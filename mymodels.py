@@ -1,0 +1,218 @@
+import torch
+from torch_geometric.nn import TAGConv
+from torch.nn import Linear, BatchNorm1d
+from torch_geometric.nn import GCNConv, TAGConv
+import torch.nn.functional as F
+
+
+from torch.nn import Linear
+from torch_geometric.nn import GCNConv, GATConv, GATv2Conv
+
+
+class AttnGCN(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+
+        self.emb1 = GCNConv(in_channels=5,
+                          out_channels=128,
+                          add_self_loops=False,
+                          normalize=False,
+                          aggr="mean"
+                          )
+
+        self.emb1_norm = BatchNorm1d(128)
+        
+        self.emb2 = GCNConv(in_channels=128,
+                          out_channels=128,
+                          add_self_loops=False,
+                          normalize=False,
+                          aggr="mean"
+                          )
+
+        self.emb2_norm = BatchNorm1d(128)
+        
+        self.att_conv1 = GATv2Conv(in_channels=128,
+                             out_channels=64,
+                             heads=2, 
+                             edge_dim=1, 
+                             aggr="mean", 
+                             concat=True, 
+                             share_weights=True)
+        self.att_conv1_norm = BatchNorm1d(128)
+        
+        self.att_conv2 = GATv2Conv(in_channels=128,
+                             out_channels=64,
+                             heads=2, 
+                             edge_dim=1, 
+                             aggr="mean", 
+                            concat=True, 
+                            share_weights=True)
+        self.att_conv2_norm = BatchNorm1d(128)
+        # self.conv3 = GATConv(in_channels=128,
+        #                      out_channels=128,
+        #                      heads=1, 
+        #                      edge_dim=1)
+        self.fc1 = Linear(128, 128)
+        self.fc1_norm = BatchNorm1d(128)
+        self.fc2 = Linear(128, 128)
+        self.fc2_norm = BatchNorm1d(128)
+        self.fc3 = Linear(128, 5)
+
+        self.dp = 0.2
+
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.emb1(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.emb1_norm(h)
+
+        h_initial = h
+        h = self.emb2(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=0.2, training=self.training)
+        h = self.emb2_norm(h)
+        h += h_initial  
+
+        h_initial = h
+        h = self.att_conv1(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv1_norm(h)
+        h += h_initial  
+
+        h_initial = h
+        h = self.att_conv2(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv2_norm(h)
+        h += h_initial  
+        
+        # h = self.conv3(h, edge_index, edge_weight).relu()
+        # h = F.dropout(h, p=self.dp, training=self.training)
+
+        h_initial = h
+        h = self.fc1(h).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.fc1_norm(h)
+        h += h_initial  
+
+        h_initial = h
+        h = self.fc2(h).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.fc2_norm(h)
+        h += h_initial  
+        
+        h = self.fc3(h)
+    
+        return h
+
+
+class SimpleNN(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+        self.norm = BatchNorm1d(5)
+        self.fc1 = Linear(5, 5)
+        self.fc2 = Linear(5, 5)
+        self.fc3 = Linear(5, 5)
+        self.fc4 = Linear(5, 5)
+        self.fc5 = Linear(5, 5)
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.norm(h)
+        h = self.fc1(h)
+        h = h.relu()
+        h = self.fc2(h)
+        h = h.relu()
+        h = self.fc3(h)
+        h = h.relu()
+        h = self.fc4(h)
+        h = h.relu()
+        h = self.fc5(h)
+        return h
+
+
+class TAGConv_3l_128h_w_k3(torch.nn.Module):
+    def __init__(self):
+        super(TAGConv_3l_128h_w_k3, self).__init__()
+        self.conv1 = TAGConv(5, 128)
+        self.conv2 = TAGConv(128, 128)
+        self.conv3 = TAGConv(128, 5)
+
+    def forward(self, x, edge_index, edge_attr):
+        x = F.elu(self.conv1(x, edge_index, edge_attr))
+        x = F.elu(self.conv2(x, edge_index, edge_attr))
+        x = self.conv3(x, edge_index, edge_attr)
+        return x
+    
+class GCNConv_3l_128h_w_l128(torch.nn.Module):
+    def __init__(self):
+        super(GCNConv_3l_128h_w_l128, self).__init__()
+        self.conv1 = GCNConv(data.num_features, 128)
+        self.conv2 = GCNConv(128, 128)
+        self.conv3 = GCNConv(128, 128)
+
+    def forward(self, data):
+        x, edge_index, edge_attr = data.x.float(), data.edge_index, data.weight.float()
+        x = F.elu(self.conv1(x, edge_index, edge_attr))
+        x = F.elu(self.conv2(x, edge_index, edge_attr))
+        x = self.conv3(x, edge_index, edge_attr)
+        x = torch.nn.functional.normalize(x, p=2, dim=1)
+        return x
+
+
+
+class GCN(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+        #self.norm = BatchNorm1d(15)
+        
+        self.convs = torch.nn.ModuleList()
+
+        for _ in range(20): 
+            self.convs.append(GCNConv(5, 5))
+        
+        self.fc1 = Linear(5, 5)
+        self.fc2 = Linear(5, 5)
+        self.fc3 = Linear(5, 5)
+
+    def forward(self, h, edge_index, edge_weight):
+        
+        for i in range(len(self.convs)):
+            h = self.convs[i](h, edge_index)
+            h = F.relu(h)
+            h = F.dropout(h, p=0.5, training=self.training)
+        
+        h = self.fc1(h)
+        h = h.relu()
+        h = self.fc2(h)
+        h = h.relu()
+        h = self.fc3(h)
+        return h
+
+
+class GCN_Embedding(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+        self.convs = torch.nn.ModuleList()
+
+        for _ in range(3): 
+            self.convs.append(GCNConv(in_channels=5,
+                                      out_channels=5,
+                                      add_self_loops=False,
+                                      normalize=False,
+                                      aggr="mean"
+                                      )
+                              )
+        self.fc1 = Linear(5, 5)
+        self.fc2 = Linear(5, 5)
+        self.fc3 = Linear(5, 5)
+
+    def forward(self, h, edge_index, edge_weight):
+        
+        for i in range(len(self.convs)):
+            h = self.convs[i](h, edge_index, edge_weight).relu()
+        h = self.fc1(h).relu()
+        h = self.fc2(h).relu()
+        h = self.fc3(h)
+        return h
