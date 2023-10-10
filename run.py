@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 1100
+    wandb.config.epochs = 100
 
     class_balanced_split = ClassBalancedNodeSplit(train=0.7, val=0.0, test=0.3)
     full_dataset = MyDataset(root="full_data/", transform=class_balanced_split)
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
 
     # TEST
-    y_true, y_pred = evaluate_one_by_one(model, data)
+    y_true, y_pred = evaluate_one_by_one(model, full_data)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
