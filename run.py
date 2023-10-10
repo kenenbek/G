@@ -18,7 +18,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 from mydata import ClassBalancedNodeSplit, MyDataset
 from mymodels import AttnGCN
-from utils import evaluate_one_by_one, set_global_seed
+from utils import evaluate_one_by_one, calc_accuracy, set_global_seed
 
 if __name__ == "__main__":
     set_global_seed(42)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 100
+    wandb.config.epochs = 1000
 
     class_balanced_split = ClassBalancedNodeSplit(train=0.7, val=0.0, test=0.3)
     full_dataset = MyDataset(root="full_data/", transform=class_balanced_split)
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     t = trange(wandb.config.epochs, leave=True)
     losses = []
     
-    hidden_train_mask_sub, hidden_train_mask_full, train_nodes_sub, train_nodes_full = full_data.create_hidden_train_mask(hide_frac=0.5)
+    hidden_train_mask_sub, hidden_train_mask_full, train_nodes_sub, train_nodes_full = full_data.create_hidden_train_mask(hide_frac=0.0)
     full_data.recalculate_one_hot()
     
     
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     sub_etnos = ["1", "2", "3", "4", "5"]
     
     
-    cm_display = ConfusionMatrixDisplay.from_predictions(full_data.y[full_data.test_mask],
-                                            pred[full_data.test_mask],
+    cm_display = ConfusionMatrixDisplay.from_predictions(y_true,
+                                            y_pred,
                                             display_labels=sub_etnos,
                                             ax=ax)
     fig.savefig("confusion_matrix.png")  # Save the figure to a file

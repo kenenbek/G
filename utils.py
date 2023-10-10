@@ -3,6 +3,7 @@ import torch
 import numpy as np
 import random
 from sklearn import metrics 
+from tqdm import tqdm, trange
 
 
 def evaluate_one_by_one(model, data):
@@ -63,7 +64,7 @@ def calc_accuracy(y_true, y_pred):
     print(f'Micro-Averaged Precision: {precision_micro:.4f}, Recall: {recall_micro:.4f}, F1 Score: {f1_micro:.4f}')
     print(f'Macro-Averaged Precision: {precision_macro:.4f}, Recall: {recall_macro:.4f}, F1 Score: {f1_macro:.4f}')
 
-    metrics = {
+    stats = {
         "Accuracy": accuracy,
         "Micro-Averaged Precision": precision_micro,
         "Micro-Averaged Recall": recall_micro,
@@ -73,7 +74,7 @@ def calc_accuracy(y_true, y_pred):
         "Macro-Averaged F1 Score": f1_macro
     }
 
-    return metrics
+    return stats
 
 
 def set_global_seed(seed):
