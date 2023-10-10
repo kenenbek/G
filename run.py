@@ -23,12 +23,12 @@ from utils import evaluate_one_by_one, set_global_seed
 if __name__ == "__main__":
     set_global_seed(42)
 
-    wandb.init(project="your_project_name", entity="your_username")
+    wandb.init(project="Genomics", entity="kenenbek")
 
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 10
+    wandb.config.epochs = 1100
 
     class_balanced_split = ClassBalancedNodeSplit(train=0.7, val=0.0, test=0.3)
     full_dataset = MyDataset(root="full_data/", transform=class_balanced_split)
