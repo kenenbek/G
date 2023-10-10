@@ -39,7 +39,7 @@ if __name__ == "__main__":
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     
-    wandb.watch(model)
+    wandb.watch(model, log="all", log_freq=10)
 
     
     t = trange(wandb.config.epochs, leave=True)
@@ -88,5 +88,9 @@ if __name__ == "__main__":
 
 
     
-    wandb.log(metrics)        
+    wandb.log(metrics)
+
+    model.save_weights("attn.pt")
+    wandb.save("attn.pt")
+    
     wandb.finish()
