@@ -11,54 +11,6 @@ import numpy as np
 import random
 
 
-
-class ClassBalancedNodeSplit(BaseTransform):
-    def __init__(self, train, val, test):
-        assert train + val + test == 1.0, "The sum of train, val, and test ratios should be 1.0"
-        self.train = train
-        self.val = val
-        self.test = test
-
-    def __call__(self, data):
-        y = data.y
-        num_nodes = y.size(0)
-
-        # Initialize masks
-        train_mask = torch.zeros(num_nodes, dtype=bool)
-        val_mask = torch.zeros(num_nodes, dtype=bool)
-        test_mask = torch.zeros(num_nodes, dtype=bool)
-
-        num_classes = int(y.max()) + 1
-        for c in range(num_classes):
-            class_indices = (y == c).nonzero().squeeze().tolist()
-
-            num_train_samples = int(len(class_indices) * self.train)
-            num_val_samples = int(len(class_indices) * self.val)
-            num_test_samples = len(class_indices) - num_train_samples - num_val_samples
-
-            # Randomly shuffle class indices
-            random_indices = torch.randperm(len(class_indices)).tolist()
-            train_class_indices = [class_indices[i] for i in random_indices[:num_train_samples]]
-            val_class_indices = [class_indices[i] for i in random_indices[num_train_samples:num_train_samples+num_val_samples]]
-            test_class_indices = [class_indices[i] for i in random_indices[num_train_samples+num_val_samples:]]
-
-            # Assign to masks
-            train_mask[train_class_indices] = True
-            val_mask[val_class_indices] = True
-            test_mask[test_class_indices] = True
-
-        data.train_mask = train_mask
-        data.val_mask = val_mask
-        data.test_mask = test_mask
-
-        return data
-
-    def __repr__(self):
-        return '{}(train={}, val={}, test={})'.format(self.__class__.__name__, self.train, self.val, self.test)
-    
-
-
-
 class MyDataset(Dataset):
     def __init__(self, root, transform=None, pre_transform=None, pre_filter=None):
         super().__init__(root, transform, pre_transform, pre_filter)
@@ -74,8 +26,7 @@ class MyDataset(Dataset):
     def download(self):
         # Download to `self.raw_dir`.
         pass
-        
-    
+
     def process(self):
 
         ind = {
@@ -85,15 +36,15 @@ class MyDataset(Dataset):
             'южные-русские': 3,
             'северные-русские': 4
         }
-        
+
         idx = 0
         for raw_path in self.raw_paths:
             edge_index = []
             edge_attr = []
-            
-            y_labels = {}            
+
+            y_labels = {}
             x_data = defaultdict(lambda: (5 * [0]))
-            
+
             dataset_csv = pd.read_csv(raw_path)
             for index, row in tqdm(dataset_csv.iterrows()):
                 node1 = row["node_id1"]
@@ -105,8 +56,8 @@ class MyDataset(Dataset):
                 id1 = int(node1[5:])
                 id2 = int(node2[5:])
 
-                x_data[id1][ind[label2]] += 1 #ibd_sum 
-                x_data[id2][ind[label1]] += 1 #ibd_sum
+                x_data[id1][ind[label2]] += 1  # ibd_sum
+                x_data[id2][ind[label1]] += 1  # ibd_sum
 
                 edge_index.append([id1, id2])
                 edge_index.append([id2, id1])
@@ -116,7 +67,6 @@ class MyDataset(Dataset):
                 y_labels[id1] = ind[label1]
                 y_labels[id2] = ind[label2]
 
-
             y_labels = dict(sorted(y_labels.items()))
             y = torch.Tensor(list(y_labels.values())).type(torch.long)
 
@@ -125,9 +75,8 @@ class MyDataset(Dataset):
             edge_attr = torch.Tensor(edge_attr).type(torch.float).contiguous()
             edge_index = torch.Tensor(edge_index).type(torch.long).t().contiguous()
 
-            x_one_hot = F.one_hot(y, num_classes=int(y.max())+1).type(torch.float)
+            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1).type(torch.float)
 
-            
             data = MyData(x=x,
                           edge_index=edge_index,
                           edge_attr=edge_attr,
@@ -146,6 +95,7 @@ class MyDataset(Dataset):
 
 from torch_geometric.transforms import BaseTransform
 
+
 class ClassBalancedNodeSplit(BaseTransform):
     def __init__(self, train, val, test):
         assert train + val + test == 1.0, "The sum of train, val, and test ratios should be 1.0"
@@ -173,8 +123,9 @@ class ClassBalancedNodeSplit(BaseTransform):
             # Randomly shuffle class indices
             random_indices = torch.randperm(len(class_indices)).tolist()
             train_class_indices = [class_indices[i] for i in random_indices[:num_train_samples]]
-            val_class_indices = [class_indices[i] for i in random_indices[num_train_samples:num_train_samples+num_val_samples]]
-            test_class_indices = [class_indices[i] for i in random_indices[num_train_samples+num_val_samples:]]
+            val_class_indices = [class_indices[i] for i in
+                                 random_indices[num_train_samples:num_train_samples + num_val_samples]]
+            test_class_indices = [class_indices[i] for i in random_indices[num_train_samples + num_val_samples:]]
 
             # Assign to masks
             train_mask[train_class_indices] = True
@@ -191,14 +142,13 @@ class ClassBalancedNodeSplit(BaseTransform):
         return '{}(train={}, val={}, test={})'.format(self.__class__.__name__, self.train, self.val, self.test)
 
 
-
 class MyData(Data):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hidden_x = None
         self.hidden_train_mask = None
         self.x_one_hot_hidden = None
-    
+
     def create_hidden_train_mask(self, hide_frac=0.0):
         """
         Generate two masks:
@@ -206,81 +156,74 @@ class MyData(Data):
         - Another that hides the same fraction of the True values but within the full data.
         """
         # Get the indices of the True values in the training mask
-        train_indices = torch.nonzero(self.train_mask).squeeze()
-    
+        train_indices_full = torch.nonzero(self.train_mask).squeeze()
+
         # Number of training samples
-        num_train_samples = train_indices.size(0)
-        
+        num_train_samples = train_indices_full.size(0)
+
         # Determine the number of nodes to hide
         num_to_hide = int(hide_frac * num_train_samples)
-        
+
         # Randomly select relative nodes to hide from the subset of training data
         hide_relative_indices = torch.randperm(num_train_samples)[:num_to_hide]
-        
+
         # Create a new mask for the subsetted training data
         hidden_train_mask_subset = torch.ones(num_train_samples, dtype=torch.bool)
-        
+
         # Set the mask value of the selected nodes to False
         hidden_train_mask_subset[hide_relative_indices] = False
-        
+
         # Create a new mask for the full data
         hidden_train_mask_full = self.train_mask.clone()
-        
+
         # Convert relative hide indices to full data indices
-        hide_full_indices = train_indices[hide_relative_indices]
-        
+        hide_full_indices = train_indices_full[hide_relative_indices]
+
         # Set the mask value of the selected nodes to False in the full mask
         hidden_train_mask_full[hide_full_indices] = False
 
         self.hidden_train_mask_subset = hidden_train_mask_subset
         self.hidden_train_mask_full = hidden_train_mask_full
-        return hidden_train_mask_subset, hidden_train_mask_full, torch.nonzero(self.hidden_train_mask_full).squeeze(), train_indices
+        return hidden_train_mask_subset, hidden_train_mask_full
 
     def recalculate_one_hot(self):
         assert self.hidden_train_mask_subset is not None, "Error"
         assert self.hidden_train_mask_full is not None, "Error"
-    
-        available_node_indices = torch.nonzero(self.hidden_train_mask_full).squeeze()
-        known_trainig_set = set(available_node_indices.tolist())
 
         hidden_x_data = {}
-        
+
         for i in range(self.x_one_hot.shape[0]):
             if self.hidden_train_mask_full[i]:
                 hidden_x_data[i] = list(self.x_one_hot[i])
             else:
                 hidden_x_data[i] = [0, 0, 0, 0, 0]
-    
-                
+
         hidden_x_data = dict(sorted(hidden_x_data.items()))
         hidden_x_data = torch.Tensor(list(hidden_x_data.values())).contiguous()
-    
-        self.x_one_hot_hidden = hidden_x_data 
 
-    
+        self.x_one_hot_hidden = hidden_x_data
+
     def recalculate_input_features(self):
         assert self.train_mask is not None, "Error"
         assert self.hidden_train_mask is not None, "Error"
-    
+
         available_node_indices = torch.nonzero(self.hidden_train_mask).squeeze()
         known_trainig_set = set(available_node_indices.tolist())
 
         hidden_x_data = {}
         for i in range(self.x.shape[0]):
             hidden_x_data[i] = [0, 0, 0, 0, 0]
-    
+
         for i, edge in tqdm(enumerate(self.edge_index.t())):
             start_node = edge[0].item()
             dest_node = edge[1].item()
-    
+
             start_ethnicity = self.y[start_node].item()
-            
+
             if start_node in known_trainig_set:
                 hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
-                
+
         hidden_x_data = dict(sorted(hidden_x_data.items()))
         hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
-    
-        self.hidden_x = hidden_x
 
-    
+        self.hidden_x = hidden_x

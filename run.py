@@ -44,8 +44,12 @@ if __name__ == "__main__":
     
     t = trange(wandb.config.epochs, leave=True)
     losses = []
-    
-    hidden_train_mask_sub, hidden_train_mask_full, train_nodes_sub, train_nodes_full = full_data.create_hidden_train_mask(hide_frac=0.0)
+
+    hidden_train_mask_sub, hidden_train_mask_full = full_data.create_hidden_train_mask(hide_frac=0.0)
+
+    train_nodes_full = torch.nonzero(full_data.train_mask).squeeze()
+    train_nodes_sub = torch.nonzero(full_data.hidden_train_mask_full).squeeze()
+
     full_data.recalculate_one_hot()
     
     
@@ -90,7 +94,14 @@ if __name__ == "__main__":
     
     wandb.log(metrics)
 
-    model.save_weights("attn.pt")
-    wandb.save("attn.pt")
+    torch.save(model, "attn_full.pt")
+
+    # Create a new artifact
+    artifact = wandb.Artifact('model-artifact', type='model')
+    # Add a file to the artifact (the model file)
+    artifact.add_file('attn_full.pt')
+    # Log the artifact
+    wandb.log_artifact(artifact)
+
     
     wandb.finish()

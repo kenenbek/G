@@ -4,7 +4,6 @@ from torch.nn import Linear, BatchNorm1d
 from torch_geometric.nn import GCNConv, TAGConv
 import torch.nn.functional as F
 
-
 from torch.nn import Linear
 from torch_geometric.nn import GCNConv, GATConv, GATv2Conv
 
@@ -69,7 +68,7 @@ class AttnGCN(torch.nn.Module):
 
         h_initial = h
         h = self.emb2(h, edge_index, edge_weight).relu()
-        h = F.dropout(h, p=0.2, training=self.training)
+        h = F.dropout(h, p=self.dp, training=self.training)
         h = self.emb2_norm(h)
         h += h_initial  
 
