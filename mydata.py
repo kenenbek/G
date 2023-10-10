@@ -193,7 +193,7 @@ class MyData(Data):
         hidden_x_data = {}
 
         for i in range(self.x_one_hot.shape[0]):
-            if self.hidden_train_mask_full[i]:
+            if self.hidden_train_mask_full[i] or self.test_mask[i]:
                 hidden_x_data[i] = list(self.x_one_hot[i])
             else:
                 hidden_x_data[i] = [0, 0, 0, 0, 0]
