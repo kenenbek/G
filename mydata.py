@@ -56,8 +56,8 @@ class MyDataset(Dataset):
                 id1 = int(node1[5:])
                 id2 = int(node2[5:])
 
-                x_data[id1][ind[label2]] += 1  # ibd_sum
-                x_data[id2][ind[label1]] += 1  # ibd_sum
+                x_data[id1][ind[label2]] += ibd_sum
+                x_data[id2][ind[label1]] += ibd_sum
 
                 edge_index.append([id1, id2])
                 edge_index.append([id2, id1])
@@ -205,9 +205,9 @@ class MyData(Data):
 
     def recalculate_input_features(self):
         assert self.train_mask is not None, "Error"
-        assert self.hidden_train_mask is not None, "Error"
+        assert self.hidden_train_mask_full is not None, "Error"
 
-        available_node_indices = torch.nonzero(self.hidden_train_mask).squeeze()
+        available_node_indices = torch.nonzero(self.hidden_train_mask_full).squeeze()
         known_trainig_set = set(available_node_indices.tolist())
 
         hidden_x_data = {}

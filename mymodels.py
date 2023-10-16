@@ -22,14 +22,14 @@ class AttnGCN(torch.nn.Module):
 
         self.emb1_norm = BatchNorm1d(128)
         
-        self.emb2 = GCNConv(in_channels=128,
-                          out_channels=128,
-                          add_self_loops=False,
-                          normalize=False,
-                          aggr="mean"
-                          )
+        # self.emb2 = GCNConv(in_channels=128,
+        #                   out_channels=128,
+        #                   add_self_loops=False,
+        #                   normalize=False,
+        #                   aggr="mean"
+        #                   )
 
-        self.emb2_norm = BatchNorm1d(128)
+        # self.emb2_norm = BatchNorm1d(128)
         
         self.att_conv1 = GATv2Conv(in_channels=128,
                              out_channels=64,
@@ -66,11 +66,11 @@ class AttnGCN(torch.nn.Module):
         h = F.dropout(h, p=self.dp, training=self.training)
         h = self.emb1_norm(h)
 
-        h_initial = h
-        h = self.emb2(h, edge_index, edge_weight).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.emb2_norm(h)
-        h += h_initial  
+        # h_initial = h
+        # h = self.emb2(h, edge_index, edge_weight).relu()
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        # h = self.emb2_norm(h)
+        # h += h_initial  
 
         h_initial = h
         h = self.att_conv1(h, edge_index, edge_weight).relu()
