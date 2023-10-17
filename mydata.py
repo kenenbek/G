@@ -288,21 +288,23 @@ def generate_subgraphs():
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
 
-    train_indices = torch.load("full_data/0/train_indices.pt")
-    test_indices = torch.load("full_data/0/test_indices.pt")
+    for i in range(10):
+        train_indices = torch.load(f"full_data/{i}/train_indices.pt")
+        test_indices = torch.load(f"full_data/{i}/test_indices.pt")
 
-    for test_index in trange(len(test_indices)):
-        # Get the actual node index
-        idx = test_indices[test_index]
+        for test_index in trange(len(test_indices)):
+            # Get the actual node index
+            idx = test_indices[test_index]
 
-        # Combine training indices with the current test index
-        sub_indices = torch.cat([train_indices, torch.tensor([idx])])
-        sub_indices, _ = torch.sort(sub_indices)
+            # Combine training indices with the current test index
+            sub_indices = torch.cat([train_indices, torch.tensor([idx])])
+            sub_indices, _ = torch.sort(sub_indices)
 
-        # Extract sub-graph
-        sub_data = full_data.subgraph(sub_indices)
+            # Extract sub-graph
+            sub_data = full_data.subgraph(sub_indices)
 
-        # Find the position of the test node in the subgraph
-        test_node_position = torch.where(sub_indices == idx)[0].item()
-        sub_data.test_node_position = test_node_position
-        torch.save(sub_data, "full_data/0/test_sub_graph_0.pt")
+            # Find the position of the test node in the subgraph
+            test_node_position = torch.where(sub_indices == idx)[0].item()
+            sub_data.test_node_position = test_node_position
+            torch.save(sub_data, f"full_data/{i}/test_sub_graph_{test_index}.pt")
+            
