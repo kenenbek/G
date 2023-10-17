@@ -145,7 +145,7 @@ class ClassBalancedNodeSplit(BaseTransform):
 class MyData(Data):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.hidden_x = None
+        self.train_x = None
         self.hidden_train_mask = None
         self.x_one_hot_hidden = None
 
@@ -203,12 +203,9 @@ class MyData(Data):
 
         self.x_one_hot_hidden = hidden_x_data
 
-    def recalculate_input_features(self):
-        assert self.train_mask is not None, "Error"
-        assert self.hidden_train_mask_full is not None, "Error"
-
-        available_node_indices = torch.nonzero(self.hidden_train_mask_full).squeeze()
-        known_trainig_set = set(available_node_indices.tolist())
+    def recalculate_input_features(self, train_mask):
+        available_node_indices = torch.nonzero(train_mask).squeeze()
+        known_training_set = set(available_node_indices.tolist())
 
         hidden_x_data = {}
         for i in range(self.x.shape[0]):
@@ -220,13 +217,13 @@ class MyData(Data):
 
             start_ethnicity = self.y[start_node].item()
 
-            if start_node in known_trainig_set:
+            if start_node in known_training_set:
                 hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
 
         hidden_x_data = dict(sorted(hidden_x_data.items()))
         hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
 
-        self.hidden_x = hidden_x
+        self.train_x = hidden_x
 
 
 def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):
@@ -269,21 +266,6 @@ def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):
     return
 
 
-def fix_last_test_index(data, train_mask, test_index):
-    # Create a copy of the original data
-    data_copy = data.clone()
-
-    # Relabel the test_index node to a value larger than any other node index
-    max_index = data.num_nodes
-    data_copy.edge_index[data_copy.edge_index == test_index] = max_index
-
-    # Concatenate sub_indices with the new test index value
-    sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([max_index])])
-
-    # Get the subgraph
-    sub_data = data_copy.subgraph(sub_indices)
-
-
 def generate_subgraphs():
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -291,6 +273,11 @@ def generate_subgraphs():
     for i in range(10):
         train_indices = torch.load(f"full_data/{i}/train_indices.pt")
         test_indices = torch.load(f"full_data/{i}/test_indices.pt")
+
+        train_mask_f = torch.zeros(full_data.y.shape[0], dtype=torch.bool)
+        train_mask_f[train_indices] = True
+
+        full_data.recalculate_input_features(train_mask_f)
 
         for test_index in trange(len(test_indices)):
             # Get the actual node index
@@ -307,4 +294,36 @@ def generate_subgraphs():
             test_node_position = torch.where(sub_indices == idx)[0].item()
             sub_data.test_node_position = test_node_position
             torch.save(sub_data, f"full_data/{i}/test_sub_graph_{test_index}.pt")
-            
+
+
+def create_hidden_train_mask(train_indices_full, num_nodes_full, hide_frac=0.0):
+    """
+    Generate two masks:
+    - One that hides a fraction of the True values within the subsetted training data.
+    - Another that hides the same fraction of the True values but within the full data.
+    """
+    train_mask = torch.zeros(num_nodes_full, dtype=torch.bool)
+    train_mask[train_indices_full] = True
+
+    # Number of training samples
+    num_train_samples = train_indices_full.size(0)
+
+    # Determine the number of nodes to hide
+    num_to_hide = int(hide_frac * num_train_samples)
+
+    # Randomly select relative nodes to hide from the subset of training data
+    hide_relative_indices = torch.randperm(num_train_samples)[:num_to_hide]
+
+    # Create a new mask for the subsetted training data
+    hidden_train_mask_subset = torch.ones(num_train_samples, dtype=torch.bool)
+
+    # Set the mask value of the selected nodes to False
+    hidden_train_mask_subset[hide_relative_indices] = False
+
+    # Convert relative hide indices to full data indices
+    hide_full_indices = train_indices_full[hide_relative_indices]
+
+    # Set the mask value of the selected nodes to False in the full mask
+    train_mask[hide_full_indices] = False
+
+    return hidden_train_mask_subset, train_mask

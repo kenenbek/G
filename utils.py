@@ -87,3 +87,28 @@ def set_global_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+
+def evaluate_one_by_one_load_from_file(model, run: int = 0):
+    model.eval()
+    # Get the indices of test nodes
+    test_indices = torch.load(f"full_data/{run}/test_indices.pt")
+
+    y_true_list = []
+    pred_list = []
+
+    with torch.no_grad():
+        for test_index in trange(len(test_indices)):
+            # load sub_data
+            sub_data = torch.load(f"full_data/0/test_sub_graph_{test_index}.pt")
+
+            # Predict on the sub-graph
+            out = model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
+
+            # Use the test_node_position to get the prediction and true label
+            pred = out[sub_data.test_node_position].argmax(dim=0).item()
+            true_label = sub_data.y[sub_data.test_node_position].item()
+
+            y_true_list.append(true_label)
+            pred_list.append(pred)
+
+    return y_true_list, pred_list

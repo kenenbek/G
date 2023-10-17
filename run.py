@@ -14,11 +14,9 @@ import random
 from collections import defaultdict
 from sklearn.metrics import ConfusionMatrixDisplay
 
-
-
-from mydata import ClassBalancedNodeSplit, MyDataset
+from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN
-from utils import evaluate_one_by_one, calc_accuracy, set_global_seed
+from utils import evaluate_one_by_one, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 
 if __name__ == "__main__":
     set_global_seed(42)
@@ -30,71 +28,62 @@ if __name__ == "__main__":
     wandb.config.weight_decay = 5e-4
     wandb.config.epochs = 1000
 
-    class_balanced_split = ClassBalancedNodeSplit(train=0.7, val=0.0, test=0.3)
-    full_dataset = MyDataset(root="full_data/", transform=class_balanced_split)
-    
+    full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
+    num_nodes = full_data.y.shape[0]
+    train_indices_full = torch.load("full_data/0/train_indices.pt")
+    test_indices = torch.load("full_data/0/test_indices.pt")
+
+    train_mask_f = torch.zeros(num_nodes, dtype=torch.bool)
+    train_mask_f[train_indices_full] = True
+
+    train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
+    full_data.recalculate_input_features(train_mask_h)
 
     model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
-    
+
     wandb.watch(model, log="all", log_freq=10)
 
-    
     t = trange(wandb.config.epochs, leave=True)
     losses = []
 
-    hidden_train_mask_sub, hidden_train_mask_full = full_data.create_hidden_train_mask(hide_frac=0.0)
-
-    train_nodes_full = torch.nonzero(full_data.train_mask).squeeze()
-    train_nodes_sub = torch.nonzero(full_data.hidden_train_mask_full).squeeze()
-
-    full_data.recalculate_one_hot()
-    
-    
     # Extract the subgraph associated with the training nodes
+    train_nodes = torch.nonzero(train_mask_f).squeeze()
     train_edge_index, train_edge_weight = subgraph(
-        train_nodes_full, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
+        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
-    
+
     for epoch in t:
         model.train()
         optimizer.zero_grad()
-            
-        out = model(full_data.x_one_hot_hidden[full_data.train_mask], train_edge_index, train_edge_weight)
-        
-        loss = criterion(out[hidden_train_mask_sub], full_data.y[hidden_train_mask_full])
-        loss.backward()  
+
+        out = model(full_data.train_x[train_mask_f], train_edge_index, train_edge_weight)
+        loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+        loss.backward()
         optimizer.step()
-        
+
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
-    
         wandb.log({"loss": loss.item()})
 
-
-
     # TEST
-    y_true, y_pred = evaluate_one_by_one(model, full_data)
+    y_true, y_pred = evaluate_one_by_one_load_from_file(model)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
     sub_etnos = ["1", "2", "3", "4", "5"]
-    
-    
+
     cm_display = ConfusionMatrixDisplay.from_predictions(y_true,
-                                            y_pred,
-                                            display_labels=sub_etnos,
-                                            ax=ax)
+                                                         y_pred,
+                                                         display_labels=sub_etnos,
+                                                         ax=ax)
     fig.savefig("confusion_matrix.png")  # Save the figure to a file
     wandb.log({"confusion_matrix": wandb.Image("confusion_matrix.png")})  # Log the saved figure to wandb
-
-
-    
     wandb.log(metrics)
 
-    torch.save(model, "attn_full.pt")
+    torch.save(model.state_dict(), "attn_full.pt")
 
     # Create a new artifact
     artifact = wandb.Artifact('model-artifact', type='model')
@@ -103,5 +92,4 @@ if __name__ == "__main__":
     # Log the artifact
     wandb.log_artifact(artifact)
 
-    
     wandb.finish()
