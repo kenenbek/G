@@ -227,3 +227,78 @@ class MyData(Data):
         hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
 
         self.hidden_x = hidden_x
+
+
+def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):
+    num_nodes = y.size(0)
+    num_classes = int(y.max()) + 1
+
+    for i in range(run):
+        # Initialize masks
+        train_mask = torch.zeros(num_nodes, dtype=bool)
+        val_mask = torch.zeros(num_nodes, dtype=bool)
+        test_mask = torch.zeros(num_nodes, dtype=bool)
+
+        for c in range(num_classes):
+            class_indices = (y == c).nonzero().squeeze().tolist()
+
+            num_train_samples = int(len(class_indices) * train)
+            num_val_samples = int(len(class_indices) * val)
+            num_test_samples = len(class_indices) - num_train_samples - num_val_samples
+
+            # Randomly shuffle class indices
+            random_indices = torch.randperm(len(class_indices)).tolist()
+            train_class_indices = [class_indices[i] for i in random_indices[:num_train_samples]]
+            val_class_indices = [class_indices[i] for i in
+                                 random_indices[num_train_samples:num_train_samples + num_val_samples]]
+            test_class_indices = [class_indices[i] for i in random_indices[num_train_samples + num_val_samples:]]
+
+            # Assign to masks
+            train_mask[train_class_indices] = True
+            val_mask[val_class_indices] = True
+            test_mask[test_class_indices] = True
+
+        train_indices = torch.nonzero(train_mask).squeeze()
+        val_indices = torch.nonzero(val_mask).squeeze()
+        test_indices = torch.nonzero(test_mask).squeeze()
+
+        torch.save(train_indices, f"full_data/{i}/train_indices.pt")
+        torch.save(val_indices, f"full_data/{i}/val_indices.pt")
+        torch.save(test_indices, f"full_data/{i}/test_indices.pt")
+
+    return
+
+
+def fix_last_test_index(data, train_mask, test_index):
+    # Create a copy of the original data
+    data_copy = data.clone()
+
+    # Relabel the test_index node to a value larger than any other node index
+    max_index = data.num_nodes
+    data_copy.edge_index[data_copy.edge_index == test_index] = max_index
+
+    # Concatenate sub_indices with the new test index value
+    sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([max_index])])
+
+    # Get the subgraph
+    sub_data = data_copy.subgraph(sub_indices)
+
+
+def generate_subgraphs():
+    full_dataset = MyDataset(root="full_data/")
+    full_data = full_dataset[0]
+
+    train_indices = torch.load("full_data/0/train_indices.pt")
+    test_indices = torch.load("full_data/0/test_indices.pt")
+
+    for test_index in trange(len(test_indices)):
+        idx = test_indices[test_index]
+        full_data_copy = full_data.clone()
+
+        max_index = full_data_copy.num_nodes + 1000000
+        full_data_copy.edge_index[full_data_copy.edge_index == test_index] = max_index
+
+        sub_indices = torch.cat(train_indices, torch.tensor([max_index]))
+        sub_data = full_data.subgraph(sub_indices)
+
+        torch.save(sub_data, "full_data/0/test_sub_graph_0.pt")
