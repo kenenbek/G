@@ -292,13 +292,12 @@ def generate_subgraphs():
     test_indices = torch.load("full_data/0/test_indices.pt")
 
     for test_index in trange(len(test_indices)):
-        idx = test_indices[test_index]
         full_data_copy = full_data.clone()
 
         max_index = full_data_copy.num_nodes + 1000000
         full_data_copy.edge_index[full_data_copy.edge_index == test_index] = max_index
 
-        sub_indices = torch.cat(train_indices, torch.tensor([max_index]))
+        sub_indices = torch.cat([train_indices, torch.tensor([max_index])])
         sub_data = full_data.subgraph(sub_indices)
 
         torch.save(sub_data, "full_data/0/test_sub_graph_0.pt")
