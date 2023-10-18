@@ -279,3 +279,17 @@ class GCN_Embedding(torch.nn.Module):
         h = self.fc2(h).relu()
         h = self.fc3(h)
         return h
+
+
+class TAGConv_3l_512h_w_k3(torch.nn.Module):
+    def __init__(self):
+        super(TAGConv_3l_512h_w_k3, self).__init__()
+        self.conv1 = TAGConv(5, 512)
+        self.conv2 = TAGConv(512, 512)
+        self.conv3 = TAGConv(512, 5)
+
+    def forward(self, x, edge_index, edge_weight):
+        x = F.elu(self.conv1(x, edge_index, edge_weight))
+        x = F.elu(self.conv2(x, edge_index, edge_weight))
+        x = self.conv3(x, edge_index, edge_weight)
+        return x

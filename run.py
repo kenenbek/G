@@ -15,7 +15,7 @@ from collections import defaultdict
 from sklearn.metrics import ConfusionMatrixDisplay
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
-from mymodels import AttnGCN
+from mymodels import AttnGCN, TAGConv_3l_512h_w_k3
 from utils import evaluate_one_by_one, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 
 if __name__ == "__main__":
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
 
-    model = AttnGCN()
+    model = TAGConv_3l_512h_w_k3()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
 
