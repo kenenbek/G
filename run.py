@@ -39,7 +39,7 @@ if __name__ == "__main__":
     test_mask = torch.zeros(num_nodes, dtype=torch.bool)
     test_mask[test_indices] = True
 
-    assert train_mask_f == ~test_mask, "Error"
+    assert torch.equal(train_mask_f, ~test_mask), "Error"
 
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
