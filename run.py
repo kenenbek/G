@@ -69,7 +69,7 @@ if __name__ == "__main__":
         wandb.log({"loss": loss.item()})
 
     # TEST batch
-    y_true, y_pred = evaluate_batch(model)
+    y_true, y_pred = evaluate_batch(model, full_data, test_indices)
     metrics = calc_accuracy(y_true, y_pred)
 
     # TEST one by one
