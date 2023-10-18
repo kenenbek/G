@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, TAGConv_3l_512h_w_k3
-from utils import evaluate_one_by_one, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
+from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 
 if __name__ == "__main__":
     set_global_seed(42)
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 1000
+    wandb.config.epochs = 600
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -68,7 +68,11 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
         wandb.log({"loss": loss.item()})
 
-    # TEST
+    # TEST batch
+    y_true, y_pred = evaluate_batch(model)
+    metrics = calc_accuracy(y_true, y_pred)
+
+    # TEST one by one
     y_true, y_pred = evaluate_one_by_one_load_from_file(model)
     metrics = calc_accuracy(y_true, y_pred)
 
