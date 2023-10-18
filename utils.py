@@ -46,12 +46,8 @@ def evaluate_one_by_one(model, data):
     return y_true_list, pred_list
 
 
-def evaluate_batch(model, full_data, test_indices):
+def evaluate_batch(model, full_data, test_mask):
     model.eval()
-
-    num_nodes = full_data.y.shape[0]
-    test_mask = torch.zeros(num_nodes, dtype=torch.bool)
-    test_mask[test_indices] = True
 
     out = model(full_data.train_x, full_data.edge_index, full_data.edge_attr)
     pred = out.argmax(dim=1)

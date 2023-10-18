@@ -24,9 +24,9 @@ if __name__ == "__main__":
     wandb.init(project="Genomics", entity="kenenbek")
 
     # Store configurations/hyperparameters
-    wandb.config.lr = 0.001
+    wandb.config.lr = 0.0001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 600
+    wandb.config.epochs = 5000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -36,6 +36,10 @@ if __name__ == "__main__":
 
     train_mask_f = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask_f[train_indices_full] = True
+    test_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    test_mask[test_indices] = True
+
+    assert train_mask_f == ~test_mask, "Error"
 
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
@@ -69,7 +73,7 @@ if __name__ == "__main__":
         wandb.log({"loss": loss.item()})
 
     # TEST batch
-    y_true, y_pred = evaluate_batch(model, full_data, test_indices)
+    y_true, y_pred = evaluate_batch(model, full_data, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
     # TEST one by one
