@@ -24,9 +24,9 @@ if __name__ == "__main__":
     wandb.init(project="Genomics", entity="kenenbek")
 
     # Store configurations/hyperparameters
-    wandb.config.lr = 0.0001
+    wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 5000
+    wandb.config.epochs = 1000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
 
-    model = TAGConv_3l_512h_w_k3()
+    model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
 
@@ -72,12 +72,8 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
         wandb.log({"loss": loss.item()})
 
-    # TEST batch
-    y_true, y_pred = evaluate_batch(model, full_data, test_mask)
-    metrics = calc_accuracy(y_true, y_pred)
-
     # TEST one by one
-    y_true, y_pred = evaluate_one_by_one_load_from_file(model)
+    y_true, y_pred = evaluate_one_by_one(model, full_data, train_mask_f, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
