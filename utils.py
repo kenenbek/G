@@ -6,11 +6,8 @@ from sklearn import metrics
 from tqdm import tqdm, trange
 
 
-def evaluate_one_by_one(model, data):
+def evaluate_one_by_one(model, data, train_mask, test_mask):
     model.eval()
-
-    train_mask = data.train_mask
-    test_mask = data.test_mask
 
     # Get the indices of test nodes
     test_indices = torch.where(test_mask)[0].tolist()
@@ -29,12 +26,13 @@ def evaluate_one_by_one(model, data):
 
             # Extract sub-graph
             sub_data = data.subgraph(sub_indices)
+            sub_data.recalculate_with_test()
 
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Predict on the sub-graph
-            out = model(sub_data.x_one_hot_hidden, sub_data.edge_index, sub_data.edge_attr)
+            out = model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
@@ -44,6 +42,11 @@ def evaluate_one_by_one(model, data):
             pred_list.append(pred)
 
     return y_true_list, pred_list
+
+
+def get_neighbors(node_id, edge_index):
+    # Returns the indices where the source node (node_id) appears in the edge_index[0]
+    return edge_index[1][edge_index[0] == node_id]
 
 
 def evaluate_batch(model, full_data, test_mask):
