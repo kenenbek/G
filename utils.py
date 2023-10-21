@@ -26,7 +26,6 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
             # Extract sub-graph
             sub_data = data.subgraph(sub_indices)
-            sub_data.recalculate_with_test()
 
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()

@@ -225,24 +225,6 @@ class MyData(Data):
 
         self.train_x = hidden_x
 
-    def recalculate_with_test(self):
-
-        hidden_x_data = {}
-        for i in range(self.x.shape[0]):
-            hidden_x_data[i] = [0, 0, 0, 0, 0]
-
-        for i, edge in enumerate(self.edge_index.t()):
-            start_node = edge[0].item()
-            dest_node = edge[1].item()
-
-            start_ethnicity = self.y[start_node].item()
-            hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
-
-        hidden_x_data = dict(sorted(hidden_x_data.items()))
-        hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
-
-        self.train_x = hidden_x
-
 
 def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):
     num_nodes = y.size(0)
