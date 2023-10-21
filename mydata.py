@@ -218,7 +218,7 @@ class MyData(Data):
             start_ethnicity = self.y[start_node].item()
 
             if start_node in known_training_set:
-                hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
+                hidden_x_data[dest_node][start_ethnicity] += 0 #self.edge_attr[i]
 
         hidden_x_data = dict(sorted(hidden_x_data.items()))
         hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
