@@ -20,7 +20,7 @@ class TransformNet(torch.nn.Module):
                                          )
         self.att_conv1_norm = BatchNorm1d(128)
 
-        self.att_conv2 = TransformerConv(in_channels=5,
+        self.att_conv2 = TransformerConv(in_channels=128,
                                          out_channels=128,
                                          heads=2,
                                          concat=False,
