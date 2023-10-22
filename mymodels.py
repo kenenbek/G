@@ -1,11 +1,78 @@
 import torch
-from torch_geometric.nn import TAGConv
 from torch.nn import Linear, BatchNorm1d
-from torch_geometric.nn import GCNConv, TAGConv
+from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv
 import torch.nn.functional as F
 
-from torch.nn import Linear
-from torch_geometric.nn import GCNConv, GATConv, GATv2Conv
+
+class Transform(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+        self.norm0 = BatchNorm1d(5)
+        self.att_conv1 = TransformerConv(in_channels=5,
+                                         out_channels=128,
+                                         heads=2,
+                                         concat=False,
+                                         beta=False,
+                                         dropout=0.2,
+                                         edge_dim=1,
+                                         root_weight=True
+                                         )
+        self.att_conv1_norm = BatchNorm1d(128)
+
+        self.att_conv2 = TransformerConv(in_channels=5,
+                                         out_channels=128,
+                                         heads=2,
+                                         concat=False,
+                                         beta=False,
+                                         dropout=0.2,
+                                         edge_dim=1,
+                                         root_weight=True
+                                         )
+        self.att_conv2_norm = BatchNorm1d(128)
+        self.att_conv3 = TransformerConv(in_channels=5,
+                                         out_channels=128,
+                                         heads=2,
+                                         concat=False,
+                                         beta=False,
+                                         dropout=0.2,
+                                         edge_dim=1,
+                                         root_weight=True
+                                         )
+        self.att_conv3_norm = BatchNorm1d(128)
+        self.fc1 = Linear(128, 128)
+        self.fc1_norm = BatchNorm1d(128)
+        self.fc2 = Linear(128, 5)
+
+        self.dp = 0.2
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.norm0(h)
+        h = self.att_conv1(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv1_norm(h)
+
+        h_initial = h.clone()
+        h = self.att_conv2(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv2_norm(h)
+        h += h_initial
+
+        h_initial = h.clone()
+        h = self.att_conv3(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv3_norm(h)
+        h += h_initial
+
+        h_initial = h.clone()
+        h = self.fc1(h).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.fc1_norm(h)
+        h += h_initial
+
+        h = self.fc2(h)
+
+        return h
 
 
 class AttnGCN(torch.nn.Module):
