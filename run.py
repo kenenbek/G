@@ -13,6 +13,7 @@ import numpy as np
 import random
 from collections import defaultdict
 from sklearn.metrics import ConfusionMatrixDisplay
+from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, TransformNet, TAGConv_3l_512h_w_k3
@@ -26,7 +27,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 1000
+    wandb.config.epochs = 3000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     model = TransformNet()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
+    scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
 
     wandb.watch(model, log="all", log_freq=10)
 
@@ -67,6 +69,7 @@ if __name__ == "__main__":
         loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
         loss.backward()
         optimizer.step()
+        scheduler.step()
 
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
