@@ -4,7 +4,7 @@ from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv
 import torch.nn.functional as F
 
 
-class Transform(torch.nn.Module):
+class TransformNet(torch.nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(1234)
