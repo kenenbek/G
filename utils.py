@@ -124,3 +124,58 @@ def evaluate_one_by_one_load_from_file(model, run: int = 0):
             pred_list.append(pred)
 
     return y_true_list, pred_list
+
+
+def to_one_hot(labels):
+    num_classes = labels.max().item() + 1  # assuming labels are 0-indexed
+    one_hot = torch.zeros(labels.size(0), num_classes)
+    one_hot.scatter_(1, labels.unsqueeze(1), 1)
+    return one_hot
+
+
+def inductive_train(model, optimizer, scheduler, criterion, data, train_mask):
+    model.train()
+    optimizer.zero_grad()
+
+    total_loss = 0
+
+    # Save the original features
+    x_one_hot = to_one_hot(data.y[train_mask_h])
+
+    for node in range(len(train_nodes)):  # Loop over nodes in the training mask
+        # Zero out the feature of the current node
+        saved_features = x_one_hot[node]
+        x_one_hot[node] = torch.zeros(5)
+
+        # Get output
+        out = model(x_one_hot, train_edge_index, train_edge_weight)
+
+        # Compute the loss for the current node
+        loss = criterion(out[node].unsqueeze(0), data.y[node].unsqueeze(0))
+        total_loss += loss
+
+        # Restore the original features for the next iteration
+        data.x[node] = saved_features
+
+    total_loss.backward()
+    optimizer.step()
+    scheduler.step()
+
+    losses.append(loss)
+    t.set_description(str(round(loss.item(), 6)))
+    wandb.log({"loss": loss.item()})
+
+
+def ordinary_training(model, optimizer, scheduler, data, criterion):
+    model.train()
+    optimizer.zero_grad()
+
+    out = model(data.train_x[train_mask_f], train_edge_index, train_edge_weight)
+    loss = criterion(out[train_mask_sub], data.y[train_mask_h])
+    loss.backward()
+    optimizer.step()
+    scheduler.step()
+
+    losses.append(loss)
+    t.set_description(str(round(loss.item(), 6)))
+    wandb.log({"loss": loss.item()})
