@@ -67,10 +67,10 @@ if __name__ == "__main__":
     x_one_hot = to_one_hot(full_data.y[train_mask_h])
     for epoch in t:
         model.train()
-        optimizer.zero_grad()
 
         total_loss = 0
         for node in range(len(train_nodes)):  # Loop over nodes in the training mask
+            optimizer.zero_grad()
             # Zero out the feature of the current node
             saved_features = x_one_hot[node]
             x_one_hot[node] = torch.zeros(5)
@@ -80,16 +80,15 @@ if __name__ == "__main__":
 
             # Compute the loss for the current node
             loss = criterion(out[node].unsqueeze(0), y[node].unsqueeze(0))
-            total_loss += loss
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.detach().item()
 
             # Restore the original features for the next iteration
             x_one_hot[node] = saved_features
 
-        total_loss.backward()
-        optimizer.step()
         scheduler.step()
-
-        losses.append(loss)
+        losses.append(total_loss)
         t.set_description(str(round(loss.item(), 6)))
         wandb.log({"loss": loss.item()})
 
