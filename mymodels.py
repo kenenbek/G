@@ -1,6 +1,7 @@
 import torch
 from torch.nn import Linear, BatchNorm1d
 from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv
+from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
 
 
@@ -80,68 +81,59 @@ class AttnGCN(torch.nn.Module):
         super().__init__()
         torch.manual_seed(1234)
         self.norm0 = BatchNorm1d(5)
-        self.att_conv1 = GATv2Conv(in_channels=5,
-                                   out_channels=128,
-                                   heads=2,
-                                   edge_dim=1,
-                                   aggr="mean",
-                                   concat=False,
-                                   share_weights=False)
-        self.att_conv1_norm = BatchNorm1d(128)
+        self.conv1 = GATv2Conv(in_channels=5,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="mean",
+                               concat=False,
+                               share_weights=False)
+        self.norm1 = BatchNorm1d(128)
 
-        self.att_conv2 = GATv2Conv(in_channels=128,
-                                   out_channels=128,
-                                   heads=2,
-                                   edge_dim=1,
-                                   aggr="mean",
-                                   concat=False,
-                                   share_weights=False)
-        self.att_conv2_norm = BatchNorm1d(128)
-        self.att_conv3 = GATv2Conv(in_channels=128,
-                                   out_channels=128,
-                                   heads=2,
-                                   edge_dim=1,
-                                   aggr="mean",
-                                   concat=False,
-                                   share_weights=False)
-        self.att_conv3_norm = BatchNorm1d(128)
+        self.conv2 = GATv2Conv(in_channels=128,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="mean",
+                               concat=False,
+                               share_weights=False)
+        self.norm2 = BatchNorm1d(128)
+        self.conv3 = GATv2Conv(in_channels=128,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="mean",
+                               concat=False,
+                               share_weights=False)
+        self.norm3 = BatchNorm1d(128)
         self.fc1 = Linear(128, 128)
-        self.fc1_norm = BatchNorm1d(128)
+        self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
-        self.fc2_norm = BatchNorm1d(128)
+        self.fc_norm2 = BatchNorm1d(128)
         self.fc3 = Linear(128, 5)
 
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
         h = self.norm0(h)
-        h = self.att_conv1(h, edge_index, edge_weight).relu()
+        h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv1_norm(h)
 
         h_initial = h.clone()
-        h = self.att_conv2(h, edge_index, edge_weight).relu()
+        h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv2_norm(h)
         h += h_initial
 
-        h_initial = h.clone()
-        h = self.att_conv3(h, edge_index, edge_weight).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv3_norm(h)
-        h += h_initial
+        # h_initial = h.clone()
+        # h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        # h += h_initial
 
-        h_initial = h.clone()
-        h = self.fc1(h).relu()
+        h = self.fc_norm1(self.fc1(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc1_norm(h)
-        h += h_initial
 
-        h_initial = h.clone()
-        h = self.fc2(h).relu()
+        h = self.fc_norm2(self.fc2(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc2_norm(h)
-        h += h_initial
 
         h = self.fc3(h)
 
@@ -246,24 +238,28 @@ class AttnGCN2(torch.nn.Module):
 class SimpleNN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        torch.manual_seed(1234)
-        self.norm = BatchNorm1d(5)
-        self.fc1 = Linear(5, 5)
-        self.fc2 = Linear(5, 5)
-        self.fc3 = Linear(5, 5)
-        self.fc4 = Linear(5, 5)
-        self.fc5 = Linear(5, 5)
+        self.dp = 0.2
+        self.norm0 = BatchNorm1d(5)
+        self.fc1 = Linear(5, 128)
+        self.norm1 = BatchNorm1d(128)
+        self.fc2 = Linear(128, 128)
+        self.norm2 = BatchNorm1d(128)
+        self.fc3 = Linear(128, 128)
+        self.norm3 = BatchNorm1d(128)
+        self.fc4 = Linear(128, 128)
+        self.norm4 = BatchNorm1d(128)
+        self.fc5 = Linear(128, 5)
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm(h)
-        h = self.fc1(h)
-        h = h.relu()
-        h = self.fc2(h)
-        h = h.relu()
-        h = self.fc3(h)
-        h = h.relu()
-        h = self.fc4(h)
-        h = h.relu()
+        h = self.norm0(h)
+        h = self.norm1(self.fc1(h)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.norm2(self.fc2(h)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.norm3(self.fc3(h)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.norm4(self.fc4(h)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
         h = self.fc5(h)
         return h
 
@@ -368,3 +364,49 @@ class TAGConv_3l_512h_w_k3(torch.nn.Module):
         x = F.elu(self.conv2(x, edge_index, edge_weight))
         x = self.conv3(x, edge_index, edge_weight)
         return x
+
+
+class SAGE(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+        self.norm0 = BatchNorm1d(5)
+        self.conv1 = SAGEConv(in_channels=5,
+                              out_channels=64,
+                              aggr="mean",
+                              normalize=True,
+                              root_weight=True,
+                              project=True
+                              )
+
+        self.conv2 = SAGEConv(in_channels=5,
+                              out_channels=64,
+                              aggr="mean",
+                              normalize=True,
+                              root_weight=True,
+                              project=True
+                              )
+        self.conv2_norm = BatchNorm1d(64)
+
+        self.conv3 = SAGEConv(in_channels=64,
+                              out_channels=5,
+                              aggr="mean",
+                              normalize=True,
+                              root_weight=True,
+                              project=True
+                              )
+
+        self.dp = 0.1
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.norm0(h)
+        h = self.conv1(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.conv2(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.conv3(h, edge_index, edge_weight)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        return h

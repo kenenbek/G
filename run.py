@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
-from mymodels import AttnGCN, TransformNet, TAGConv_3l_512h_w_k3
+from mymodels import AttnGCN, TransformNet, TAGConv_3l_512h_w_k3, SAGE
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 from utils import inductive_train, to_one_hot
 
@@ -63,32 +63,17 @@ if __name__ == "__main__":
         train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
 
-    y = full_data.y[train_mask_h]
-    x_one_hot = to_one_hot(full_data.y[train_mask_h])
     for epoch in t:
         model.train()
+        optimizer.zero_grad()
 
-        total_loss = 0
-        for node in range(len(train_nodes)):  # Loop over nodes in the training mask
-            optimizer.zero_grad()
-            # Zero out the feature of the current node
-            saved_features = x_one_hot[node]
-            x_one_hot[node] = torch.zeros(5)
-
-            # Get output
-            out = model(x_one_hot, train_edge_index, train_edge_weight)
-
-            # Compute the loss for the current node
-            loss = criterion(out[node].unsqueeze(0), y[node].unsqueeze(0))
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.detach().item()
-
-            # Restore the original features for the next iteration
-            x_one_hot[node] = saved_features
-
+        out = model(full_data.train_x[train_mask_f], train_edge_index, train_edge_weight)
+        loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+        loss.backward()
+        optimizer.step()
         scheduler.step()
-        losses.append(total_loss)
+
+        losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
         wandb.log({"loss": loss.item()})
 

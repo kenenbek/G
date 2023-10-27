@@ -134,36 +134,34 @@ def to_one_hot(labels):
 
 
 def inductive_train(model, optimizer, scheduler, criterion, data, train_mask):
-    model.train()
-    optimizer.zero_grad()
+    y = full_data.y[train_mask_h]
+    x_one_hot = to_one_hot(full_data.y[train_mask_h])
+    for epoch in t:
+        model.train()
 
-    total_loss = 0
+        total_loss = 0
+        for node in range(len(train_nodes)):  # Loop over nodes in the training mask
+            optimizer.zero_grad()
+            # Zero out the feature of the current node
+            saved_features = x_one_hot[node]
+            x_one_hot[node] = torch.zeros(5)
 
-    # Save the original features
-    x_one_hot = to_one_hot(data.y[train_mask_h])
+            # Get output
+            out = model(x_one_hot, train_edge_index, train_edge_weight)
 
-    for node in range(len(train_nodes)):  # Loop over nodes in the training mask
-        # Zero out the feature of the current node
-        saved_features = x_one_hot[node]
-        x_one_hot[node] = torch.zeros(5)
+            # Compute the loss for the current node
+            loss = criterion(out[node].unsqueeze(0), y[node].unsqueeze(0))
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.detach().item()
 
-        # Get output
-        out = model(x_one_hot, train_edge_index, train_edge_weight)
+            # Restore the original features for the next iteration
+            x_one_hot[node] = saved_features
 
-        # Compute the loss for the current node
-        loss = criterion(out[node].unsqueeze(0), data.y[node].unsqueeze(0))
-        total_loss += loss
-
-        # Restore the original features for the next iteration
-        data.x[node] = saved_features
-
-    total_loss.backward()
-    optimizer.step()
-    scheduler.step()
-
-    losses.append(loss)
-    t.set_description(str(round(loss.item(), 6)))
-    wandb.log({"loss": loss.item()})
+        scheduler.step()
+        losses.append(total_loss)
+        t.set_description(str(round(loss.item(), 6)))
+        wandb.log({"loss": loss.item()})
 
 
 def ordinary_training(model, optimizer, scheduler, data, criterion):
