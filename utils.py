@@ -8,7 +8,7 @@ from torch_geometric.nn.models import LabelPropagation
 
 
 def label_propagation_one_by_one(data, train_mask, test_mask):
-    model = LabelPropagation(num_layers=10, alpha=1)
+    model = LabelPropagation(num_layers=3, alpha=0.8)
 
     # Get the indices of test nodes
     test_indices = torch.where(test_mask)[0].tolist()
@@ -86,6 +86,45 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
     return y_true_list, pred_list
 
+
+
+def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask):
+    vgae_model.eval()
+    predictor.eval()
+
+    # Get the indices of test nodes
+    test_indices = torch.where(test_mask)[0].tolist()
+
+    y_true_list = []
+    pred_list = []
+
+    with torch.no_grad():
+        for test_index in trange(len(test_indices)):
+            # Get the actual node index
+            idx = test_indices[test_index]
+
+            # Combine training indices with the current test index
+            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx])])
+            sub_indices, _ = torch.sort(sub_indices)
+
+            # Extract sub-graph
+            sub_data = data.subgraph(sub_indices)
+
+            # Find the position of the test node in the subgraph
+            test_node_position = torch.where(sub_indices == idx)[0].item()
+
+            # Predict on the sub-graph
+            out = vgae_model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
+            out = predictor(out)
+
+            # Use the test_node_position to get the prediction and true label
+            pred = out[test_node_position].argmax(dim=0).item()
+            true_label = sub_data.y[test_node_position].item()
+
+            y_true_list.append(true_label)
+            pred_list.append(pred)
+
+    return y_true_list, pred_list
 
 def get_neighbors(node_id, edge_index):
     # Returns the indices where the source node (node_id) appears in the edge_index[0]
