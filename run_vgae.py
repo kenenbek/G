@@ -11,6 +11,7 @@ from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from my_vgae import Encoder, WeightedInnerProductDecoder, SimplePredictor
+from mymodels import AttnGCN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
     set_global_seed, vgae_evaluate_one_by_one
 from utils import inductive_train, to_one_hot
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     vgae_optimizer = torch.optim.Adam(vgae_model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     vgae_scheduler = StepLR(vgae_optimizer, step_size=500, gamma=0.1)
 
-    predictor = SimplePredictor()
+    predictor = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     pred_optimizer = torch.optim.Adam(predictor.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     pred_scheduler = StepLR(pred_optimizer, step_size=500, gamma=0.1)
@@ -86,7 +87,7 @@ if __name__ == "__main__":
         # vgae_optimizer.step()
         # vgae_scheduler.step()
 
-        y_pred = predictor(z)
+        y_pred = predictor(z, train_edge_index, train_edge_weight)
         loss = criterion(y_pred[train_mask_sub], full_data.y[train_mask_h])
         # loss.backward()
         # pred_optimizer.step()
