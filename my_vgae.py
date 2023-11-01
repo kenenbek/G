@@ -20,9 +20,9 @@ class Encoder(torch.nn.Module):
 
         self.conv2 = GATv2Conv(in_channels=32,
                                out_channels=32,
-                               heads=2,
+                               heads=1,
                                edge_dim=1,
-                               aggr="mean",
+                               aggr="add",
                                concat=True,
                                share_weights=False)
         self.norm2 = BatchNorm1d(32)
