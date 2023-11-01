@@ -41,7 +41,7 @@ class Encoder(torch.nn.Module):
                                  aggr="add",
                                  concat=False,
                                  share_weights=False)
-        self.dp = 0.2
+        self.dp = 0.05
 
     def forward(self, h, edge_index, edge_weight):
         h = self.norm0(h)
