@@ -72,20 +72,29 @@ if __name__ == "__main__":
     for epoch in t:
         vgae_model.train()
         predictor.train()
-        combined_optimizer.zero_grad()
+        # combined_optimizer.zero_grad()
+        vgae_optimizer.zero_grad()
+        predictor.zero_grad()
 
         z = vgae_model.encode(full_data.train_x[train_mask_f], train_edge_index, train_edge_weight)
         adj_reconstructed = vgae_model.decode(z)
 
         recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
         kl_loss = vgae_model.kl_loss()
+        vgae_loss = recon_loss + kl_loss
+        vgae_loss.backward()
+        vgae_optimizer.step()
+        vgae_scheduler.step()
 
-        y_pred = predictor(z)
+        y_pred = predictor(z.detach())
         loss = criterion(y_pred[train_mask_sub], full_data.y[train_mask_h])
-        total_loss = recon_loss + kl_loss + loss
-        total_loss.backward()
-        combined_optimizer.step()
-        combined_scheduler.step()
+        loss.backward()
+        pred_optimizer.step()
+        pred_scheduler.step()
+        # total_loss = recon_loss + kl_loss + loss
+        # total_loss.backward()
+        # combined_optimizer.step()
+        # combined_scheduler.step()
 
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
