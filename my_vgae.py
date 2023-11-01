@@ -11,18 +11,18 @@ class Encoder(torch.nn.Module):
         self.norm0 = BatchNorm1d(5)
         self.conv1 = GCNConv(
             in_channels=5,
-            out_channels=512
+            out_channels=128
         )
-        self.norm1 = BatchNorm1d(512)
+        self.norm1 = BatchNorm1d(128)
 
         self.conv2 = GCNConv(
-            in_channels=512,
-            out_channels=512
+            in_channels=128,
+            out_channels=128
         )
-        self.norm2 = BatchNorm1d(512)
+        self.norm2 = BatchNorm1d(128)
 
-        self.mu = Linear(512, 512)
-        self.log_std = Linear(512, 512)
+        self.mu = Linear(128, 128)
+        self.log_std = Linear(128, 128)
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
@@ -42,9 +42,9 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(512, 512)
-        self.fc2 = Linear(512, 512)
-        self.fc3 = Linear(512, 512)
+        self.fc1 = Linear(128, 128)
+        self.fc2 = Linear(128, 128)
+        self.fc3 = Linear(128, 128)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """
@@ -66,12 +66,12 @@ class SimplePredictor(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.dp = 0.2
-        self.norm0 = BatchNorm1d(512)
-        self.fc1 = Linear(512, 512)
-        self.norm1 = BatchNorm1d(512)
-        self.fc2 = Linear(512, 512)
-        self.norm2 = BatchNorm1d(512)
-        self.fc3 = Linear(512, 512)
+        self.norm0 = BatchNorm1d(128)
+        self.fc1 = Linear(128, 128)
+        self.norm1 = BatchNorm1d(128)
+        self.fc2 = Linear(128, 128)
+        self.norm2 = BatchNorm1d(128)
+        self.fc3 = Linear(128, 128)
 
     def forward(self, h):
         h = self.norm0(h)
