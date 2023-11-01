@@ -114,7 +114,7 @@ def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask)
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Predict on the sub-graph
-            out = vgae_model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
+            out = vgae_model.encode(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
             out = predictor(out)
 
             # Use the test_node_position to get the prediction and true label
