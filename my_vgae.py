@@ -41,7 +41,7 @@ class Encoder(torch.nn.Module):
         # h = F.dropout(h, p=self.dp, training=self.training)
 
         mu = self.mu(h)
-        log_std = torch.log(self.log_std(h))
+        log_std = self.log_std(h)
 
         return mu, log_std
 

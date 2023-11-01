@@ -72,9 +72,9 @@ if __name__ == "__main__":
     for epoch in t:
         vgae_model.train()
         predictor.train()
-        # combined_optimizer.zero_grad()
-        vgae_optimizer.zero_grad()
-        predictor.zero_grad()
+        combined_optimizer.zero_grad()
+        # vgae_optimizer.zero_grad()
+        # predictor.zero_grad()
 
         z = vgae_model.encode(full_data.train_x[train_mask_f], train_edge_index, train_edge_weight)
         adj_reconstructed = vgae_model.decode(z)
@@ -82,23 +82,25 @@ if __name__ == "__main__":
         recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
         kl_loss = vgae_model.kl_loss()
         vgae_loss = recon_loss + kl_loss
-        vgae_loss.backward()
-        vgae_optimizer.step()
-        vgae_scheduler.step()
+        # vgae_loss.backward()
+        # vgae_optimizer.step()
+        # vgae_scheduler.step()
 
-        y_pred = predictor(z.detach())
+        y_pred = predictor(z)
         loss = criterion(y_pred[train_mask_sub], full_data.y[train_mask_h])
-        loss.backward()
-        pred_optimizer.step()
-        pred_scheduler.step()
-        # total_loss = recon_loss + kl_loss + loss
-        # total_loss.backward()
-        # combined_optimizer.step()
-        # combined_scheduler.step()
+        # loss.backward()
+        # pred_optimizer.step()
+        # pred_scheduler.step()
+        total_loss = recon_loss + kl_loss + loss
+        total_loss.backward()
+        combined_optimizer.step()
+        combined_scheduler.step()
 
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
-        wandb.log({"loss": loss.item()})
+        wandb.log({"ce_loss": loss.item()})
+        wandb.log({"kl_loss": kl_loss.item()})
+        wandb.log({"recon_loss": recon_loss.item()})
 
     # TEST one by one
     y_true, y_pred = vgae_evaluate_one_by_one(vgae_model, predictor, full_data, train_mask_f, test_mask)
