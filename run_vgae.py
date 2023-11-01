@@ -56,7 +56,7 @@ if __name__ == "__main__":
     combined_optimizer = torch.optim.Adam(combined_parameters, lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     combined_scheduler = StepLR(combined_optimizer, step_size=500, gamma=0.1)
 
-    wandb.watch(vgae_model, log="all", log_freq=10)
+    # wandb.watch(vgae_model, log="all", log_freq=10)
 
     t = trange(wandb.config.epochs, leave=True)
     losses = []

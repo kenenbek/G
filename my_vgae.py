@@ -13,10 +13,10 @@ class Encoder(torch.nn.Module):
                                out_channels=128,
                                heads=2,
                                edge_dim=1,
-                               aggr="mean",
-                               concat=False,
+                               aggr="add",
+                               concat=True,
                                share_weights=False)
-        self.norm1 = BatchNorm1d(128)
+        self.norm1 = BatchNorm1d(256)
 
         # self.conv2 = GATv2Conv(in_channels=128,
         #                        out_channels=128,
@@ -27,8 +27,8 @@ class Encoder(torch.nn.Module):
         #                        share_weights=False)
         # self.norm2 = BatchNorm1d(128)
 
-        self.mu = Linear(128, 128)
-        self.log_std = Linear(128, 128)
+        self.mu = Linear(256, 128)
+        self.log_std = Linear(256, 128)
 
         self.dp = 0.2
 
