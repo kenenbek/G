@@ -15,7 +15,7 @@ class Encoder(torch.nn.Module):
         )
         self.norm1 = BatchNorm1d(128)
 
-        self.conv1 = GCNConv(
+        self.conv2 = GCNConv(
             in_channels=128,
             out_channels=128
         )
