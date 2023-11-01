@@ -18,14 +18,14 @@ class Encoder(torch.nn.Module):
                                share_weights=False)
         self.norm1 = BatchNorm1d(32)
 
-        # self.conv2 = GATv2Conv(in_channels=128,
-        #                        out_channels=128,
-        #                        heads=2,
-        #                        edge_dim=1,
-        #                        aggr="mean",
-        #                        concat=False,
-        #                        share_weights=False)
-        # self.norm2 = BatchNorm1d(128)
+        self.conv2 = GATv2Conv(in_channels=32,
+                               out_channels=32,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="mean",
+                               concat=True,
+                               share_weights=False)
+        self.norm2 = BatchNorm1d(32)
 
         self.mu = GATv2Conv(in_channels=32,
                             out_channels=32,
@@ -48,8 +48,8 @@ class Encoder(torch.nn.Module):
         h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        # h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
-        # h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
 
         mu = self.mu(h, edge_index, edge_weight)
         log_std = self.log_std(h, edge_index, edge_weight)
