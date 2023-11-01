@@ -27,9 +27,20 @@ class Encoder(torch.nn.Module):
         #                        share_weights=False)
         # self.norm2 = BatchNorm1d(128)
 
-        self.mu = Linear(256, 128)
-        self.log_std = Linear(256, 128)
-
+        self.mu = GATv2Conv(in_channels=256,
+                            out_channels=128,
+                            heads=2,
+                            edge_dim=1,
+                            aggr="add",
+                            concat=False,
+                            share_weights=False)
+        self.log_std = GATv2Conv(in_channels=256,
+                                 out_channels=128,
+                                 heads=2,
+                                 edge_dim=1,
+                                 aggr="add",
+                                 concat=False,
+                                 share_weights=False)
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
