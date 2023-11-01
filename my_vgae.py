@@ -9,20 +9,38 @@ class Encoder(torch.nn.Module):
         super().__init__()
         torch.manual_seed(1234)
         self.norm0 = BatchNorm1d(5)
-        self.conv1 = GCNConv(
-            in_channels=5,
-            out_channels=128
-        )
+        self.conv1 = GATv2Conv(in_channels=5,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False)
         self.norm1 = BatchNorm1d(128)
 
-        self.conv2 = GCNConv(
-            in_channels=128,
-            out_channels=128
-        )
+        self.conv2 = GATv2Conv(in_channels=128,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False)
         self.norm2 = BatchNorm1d(128)
 
-        self.mu = Linear(128, 128)
-        self.log_std = Linear(128, 128)
+        self.mu = GATv2Conv(in_channels=128,
+                            out_channels=128,
+                            heads=2,
+                            edge_dim=1,
+                            aggr="add",
+                            concat=False,
+                            share_weights=False)
+        self.log_std = GATv2Conv(in_channels=128,
+                                 out_channels=128,
+                                 heads=2,
+                                 edge_dim=1,
+                                 aggr="add",
+                                 concat=False,
+                                 share_weights=False)
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
@@ -33,8 +51,8 @@ class Encoder(torch.nn.Module):
         h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        mu = self.mu(h)
-        log_std = self.log_std(h)
+        mu = self.mu(h, edge_index, edge_weight)
+        log_std = self.log_std(h, edge_index, edge_weight)
 
         return mu, log_std
 
