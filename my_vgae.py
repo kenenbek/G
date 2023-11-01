@@ -51,8 +51,8 @@ class Encoder(torch.nn.Module):
         # h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
         # h = F.dropout(h, p=self.dp, training=self.training)
 
-        mu = self.mu(h)
-        log_std = self.log_std(h)
+        mu = self.mu(h, edge_index, edge_weight)
+        log_std = self.log_std(h, edge_index, edge_weight)
 
         return mu, log_std
 
