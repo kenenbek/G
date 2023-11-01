@@ -47,10 +47,19 @@ class Encoder(torch.nn.Module):
 
 
 class WeightedInnerProductDecoder(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc1 = Linear(128, 128)
+        self.fc2 = Linear(128, 128)
+        self.fc3 = Linear(128, 128)
+
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """
         Decodes the latent variables 'z' into edge weights for the given node-pairs 'edge_index'.
         """
+        z = self.fc1(z).relu()
+        z = self.fc2(z).relu()
+        z = self.fc3(z)
         return torch.matmul(z, z.t())  # (z[edge_index[0]] * z[edge_index[1]]).sum(dim=1)
 
     def forward_all(self, z: torch.Tensor) -> torch.Tensor:
