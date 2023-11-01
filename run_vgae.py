@@ -21,7 +21,7 @@ if __name__ == "__main__":
     wandb.init(project="Genomics", entity="kenenbek")
 
     # Store configurations/hyperparameters
-    wandb.config.lr = 0.0001
+    wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
     wandb.config.epochs = 5000
 
