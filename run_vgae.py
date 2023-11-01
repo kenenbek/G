@@ -92,7 +92,7 @@ if __name__ == "__main__":
         # loss.backward()
         # pred_optimizer.step()
         # pred_scheduler.step()
-        total_loss = recon_loss + kl_loss + loss
+        total_loss = recon_loss + kl_loss + 5 * loss
         total_loss.backward()
         combined_optimizer.step()
         combined_scheduler.step()

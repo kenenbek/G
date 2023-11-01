@@ -115,7 +115,7 @@ def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask)
 
             # Predict on the sub-graph
             out = vgae_model.encode(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
-            out = predictor(out)
+            out = predictor(out, sub_data.edge_index, sub_data.edge_attr)
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
