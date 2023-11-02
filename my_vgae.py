@@ -10,32 +10,32 @@ class Encoder(torch.nn.Module):
         torch.manual_seed(1234)
         self.norm0 = BatchNorm1d(5)
         self.conv1 = GATv2Conv(in_channels=5,
-                               out_channels=128,
+                               out_channels=2048,
                                heads=2,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
                                share_weights=False)
-        self.norm1 = BatchNorm1d(128)
+        self.norm1 = BatchNorm1d(2048)
 
-        self.conv2 = GATv2Conv(in_channels=128,
-                               out_channels=128,
+        self.conv2 = GATv2Conv(in_channels=2048,
+                               out_channels=2048,
                                heads=2,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
                                share_weights=False)
-        self.norm2 = BatchNorm1d(128)
+        self.norm2 = BatchNorm1d(2048)
 
-        self.mu = GATv2Conv(in_channels=128,
-                            out_channels=128,
+        self.mu = GATv2Conv(in_channels=2048,
+                            out_channels=2048,
                             heads=2,
                             edge_dim=1,
                             aggr="add",
                             concat=False,
                             share_weights=False)
-        self.log_std = GATv2Conv(in_channels=128,
-                                 out_channels=128,
+        self.log_std = GATv2Conv(in_channels=2048,
+                                 out_channels=2048,
                                  heads=2,
                                  edge_dim=1,
                                  aggr="add",
@@ -60,9 +60,9 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(128, 128)
-        self.fc2 = Linear(128, 128)
-        self.fc3 = Linear(128, 128)
+        self.fc1 = Linear(2048, 2048)
+        self.fc2 = Linear(2048, 2048)
+        self.fc3 = Linear(2048, 2048)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """

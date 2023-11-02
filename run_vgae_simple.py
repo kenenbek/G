@@ -75,7 +75,8 @@ if __name__ == "__main__":
         vgae_optimizer.step()
         vgae_scheduler.step()
 
-        wandb.log({"vgae_loss": vgae_loss.item()})
+        wandb.log({"kl_loss": kl_loss.item()})
+        wandb.log({"recon_loss": recon_loss.item()})
 
     torch.save(vgae_model.state_dict(), "vgae.pt")
     wandb.finish()
