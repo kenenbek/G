@@ -28,14 +28,14 @@ class Encoder(torch.nn.Module):
         self.norm2 = BatchNorm1d(128)
 
         self.mu = GATv2Conv(in_channels=128,
-                            out_channels=128,
+                            out_channels=32,
                             heads=2,
                             edge_dim=1,
                             aggr="add",
                             concat=False,
                             share_weights=False)
         self.log_std = GATv2Conv(in_channels=128,
-                                 out_channels=128,
+                                 out_channels=32,
                                  heads=2,
                                  edge_dim=1,
                                  aggr="add",
@@ -60,9 +60,9 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(128, 128)
-        self.fc2 = Linear(128, 128)
-        self.fc3 = Linear(128, 128)
+        self.fc1 = Linear(32, 32)
+        self.fc2 = Linear(32, 32)
+        self.fc3 = Linear(32, 32)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """

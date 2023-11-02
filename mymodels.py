@@ -80,8 +80,8 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(1234)
-        self.norm0 = BatchNorm1d(128)
-        self.conv1 = GATv2Conv(in_channels=128,
+        self.norm0 = BatchNorm1d(32)
+        self.conv1 = GATv2Conv(in_channels=32,
                                out_channels=128,
                                heads=2,
                                edge_dim=1,
