@@ -60,9 +60,9 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(32, 32)
-        self.fc2 = Linear(32, 32)
-        self.fc3 = Linear(32, 32)
+        self.fc1 = Linear(1024, 1024)
+        self.fc2 = Linear(1024, 1024)
+        self.fc3 = Linear(1024, 1024)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """
