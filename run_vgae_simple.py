@@ -59,11 +59,13 @@ if __name__ == "__main__":
 
     weighted_matrix = to_dense_adj(train_edge_index, edge_attr=train_edge_weight).squeeze(0).squeeze(-1)
 
+    ones_tensor = torch.ones_like(full_data.train_x[train_mask_f])
+
     for epoch in t:
         vgae_model.train()
         vgae_optimizer.zero_grad()
 
-        z = vgae_model.encode(full_data.train_x[train_mask_f], train_edge_index, train_edge_weight)
+        z = vgae_model.encode(ones_tensor, train_edge_index, train_edge_weight)
         adj_reconstructed = vgae_model.decode(z)
 
         recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
@@ -73,7 +75,7 @@ if __name__ == "__main__":
         vgae_optimizer.step()
         vgae_scheduler.step()
 
-        wandb.log({"kl_loss": vgae_loss.item()})
+        wandb.log({"vgae_loss": vgae_loss.item()})
 
     torch.save(vgae_model.state_dict(), "vgae.pt")
     wandb.finish()
