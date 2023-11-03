@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, VGAE, GATv2Conv
-from torch.nn import Linear, BatchNorm1d
+from torch.nn import Linear, BatchNorm1d, Identity
 
 
 class Encoder(torch.nn.Module):
@@ -73,12 +73,6 @@ class WeightedInnerProductDecoder(torch.nn.Module):
         z = self.fc3(z)
         return torch.matmul(z, z.t())  # (z[edge_index[0]] * z[edge_index[1]]).sum(dim=1)
 
-    def forward_all(self, z: torch.Tensor) -> torch.Tensor:
-        """
-        Decodes the latent variables 'z' into a dense adjacency matrix representing edge weights.
-        """
-        return torch.matmul(z, z.t())
-
 
 class SimplePredictor(torch.nn.Module):
     def __init__(self):
@@ -105,7 +99,7 @@ class EncoderGAE(torch.nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(1234)
-        self.norm0 = BatchNorm1d(5)
+        self.norm0 = Identity()  # BatchNorm1d(5)
         self.conv1 = GATv2Conv(in_channels=5,
                                out_channels=512,
                                heads=2,
@@ -113,7 +107,7 @@ class EncoderGAE(torch.nn.Module):
                                aggr="add",
                                concat=False,
                                share_weights=False)
-        self.norm1 = BatchNorm1d(512)
+        self.norm1 = Identity()  # BatchNorm1d(512)
 
         self.conv2 = GATv2Conv(in_channels=512,
                                out_channels=512,
@@ -122,12 +116,12 @@ class EncoderGAE(torch.nn.Module):
                                aggr="add",
                                concat=False,
                                share_weights=False)
-        self.norm2 = BatchNorm1d(512)
+        self.norm2 = Identity()  # BatchNorm1d(512)
 
         self.fc1 = Linear(512, 512)
-        self.fc_norm1 = BatchNorm1d(512)
+        self.fc_norm1 = Identity()  # BatchNorm1d(512)
         self.fc2 = Linear(512, 512)
-        self.fc_norm2 = BatchNorm1d(512)
+        self.fc_norm2 = Identity()  # BatchNorm1d(512)
         self.fc3 = Linear(512, 512)
 
         self.dp = 0.2
