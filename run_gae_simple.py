@@ -70,13 +70,10 @@ if __name__ == "__main__":
         adj_reconstructed = gae_model.decode(z)
 
         recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
-        kl_loss = gae_model.kl_loss()
-        gae_loss = recon_loss + kl_loss
-        gae_loss.backward()
+        recon_loss.backward()
         gae_optimizer.step()
         gae_scheduler.step()
 
-        wandb.log({"kl_loss": kl_loss.item()})
         wandb.log({"recon_loss": recon_loss.item()})
 
     torch.save(gae_model.state_dict(), "gae.pt")
