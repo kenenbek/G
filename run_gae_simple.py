@@ -28,8 +28,11 @@ def reconstruct_edges(z, edge_index):
     # Gather the target node features using edge_index
     x_j = z[edge_index[1]]
 
-    result = torch.matmul(x_i, x_j)
-    return result
+    # x_i and x_j are gathered node features from the previous example
+    # Perform scalar multiplication (dot product) along the feature dimension
+    scalar_products = (x_i * x_j).sum(dim=1)
+
+    return scalar_products
 
 
 if __name__ == "__main__":
