@@ -60,13 +60,13 @@ if __name__ == "__main__":
 
     weighted_matrix = to_dense_adj(train_edge_index, edge_attr=train_edge_weight).squeeze(0).squeeze(-1)
 
-    ones_tensor = torch.ones_like(full_data.train_x[train_mask_f])
+    zeros_tensor = torch.zeros_like(full_data.train_x[train_mask_f])
 
     for epoch in t:
         gae_model.train()
         gae_optimizer.zero_grad()
 
-        z = gae_model.encode(ones_tensor, train_edge_index, train_edge_weight)
+        z = gae_model.encode(zeros_tensor, train_edge_index, train_edge_weight)
         adj_reconstructed = gae_model.decode(z)
 
         recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
