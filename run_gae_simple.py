@@ -16,6 +16,22 @@ from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_
     set_global_seed, vgae_evaluate_one_by_one
 from utils import inductive_train, to_one_hot
 
+
+def reconstruct_edges(z, edge_index):
+    # Assuming data.x is a tensor of node features [num_nodes, num_features]
+    # and edge_index is a tensor of shape [2, num_edges] where the first row contains
+    # the indices of the source nodes and the second row contains the indices of the target nodes.
+
+    # Gather the source node features using edge_index
+    x_i = z[edge_index[0]]
+
+    # Gather the target node features using edge_index
+    x_j = z[edge_index[1]]
+
+    result = torch.matmul(x_i, x_j)
+    return result
+
+
 if __name__ == "__main__":
     set_global_seed(42)
 
@@ -69,7 +85,9 @@ if __name__ == "__main__":
         z = gae_model.encode(zeros_tensor, train_edge_index, train_edge_weight)
         adj_reconstructed = gae_model.decode(z)
 
-        recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
+        pred_edge_weights = reconstruct_edges(z, train_edge_index)
+
+        recon_loss = F.mse_loss(pred_edge_weights, train_edge_weight)
         recon_loss.backward()
         gae_optimizer.step()
         gae_scheduler.step()
