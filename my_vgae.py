@@ -60,9 +60,9 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(2048, 2048)
-        self.fc2 = Linear(2048, 2048)
-        self.fc3 = Linear(2048, 2048)
+        self.fc1 = Linear(512, 512)
+        self.fc2 = Linear(512, 512)
+        self.fc3 = Linear(512, 512)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """
@@ -98,4 +98,54 @@ class SimplePredictor(torch.nn.Module):
         h = self.norm2(self.fc2(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
         h = self.fc3(h)
+        return h
+
+
+class EncoderGAE(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+        self.norm0 = BatchNorm1d(5)
+        self.conv1 = GATv2Conv(in_channels=5,
+                               out_channels=512,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False)
+        self.norm1 = BatchNorm1d(512)
+
+        self.conv2 = GATv2Conv(in_channels=512,
+                               out_channels=512,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False)
+        self.norm2 = BatchNorm1d(512)
+
+        self.fc1 = Linear(512, 512)
+        self.fc_norm1 = BatchNorm1d(512)
+        self.fc2 = Linear(512, 512)
+        self.fc_norm2 = BatchNorm1d(512)
+        self.fc3 = Linear(512, 512)
+
+        self.dp = 0.2
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.norm0(h)
+        h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc_norm1(self.fc1(h)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc_norm2(self.fc2(h)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc3(h)
+
         return h
