@@ -76,7 +76,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
             # Clean subgraph
             unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float)
-            input_x = sub_data.x_one_hot().clone()
+            input_x = sub_data.x_one_hot.clone()
             input_x[test_node_position] = unknown_label
 
             edge_attr_multi = sub_data.edge_attr_multi.clone()
