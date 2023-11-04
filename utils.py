@@ -75,6 +75,10 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Predict on the sub-graph
+            mask = sub_data.edge_index[0] != test_node_position
+            sub_data.edge_index = sub_data.edge_index[:, mask]
+            sub_data.edge_attr = sub_data.edge_attr[mask]
+
             out = model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
 
             # Use the test_node_position to get the prediction and true label
@@ -85,7 +89,6 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             pred_list.append(pred)
 
     return y_true_list, pred_list
-
 
 
 def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask):
@@ -125,6 +128,7 @@ def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask)
             pred_list.append(pred)
 
     return y_true_list, pred_list
+
 
 def get_neighbors(node_id, edge_index):
     # Returns the indices where the source node (node_id) appears in the edge_index[0]
@@ -260,4 +264,3 @@ def ordinary_training(model, optimizer, scheduler, data, criterion):
     losses.append(loss)
     t.set_description(str(round(loss.item(), 6)))
     wandb.log({"loss": loss.item()})
-
