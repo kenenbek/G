@@ -45,23 +45,23 @@ class AttnGCN(torch.nn.Module):
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm1(self.conv1(h, edge_index, edge_weight)).leaky_relu()
+        h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
         h_initial = h.clone()
-        h = self.norm2(self.conv2(h, edge_index, edge_weight)).leaky_relu()
+        h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
         h += h_initial
 
         h_initial = h.clone()
-        h = self.norm3(self.conv3(h, edge_index, edge_weight)).leaky_relu()
+        h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
         h += h_initial
 
-        h = self.fc_norm1(self.fc1(h)).leaky_relu()
+        h = self.fc_norm1(self.fc1(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.fc_norm2(self.fc2(h)).leaky_relu()
+        h = self.fc_norm2(self.fc2(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.fc3(h)
