@@ -77,7 +77,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # Predict on the sub-graph
             mask = sub_data.edge_index[0] != test_node_position
             sub_data.edge_index = sub_data.edge_index[:, mask]
-            sub_data.edge_attr = sub_data.edge_attr_multi[mask]
+            sub_data.edge_attr_multi = sub_data.edge_attr_multi[mask]
 
             out = model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr_multi)
 
