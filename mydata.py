@@ -72,8 +72,8 @@ class MyDataset(Dataset):
                 eam2 = [0, 0, 0, 0, 0, 0]
                 eam1[ind[label1]] = ibd_sum
                 eam2[ind[label2]] = ibd_sum
-                edge_attr_multi.append([ibd_sum])
-                edge_attr_multi.append([ibd_sum])
+                edge_attr_multi.append(eam1)
+                edge_attr_multi.append(eam2)
 
             y_labels = dict(sorted(y_labels.items()))
             y = torch.Tensor(list(y_labels.values())).type(torch.long)
