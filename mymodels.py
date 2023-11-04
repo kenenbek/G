@@ -15,7 +15,7 @@ class AttnGCN(torch.nn.Module):
         self.conv1 = MYGATv2Conv(in_channels=5,
                                  out_channels=512,
                                  heads=2,
-                                 edge_dim=1,
+                                 edge_dim=6,
                                  aggr="mean",
                                  concat=False,
                                  share_weights=False)

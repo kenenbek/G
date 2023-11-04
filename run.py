@@ -29,7 +29,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 1000
+    wandb.config.epochs = 500
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -59,15 +59,15 @@ if __name__ == "__main__":
 
     # Extract the subgraph associated with the training nodes
     train_nodes = torch.nonzero(train_mask_f).squeeze()
-    train_edge_index, train_edge_weight = subgraph(
-        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
+    train_edge_index, train_edge_attr_multi = subgraph(
+        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
     )
 
     for epoch in t:
         model.train()
         optimizer.zero_grad()
 
-        out = model(full_data.train_x[train_mask_f], train_edge_index, train_edge_weight)
+        out = model(full_data.train_x[train_mask_f], train_edge_index, train_edge_attr_multi)
         loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
         loss.backward()
         optimizer.step()

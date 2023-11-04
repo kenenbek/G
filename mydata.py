@@ -41,6 +41,7 @@ class MyDataset(Dataset):
         for raw_path in self.raw_paths:
             edge_index = []
             edge_attr = []
+            edge_attr_multi = []
 
             y_labels = {}
             x_data = defaultdict(lambda: (5 * [0]))
@@ -67,19 +68,28 @@ class MyDataset(Dataset):
                 y_labels[id1] = ind[label1]
                 y_labels[id2] = ind[label2]
 
+                eam1 = [0, 0, 0, 0, 0, 0]
+                eam2 = [0, 0, 0, 0, 0, 0]
+                eam1[ind[label1]] = ibd_sum
+                eam2[ind[label2]] = ibd_sum
+                edge_attr_multi.append([ibd_sum])
+                edge_attr_multi.append([ibd_sum])
+
             y_labels = dict(sorted(y_labels.items()))
             y = torch.Tensor(list(y_labels.values())).type(torch.long)
 
             x_data = dict(sorted(x_data.items()))
             x = torch.Tensor(list(x_data.values())).type(torch.float)
             edge_attr = torch.Tensor(edge_attr).type(torch.float).contiguous()
+            edge_attr_multi = torch.Tensor(edge_attr_multi).type(torch.float).contiguous()
             edge_index = torch.Tensor(edge_index).type(torch.long).t().contiguous()
 
-            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1).type(torch.float)
+            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1 + 1).type(torch.float)
 
             data = MyData(x=x,
                           edge_index=edge_index,
                           edge_attr=edge_attr,
+                          edge_attr_multi=edge_attr_multi,
                           x_one_hot=x_one_hot,
                           y=y)
             torch.save(data, osp.join(self.processed_dir, f'data_{idx}.pt'))
