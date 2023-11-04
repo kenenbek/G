@@ -4,91 +4,22 @@ from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
 
-
-class TransformNet(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        torch.manual_seed(1234)
-        self.norm0 = BatchNorm1d(5)
-        self.att_conv1 = TransformerConv(in_channels=5,
-                                         out_channels=128,
-                                         heads=2,
-                                         concat=False,
-                                         beta=False,
-                                         dropout=0.2,
-                                         edge_dim=1,
-                                         root_weight=True
-                                         )
-        self.att_conv1_norm = BatchNorm1d(128)
-
-        self.att_conv2 = TransformerConv(in_channels=128,
-                                         out_channels=128,
-                                         heads=2,
-                                         concat=False,
-                                         beta=False,
-                                         dropout=0.2,
-                                         edge_dim=1,
-                                         root_weight=True
-                                         )
-        self.att_conv2_norm = BatchNorm1d(128)
-        self.att_conv3 = TransformerConv(in_channels=128,
-                                         out_channels=128,
-                                         heads=2,
-                                         concat=False,
-                                         beta=False,
-                                         dropout=0.2,
-                                         edge_dim=1,
-                                         root_weight=True
-                                         )
-        self.att_conv3_norm = BatchNorm1d(128)
-        self.fc1 = Linear(128, 128)
-        self.fc1_norm = BatchNorm1d(128)
-        self.fc2 = Linear(128, 5)
-
-        self.dp = 0.2
-
-    def forward(self, h, edge_index, edge_weight):
-        h = self.norm0(h)
-        h = self.att_conv1(h, edge_index, edge_weight).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv1_norm(h)
-
-        h_initial = h.clone()
-        h = self.att_conv2(h, edge_index, edge_weight).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv2_norm(h)
-        h += h_initial
-
-        h_initial = h.clone()
-        h = self.att_conv3(h, edge_index, edge_weight).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv3_norm(h)
-        h += h_initial
-
-        h_initial = h.clone()
-        h = self.fc1(h).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc1_norm(h)
-        h += h_initial
-
-        h = self.fc2(h)
-
-        return h
+from my_gatconv import MYGATv2Conv
 
 
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(1234)
-        self.norm0 = BatchNorm1d(1024)
-        self.conv1 = GATv2Conv(in_channels=1024,
-                               out_channels=1024,
-                               heads=2,
-                               edge_dim=1,
-                               aggr="mean",
-                               concat=False,
-                               share_weights=False)
-        self.norm1 = BatchNorm1d(1024)
+        self.norm0 = BatchNorm1d(5)
+        self.conv1 = MYGATv2Conv(in_channels=5,
+                                 out_channels=512,
+                                 heads=2,
+                                 edge_dim=1,
+                                 aggr="mean",
+                                 concat=False,
+                                 share_weights=False)
+        self.norm1 = BatchNorm1d(512)
 
         # self.conv2 = GATv2Conv(in_channels=128,
         #                        out_channels=128,
@@ -106,11 +37,11 @@ class AttnGCN(torch.nn.Module):
         #                        concat=False,
         #                        share_weights=True)
         # self.norm3 = BatchNorm1d(128)
-        self.fc1 = Linear(1024, 1024)
-        self.fc_norm1 = BatchNorm1d(1024)
-        self.fc2 = Linear(1024, 1024)
-        self.fc_norm2 = BatchNorm1d(1024)
-        self.fc3 = Linear(1024, 5)
+        self.fc1 = Linear(512, 512)
+        self.fc_norm1 = BatchNorm1d(512)
+        self.fc2 = Linear(512, 512)
+        self.fc_norm2 = BatchNorm1d(512)
+        self.fc3 = Linear(512, 5)
 
         self.dp = 0.2
 
@@ -408,5 +339,76 @@ class SAGE(torch.nn.Module):
 
         h = self.conv3(h, edge_index, edge_weight)
         h = F.dropout(h, p=self.dp, training=self.training)
+
+        return h
+
+
+class TransformNet(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        torch.manual_seed(1234)
+        self.norm0 = BatchNorm1d(5)
+        self.att_conv1 = TransformerConv(in_channels=5,
+                                         out_channels=128,
+                                         heads=2,
+                                         concat=False,
+                                         beta=False,
+                                         dropout=0.2,
+                                         edge_dim=1,
+                                         root_weight=True
+                                         )
+        self.att_conv1_norm = BatchNorm1d(128)
+
+        self.att_conv2 = TransformerConv(in_channels=128,
+                                         out_channels=128,
+                                         heads=2,
+                                         concat=False,
+                                         beta=False,
+                                         dropout=0.2,
+                                         edge_dim=1,
+                                         root_weight=True
+                                         )
+        self.att_conv2_norm = BatchNorm1d(128)
+        self.att_conv3 = TransformerConv(in_channels=128,
+                                         out_channels=128,
+                                         heads=2,
+                                         concat=False,
+                                         beta=False,
+                                         dropout=0.2,
+                                         edge_dim=1,
+                                         root_weight=True
+                                         )
+        self.att_conv3_norm = BatchNorm1d(128)
+        self.fc1 = Linear(128, 128)
+        self.fc1_norm = BatchNorm1d(128)
+        self.fc2 = Linear(128, 5)
+
+        self.dp = 0.2
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.norm0(h)
+        h = self.att_conv1(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv1_norm(h)
+
+        h_initial = h.clone()
+        h = self.att_conv2(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv2_norm(h)
+        h += h_initial
+
+        h_initial = h.clone()
+        h = self.att_conv3(h, edge_index, edge_weight).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.att_conv3_norm(h)
+        h += h_initial
+
+        h_initial = h.clone()
+        h = self.fc1(h).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.fc1_norm(h)
+        h += h_initial
+
+        h = self.fc2(h)
 
         return h

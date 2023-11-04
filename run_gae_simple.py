@@ -30,7 +30,7 @@ def reconstruct_edges(z, edge_index):
 
     # x_i and x_j are gathered node features from the previous example
     # Perform scalar multiplication (dot product) along the feature dimension
-    scalar_products = (x_i * x_j).sum(dim=1)
+    scalar_products = (x_i * x_j).sum(dim=1).unsqueeze(1)
 
     return scalar_products
 
