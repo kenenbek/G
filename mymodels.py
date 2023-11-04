@@ -11,8 +11,7 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         torch.manual_seed(1234)
-        self.norm0 = BatchNorm1d(5)
-        self.conv1 = MYGATv2Conv(in_channels=5,
+        self.conv1 = MYGATv2Conv(in_channels=6,
                                  out_channels=512,
                                  heads=2,
                                  edge_dim=6,
@@ -46,7 +45,6 @@ class AttnGCN(torch.nn.Module):
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm0(h)
         h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
