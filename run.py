@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 600
+    wandb.config.epochs = 1000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        x, edges, attr = change_input(full_data.train_x[train_mask_f], train_edge_index, train_edge_attr_multi)
+        x, edges, attr = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
 
         out = model(x, edges, attr)
         loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])

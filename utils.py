@@ -85,7 +85,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             edge_attr_multi[mask] = new_edge_attr[mask]
 
-            out = model(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr_multi)
+            out = model(input_x, sub_data.edge_index, edge_attr_multi)
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
