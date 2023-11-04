@@ -15,19 +15,19 @@ class AttnGCN(torch.nn.Module):
                                  out_channels=512,
                                  heads=2,
                                  edge_dim=6,
-                                 aggr="mean",
+                                 aggr="add",
                                  concat=False,
                                  share_weights=False)
         self.norm1 = BatchNorm1d(512)
 
-        # self.conv2 = GATv2Conv(in_channels=128,
-        #                        out_channels=128,
-        #                        heads=2,
-        #                        edge_dim=1,
-        #                        aggr="mean",
-        #                        concat=False,
-        #                        share_weights=True)
-        # self.norm2 = BatchNorm1d(128)
+        self.conv2 = MYGATv2Conv(in_channels=512,
+                                 out_channels=512,
+                                 heads=2,
+                                 edge_dim=6,
+                                 aggr="add",
+                                 concat=False,
+                                 share_weights=False)
+        self.norm2 = BatchNorm1d(512)
         # self.conv3 = GATv2Conv(in_channels=128,
         #                        out_channels=128,
         #                        heads=2,
@@ -48,10 +48,10 @@ class AttnGCN(torch.nn.Module):
         h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        # h_initial = h.clone()
-        # h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        # h += h_initial
+        h_initial = h.clone()
+        h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h += h_initial
         #
         # h_initial = h.clone()
         # h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
