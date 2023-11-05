@@ -13,34 +13,34 @@ class AttnGCN(torch.nn.Module):
         torch.manual_seed(1234)
         self.conv1 = MYGATv2Conv(in_channels=6,
                                  out_channels=128,
-                                 heads=4,
+                                 heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm1 = BatchNorm1d(512)
+        self.norm1 = BatchNorm1d(256)
 
-        self.conv2 = MYGATv2Conv(in_channels=512,
+        self.conv2 = MYGATv2Conv(in_channels=256,
                                  out_channels=128,
-                                 heads=4,
+                                 heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm2 = BatchNorm1d(512)
-        self.conv3 = MYGATv2Conv(in_channels=512,
+        self.norm2 = BatchNorm1d(256)
+        self.conv3 = MYGATv2Conv(in_channels=256,
                                  out_channels=128,
-                                 heads=4,
+                                 heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm3 = BatchNorm1d(512)
-        self.fc1 = Linear(512, 512)
-        self.fc_norm1 = BatchNorm1d(512)
-        self.fc2 = Linear(512, 512)
-        self.fc_norm2 = BatchNorm1d(512)
-        self.fc3 = Linear(512, 5)
+        self.norm3 = BatchNorm1d(256)
+        self.fc1 = Linear(256, 256)
+        self.fc_norm1 = BatchNorm1d(256)
+        self.fc2 = Linear(256, 256)
+        self.fc_norm2 = BatchNorm1d(256)
+        self.fc3 = Linear(256, 5)
 
         self.dp = 0.2
 
@@ -49,16 +49,16 @@ class AttnGCN(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        # h_initial = h.clone()
+        h_initial = h.clone()
         h = self.norm2(self.conv2(h, edge_index, edge_weight))
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
-        # h += h_initial
+        h += h_initial
 
-        # h_initial = h.clone()
-        # h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        # h += h_initial
+        h_initial = h.clone()
+        h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
+        h = F.dropout(h, p=self.dp, training=self.training)
+        h += h_initial
 
         h = self.fc_norm1(self.fc1(h))
         h = F.leaky_relu(h)
