@@ -81,7 +81,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
 
-    wandb.watch(model, log="all", log_freq=10)
+    # wandb.watch(model, log="all", log_freq=10)
 
     t = trange(wandb.config.epochs, leave=True)
     losses = []
@@ -124,6 +124,8 @@ if __name__ == "__main__":
     wandb.log(metrics)
 
     torch.save(model.state_dict(), "attn_full.pt")
+    torch.save(y_true, "y_true.pt")
+    torch.save(y_pred, "y_pred.pt")
 
     # Create a new artifact
     artifact = wandb.Artifact('model-artifact', type='model')
