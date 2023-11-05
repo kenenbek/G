@@ -10,7 +10,6 @@ from my_gatconv import MYGATv2Conv
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        torch.manual_seed(1234)
         self.conv1 = MYGATv2Conv(in_channels=6,
                                  out_channels=128,
                                  heads=2,
@@ -49,16 +48,16 @@ class AttnGCN(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        h_initial = h.clone()
-        h = self.norm2(self.conv2(h, edge_index, edge_weight))
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h += h_initial
-
-        h_initial = h.clone()
-        h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h += h_initial
+        # h_initial = h.clone()
+        # h = self.norm2(self.conv2(h, edge_index, edge_weight))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        # h += h_initial
+        #
+        # h_initial = h.clone()
+        # h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        # h += h_initial
 
         h = self.fc_norm1(self.fc1(h))
         h = F.leaky_relu(h)
