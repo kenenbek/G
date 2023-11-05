@@ -12,35 +12,35 @@ class AttnGCN(torch.nn.Module):
         super().__init__()
         torch.manual_seed(1234)
         self.conv1 = MYGATv2Conv(in_channels=6,
-                                 out_channels=32,
+                                 out_channels=6,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm1 = BatchNorm1d(64)
+        self.norm1 = BatchNorm1d(12)
 
-        self.conv2 = MYGATv2Conv(in_channels=64,
-                                 out_channels=32,
+        self.conv2 = MYGATv2Conv(in_channels=12,
+                                 out_channels=6,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm2 = BatchNorm1d(64)
-        self.conv3 = MYGATv2Conv(in_channels=64,
-                                 out_channels=32,
+        self.norm2 = BatchNorm1d(12)
+        self.conv3 = MYGATv2Conv(in_channels=12,
+                                 out_channels=6,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm3 = BatchNorm1d(64)
-        self.fc1 = Linear(64, 32)
-        self.fc_norm1 = BatchNorm1d(32)
-        self.fc2 = Linear(32, 32)
-        self.fc_norm2 = BatchNorm1d(32)
-        self.fc3 = Linear(32, 5)
+        self.norm3 = BatchNorm1d(12)
+        self.fc1 = Linear(12, 12)
+        self.fc_norm1 = BatchNorm1d(12)
+        self.fc2 = Linear(12, 12)
+        self.fc_norm2 = BatchNorm1d(12)
+        self.fc3 = Linear(12, 5)
 
         self.dp = 0.1
 
