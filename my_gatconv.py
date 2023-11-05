@@ -201,8 +201,8 @@ class MYGATv2Conv(MessagePassing):
         alpha = softmax(alpha, index, ptr, size_i)
         self._alpha = alpha
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
-        # return (x_j + edge_attr) * alpha.unsqueeze(-1)
-        return x_j * alpha.unsqueeze(-1)
+        return (x_j + edge_attr) * alpha.unsqueeze(-1)
+        # return x_j * alpha.unsqueeze(-1)
 
     def __repr__(self) -> str:
         return (f'{self.__class__.__name__}({self.in_channels}, '
