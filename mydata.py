@@ -45,6 +45,7 @@ class MyDataset(Dataset):
 
             y_labels = {}
             x_data = defaultdict(lambda: (5 * [0]))
+            edge_num = defaultdict(lambda: (5 * [0]))
 
             dataset_csv = pd.read_csv(raw_path)
             for index, row in tqdm(dataset_csv.iterrows()):
@@ -59,6 +60,8 @@ class MyDataset(Dataset):
 
                 x_data[id1][ind[label2]] += ibd_sum
                 x_data[id2][ind[label1]] += ibd_sum
+                edge_num[id1][ind[label2]] += 1
+                edge_num[id2][ind[label1]] += 1
 
                 edge_index.append([id1, id2])
                 edge_index.append([id2, id1])
@@ -80,6 +83,9 @@ class MyDataset(Dataset):
 
             x_data = dict(sorted(x_data.items()))
             x = torch.Tensor(list(x_data.values())).type(torch.float)
+            edge_num = dict(sorted(edge_num.items()))
+            edge_num = torch.Tensor(list(edge_num.values())).type(torch.float)
+
             edge_attr = torch.Tensor(edge_attr).type(torch.float).contiguous()
             edge_attr_multi = torch.Tensor(edge_attr_multi).type(torch.float).contiguous()
             edge_index = torch.Tensor(edge_index).type(torch.long).t().contiguous()
@@ -87,6 +93,7 @@ class MyDataset(Dataset):
             x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1 + 1).type(torch.float)
 
             data = MyData(x=x,
+                          edge_num=edge_num,
                           edge_index=edge_index,
                           edge_attr=edge_attr,
                           edge_attr_multi=edge_attr_multi,
@@ -218,8 +225,10 @@ class MyData(Data):
         known_training_set = set(available_node_indices.tolist())
 
         hidden_x_data = {}
+        edge_num = {}
         for i in range(self.x.shape[0]):
             hidden_x_data[i] = [0, 0, 0, 0, 0]
+            edge_num[i] = [0, 0, 0, 0, 0]
 
         for i, edge in tqdm(enumerate(self.edge_index.t())):
             start_node = edge[0].item()
@@ -229,11 +238,16 @@ class MyData(Data):
 
             if start_node in known_training_set:
                 hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
+                edge_num[dest_node][start_ethnicity] += 1
 
         hidden_x_data = dict(sorted(hidden_x_data.items()))
         hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
 
+        edge_num = dict(sorted(edge_num.items()))
+        edge_num = torch.Tensor(list(edge_num.values())).contiguous()
+
         self.train_x = hidden_x
+        self.train_edge_num = edge_num
 
 
 def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):
