@@ -22,7 +22,7 @@ class AttnGCN(torch.nn.Module):
         self.conv2 = MYGATv2Conv(in_channels=256,
                                  out_channels=128,
                                  heads=2,
-                                 edge_dim=6,
+                                 edge_dim=128,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
@@ -30,7 +30,7 @@ class AttnGCN(torch.nn.Module):
         self.conv3 = MYGATv2Conv(in_channels=256,
                                  out_channels=128,
                                  heads=2,
-                                 edge_dim=6,
+                                 edge_dim=128,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
