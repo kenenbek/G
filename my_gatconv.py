@@ -181,7 +181,7 @@ class MYGATv2Conv(MessagePassing):
             elif isinstance(edge_index, SparseTensor):
                 return out, edge_index.set_value(alpha, layout='coo')
         else:
-            return out
+            return out, self.edge_attr_trans
 
     def message(self, x_j: Tensor, x_i: Tensor, edge_attr: OptTensor,
                 index: Tensor, ptr: OptTensor,
@@ -201,6 +201,7 @@ class MYGATv2Conv(MessagePassing):
         alpha = softmax(alpha, index, ptr, size_i)
         self._alpha = alpha
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
+        self.edge_attr_trans = edge_attr * alpha.unsqueeze(-1)
         return (x_j + edge_attr) * alpha.unsqueeze(-1)
         # return x_j * alpha.unsqueeze(-1)
 

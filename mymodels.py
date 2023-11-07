@@ -11,51 +11,55 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = MYGATv2Conv(in_channels=6,
-                                 out_channels=512,
+                                 out_channels=128,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm1 = BatchNorm1d(1024)
+        self.norm1 = BatchNorm1d(256)
 
-        self.conv2 = MYGATv2Conv(in_channels=1024,
-                                 out_channels=512,
+        self.conv2 = MYGATv2Conv(in_channels=256,
+                                 out_channels=128,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm2 = BatchNorm1d(1024)
-        self.conv3 = MYGATv2Conv(in_channels=1024,
-                                 out_channels=512,
+        self.norm2 = BatchNorm1d(256)
+        self.conv3 = MYGATv2Conv(in_channels=256,
+                                 out_channels=128,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
                                  share_weights=False)
-        self.norm3 = BatchNorm1d(1024)
-        self.fc1 = Linear(1024, 256)
-        self.fc_norm1 = BatchNorm1d(256)
-        self.fc2 = Linear(256, 256)
-        self.fc_norm2 = BatchNorm1d(256)
-        self.fc3 = Linear(256, 5)
+        self.norm3 = BatchNorm1d(256)
+        self.fc1 = Linear(256, 128)
+        self.fc_norm1 = BatchNorm1d(128)
+        self.fc2 = Linear(128, 128)
+        self.fc_norm2 = BatchNorm1d(128)
+        self.fc3 = Linear(128, 5)
 
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm1(self.conv1(h, edge_index, edge_weight))
+        h, edge_attr_trans = self.conv1(h, edge_index, edge_weight)
+        h = self.norm1(h)
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
         h_initial = h.clone()
-        h = self.norm2(self.conv2(h, edge_index, edge_weight))
+        h, edge_attr_trans = self.conv2(h, edge_index, edge_attr_trans)
+        h = self.norm2(h)
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
         h += h_initial
 
         h_initial = h.clone()
-        h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
+        h, edge_attr_trans = self.conv3(h, edge_index, edge_attr_trans)
+        h = self.norm3(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
         h += h_initial
 
