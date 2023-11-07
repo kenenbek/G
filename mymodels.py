@@ -11,38 +11,38 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = MYGATv2Conv(in_channels=6,
-                                 out_channels=128,
+                                 out_channels=32,
                                  heads=4,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=False)
-        self.norm1 = BatchNorm1d(128)
+        self.norm1 = BatchNorm1d(32)
 
-        self.conv2 = MYGATv2Conv(in_channels=128,
-                                 out_channels=128,
+        self.conv2 = MYGATv2Conv(in_channels=32,
+                                 out_channels=32,
                                  heads=4,
-                                 edge_dim=128,
+                                 edge_dim=32,
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=False)
-        self.norm2 = BatchNorm1d(128)
-        self.conv3 = MYGATv2Conv(in_channels=128,
-                                 out_channels=128,
+        self.norm2 = BatchNorm1d(32)
+        self.conv3 = MYGATv2Conv(in_channels=32,
+                                 out_channels=32,
                                  heads=4,
-                                 edge_dim=128,
+                                 edge_dim=32,
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=False)
-        self.norm3 = BatchNorm1d(128)
-        self.fc1 = Linear(128, 128)
-        self.fc_norm1 = BatchNorm1d(128)
-        self.fc2 = Linear(128, 128)
-        self.fc_norm2 = BatchNorm1d(128)
-        self.fc3 = Linear(128, 5)
+        self.norm3 = BatchNorm1d(32)
+        self.fc1 = Linear(32, 32)
+        self.fc_norm1 = BatchNorm1d(32)
+        self.fc2 = Linear(32, 32)
+        self.fc_norm2 = BatchNorm1d(32)
+        self.fc3 = Linear(32, 5)
 
         self.dp = 0.2
 
@@ -53,7 +53,6 @@ class AttnGCN(torch.nn.Module):
         h = F.dropout(h, p=self.dp, training=self.training)
 
         edge_attr_trans = edge_attr_trans.sum(dim=1)
-        edge_attr_trans = edge_attr_trans.view(-1, 128)
         h_initial = h.clone()
         h, edge_attr_trans = self.conv2(h, edge_index, edge_attr_trans)
         h = self.norm2(h)
