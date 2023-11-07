@@ -16,7 +16,8 @@ class AttnGCN(torch.nn.Module):
                                  edge_dim=6,
                                  aggr="add",
                                  concat=True,
-                                 share_weights=False)
+                                 share_weights=False,
+                                 add_self_loops=False)
         self.norm1 = BatchNorm1d(256)
 
         self.conv2 = MYGATv2Conv(in_channels=256,
@@ -25,7 +26,8 @@ class AttnGCN(torch.nn.Module):
                                  edge_dim=128,
                                  aggr="add",
                                  concat=True,
-                                 share_weights=False)
+                                 share_weights=False,
+                                 add_self_loops=False)
         self.norm2 = BatchNorm1d(256)
         self.conv3 = MYGATv2Conv(in_channels=256,
                                  out_channels=128,
@@ -33,7 +35,8 @@ class AttnGCN(torch.nn.Module):
                                  edge_dim=128,
                                  aggr="add",
                                  concat=True,
-                                 share_weights=False)
+                                 share_weights=False,
+                                 add_self_loops=False)
         self.norm3 = BatchNorm1d(256)
         self.fc1 = Linear(256, 128)
         self.fc_norm1 = BatchNorm1d(128)
