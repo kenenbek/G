@@ -15,12 +15,12 @@ class AttnGCN(torch.nn.Module):
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
-                                 concat=True,
+                                 concat=False,
                                  share_weights=False,
                                  add_self_loops=False)
-        self.norm1 = BatchNorm1d(256)
+        self.norm1 = BatchNorm1d(128)
 
-        self.conv2 = MYGATv2Conv(in_channels=256,
+        self.conv2 = MYGATv2Conv(in_channels=128,
                                  out_channels=128,
                                  heads=2,
                                  edge_dim=128,
@@ -28,8 +28,8 @@ class AttnGCN(torch.nn.Module):
                                  concat=True,
                                  share_weights=False,
                                  add_self_loops=False)
-        self.norm2 = BatchNorm1d(256)
-        self.conv3 = MYGATv2Conv(in_channels=256,
+        self.norm2 = BatchNorm1d(128)
+        self.conv3 = MYGATv2Conv(in_channels=128,
                                  out_channels=128,
                                  heads=2,
                                  edge_dim=128,
@@ -37,8 +37,8 @@ class AttnGCN(torch.nn.Module):
                                  concat=True,
                                  share_weights=False,
                                  add_self_loops=False)
-        self.norm3 = BatchNorm1d(256)
-        self.fc1 = Linear(256, 128)
+        self.norm3 = BatchNorm1d(128)
+        self.fc1 = Linear(128, 128)
         self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.fc_norm2 = BatchNorm1d(128)
@@ -52,6 +52,8 @@ class AttnGCN(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
+        edge_attr_trans = edge_attr_trans.sum(dim=1)
+        edge_attr_trans = edge_attr_trans.view(-1, 128)
         h_initial = h.clone()
         h, edge_attr_trans = self.conv2(h, edge_index, edge_attr_trans)
         h = self.norm2(h)
@@ -59,6 +61,7 @@ class AttnGCN(torch.nn.Module):
         h = F.dropout(h, p=self.dp, training=self.training)
         h += h_initial
 
+        edge_attr_trans = edge_attr_trans.sum(dim=1)
         h_initial = h.clone()
         h, edge_attr_trans = self.conv3(h, edge_index, edge_attr_trans)
         h = self.norm3(h)
