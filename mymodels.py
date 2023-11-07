@@ -12,7 +12,7 @@ class AttnGCN(torch.nn.Module):
         super().__init__()
         self.conv1 = MYGATv2Conv(in_channels=6,
                                  out_channels=32,
-                                 heads=4,
+                                 heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=False,
@@ -22,7 +22,7 @@ class AttnGCN(torch.nn.Module):
 
         self.conv2 = MYGATv2Conv(in_channels=32,
                                  out_channels=32,
-                                 heads=4,
+                                 heads=2,
                                  edge_dim=32,
                                  aggr="add",
                                  concat=False,
@@ -31,7 +31,7 @@ class AttnGCN(torch.nn.Module):
         self.norm2 = BatchNorm1d(32)
         self.conv3 = MYGATv2Conv(in_channels=32,
                                  out_channels=32,
-                                 heads=4,
+                                 heads=2,
                                  edge_dim=32,
                                  aggr="add",
                                  concat=False,
