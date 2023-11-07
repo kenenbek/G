@@ -155,6 +155,7 @@ class MYGATv2Conv(MessagePassing):
                         "'edge_index' in a 'SparseTensor' form")
 
         # propagate_type: (x: PairTensor, edge_attr: OptTensor)
+        self.edge_index = edge_index
         out = self.propagate(edge_index, x=(x_l, x_r), edge_attr=edge_attr,
                              size=None)
 
@@ -201,8 +202,12 @@ class MYGATv2Conv(MessagePassing):
         alpha = softmax(alpha, index, ptr, size_i)
         self._alpha = alpha
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
-        self.edge_attr_trans = edge_attr * alpha.unsqueeze(-1)
-        return (x_j + edge_attr) * alpha.unsqueeze(-1)
+
+        res = (x_j + edge_attr) * alpha.unsqueeze(-1)
+        edge_attr_trans = edge_attr * alpha.unsqueeze(-1)
+        _, edge_attr_trans = remove_self_loops(self.edge_index, edge_attr_trans)
+        self.edge_attr_trans = edge_attr_trans
+        return res
         # return x_j * alpha.unsqueeze(-1)
 
     def __repr__(self) -> str:
