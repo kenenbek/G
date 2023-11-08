@@ -38,6 +38,8 @@ def reconstruct_edges(z, edge_index):
 if __name__ == "__main__":
     set_global_seed(42)
 
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     wandb.init(project="Genomics", entity="kenenbek")
 
     # Store configurations/hyperparameters
@@ -63,7 +65,7 @@ if __name__ == "__main__":
 
     gae_model = GAE(encoder=EncoderGAE(),
                     decoder=WeightedInnerProductDecoder()
-                    )
+                    ).to(device)
     gae_optimizer = torch.optim.Adam(gae_model.parameters(), lr=wandb.config.lr,
                                      weight_decay=wandb.config.weight_decay)
     gae_scheduler = StepLR(gae_optimizer, step_size=500, gamma=0.1)
@@ -84,7 +86,12 @@ if __name__ == "__main__":
 
     weighted_matrix = to_dense_adj(train_edge_index, edge_attr=train_edge_weight).squeeze(0).squeeze(-1)
 
-    zeros_tensor = torch.zeros_like(full_data.train_x[train_mask_f])
+    gae_model = gae_model.to(device)
+    full_data = full_data.to(device)
+    train_mask_f = train_mask_f.to(device)
+    train_edge_index = train_edge_index.to(device)
+    train_edge_attr_multi = train_edge_attr_multi.to(device)
+    train_edge_weight = train_edge_weight.to(device)
 
     for epoch in t:
         gae_model.train()
