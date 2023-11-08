@@ -62,17 +62,11 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(2048, 2048)
-        self.fc2 = Linear(2048, 2048)
-        self.fc3 = Linear(2048, 2048)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """
         Decodes the latent variables 'z' into edge weights for the given node-pairs 'edge_index'.
         """
-        z = self.fc1(z).relu()
-        z = self.fc2(z).relu()
-        z = self.fc3(z)
         return torch.matmul(z, z.t())  # (z[edge_index[0]] * z[edge_index[1]]).sum(dim=1)
 
 
@@ -119,15 +113,7 @@ class EncoderGAE(torch.nn.Module):
                                  share_weights=False,
                                  add_self_loops=True)
         self.norm2 = BatchNorm1d(2048)
-        self.conv3 = MYGATv2Conv(in_channels=2048,
-                                 out_channels=2048,
-                                 heads=2,
-                                 edge_dim=6,
-                                 aggr="add",
-                                 concat=False,
-                                 share_weights=False,
-                                 add_self_loops=True)
-        self.norm3 = BatchNorm1d(2048)
+
         self.fc1 = Linear(2048, 2048)
         self.fc_norm1 = BatchNorm1d(2048)
         self.fc2 = Linear(2048, 2048)
@@ -141,9 +127,6 @@ class EncoderGAE(torch.nn.Module):
         h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.norm3(self.conv3(h, edge_index, edge_weight)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.fc_norm1(self.fc1(h)).relu()
