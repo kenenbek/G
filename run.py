@@ -47,7 +47,10 @@ def change_input(x_input, train_edge_index, train_edge_attr_multi):
     new_edge_attr = torch.zeros_like(train_edge_attr_multi)
     new_edge_attr[mask, -1] = torch.max(train_edge_attr_multi[mask], dim=1)[0]  # Move src label info to the last position
     train_edge_attr_multi[mask] = new_edge_attr[mask]
-    return x_input, train_edge_index, train_edge_attr_multi
+
+    node_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    node_mask[indices] = True
+    return x_input, train_edge_index, train_edge_attr_multi, node_mask
 
 
 if __name__ == "__main__":
@@ -96,10 +99,10 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        x, edges, attr = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+        x, edges, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
 
         out = model(x, edges, attr)
-        loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+        loss = criterion(out[train_mask_sub][node_mask], full_data.y[train_mask_h][node_mask])
         loss.backward()
         optimizer.step()
         scheduler.step()
