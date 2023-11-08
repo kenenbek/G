@@ -62,9 +62,9 @@ class Encoder(torch.nn.Module):
 class WeightedInnerProductDecoder(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = Linear(256, 256)
-        self.fc2 = Linear(256, 256)
-        self.fc3 = Linear(256, 256)
+        self.fc1 = Linear(4096, 4096)
+        self.fc2 = Linear(4096, 4096)
+        self.fc3 = Linear(4096, 4096)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         """
@@ -101,40 +101,40 @@ class EncoderGAE(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = MYGATv2Conv(in_channels=6,
-                                 out_channels=256,
+                                 out_channels=4096,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=True)
-        self.norm1 = BatchNorm1d(256)
+        self.norm1 = BatchNorm1d(4096)
 
-        self.conv2 = MYGATv2Conv(in_channels=256,
-                                 out_channels=256,
+        self.conv2 = MYGATv2Conv(in_channels=4096,
+                                 out_channels=4096,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=True)
-        self.norm2 = BatchNorm1d(256)
-        self.conv3 = MYGATv2Conv(in_channels=256,
-                                 out_channels=256,
+        self.norm2 = BatchNorm1d(4096)
+        self.conv3 = MYGATv2Conv(in_channels=4096,
+                                 out_channels=4096,
                                  heads=2,
                                  edge_dim=6,
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=True)
-        self.norm3 = BatchNorm1d(256)
-        self.fc1 = Linear(256, 256)
-        self.fc_norm1 = BatchNorm1d(256)
-        self.fc2 = Linear(256, 256)
-        self.fc_norm2 = BatchNorm1d(256)
-        self.fc3 = Linear(256, 256)
+        self.norm3 = BatchNorm1d(4096)
+        self.fc1 = Linear(4096, 4096)
+        self.fc_norm1 = BatchNorm1d(4096)
+        self.fc2 = Linear(4096, 4096)
+        self.fc_norm2 = BatchNorm1d(4096)
+        self.fc3 = Linear(4096, 4096)
 
-        self.dp = 0.2
+        self.dp = 0.4
 
     def forward(self, h, edge_index, edge_weight):
         h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
