@@ -127,7 +127,7 @@ class EncoderGAE(torch.nn.Module):
                                  concat=False,
                                  share_weights=False,
                                  add_self_loops=True)
-
+        self.norm3 = BatchNorm1d(256)
         self.fc1 = Linear(256, 256)
         self.fc_norm1 = BatchNorm1d(256)
         self.fc2 = Linear(256, 256)
