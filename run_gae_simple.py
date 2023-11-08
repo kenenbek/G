@@ -62,10 +62,10 @@ if __name__ == "__main__":
     full_data.recalculate_input_features(train_mask_h)
 
     gae_model = GAE(encoder=EncoderGAE(),
-                     decoder=WeightedInnerProductDecoder()
-                     )
+                    decoder=WeightedInnerProductDecoder()
+                    )
     gae_optimizer = torch.optim.Adam(gae_model.parameters(), lr=wandb.config.lr,
-                                      weight_decay=wandb.config.weight_decay)
+                                     weight_decay=wandb.config.weight_decay)
     gae_scheduler = StepLR(gae_optimizer, step_size=500, gamma=0.1)
 
     t = trange(wandb.config.epochs, leave=True)
@@ -85,12 +85,12 @@ if __name__ == "__main__":
         gae_model.train()
         gae_optimizer.zero_grad()
 
-        z = gae_model.encode(zeros_tensor, train_edge_index, train_edge_weight)
+        z = gae_model.encode(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_weight)
         adj_reconstructed = gae_model.decode(z)
 
-        pred_edge_weights = reconstruct_edges(z, train_edge_index)
+        # pred_edge_weights = reconstruct_edges(z, train_edge_index)
 
-        recon_loss = F.mse_loss(pred_edge_weights, train_edge_weight)
+        recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
         recon_loss.backward()
         gae_optimizer.step()
         gae_scheduler.step()
