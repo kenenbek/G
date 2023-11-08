@@ -73,7 +73,12 @@ if __name__ == "__main__":
 
     # Extract the subgraph associated with the training nodes
     train_nodes = torch.nonzero(train_mask_f).squeeze()
-    train_edge_index, train_edge_weight = subgraph(
+
+    train_edge_index, train_edge_attr_multi = subgraph(
+        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
+    )
+
+    _, train_edge_weight = subgraph(
         train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
 
@@ -85,7 +90,7 @@ if __name__ == "__main__":
         gae_model.train()
         gae_optimizer.zero_grad()
 
-        z = gae_model.encode(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_weight)
+        z = gae_model.encode(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
         adj_reconstructed = gae_model.decode(z)
 
         # pred_edge_weights = reconstruct_edges(z, train_edge_index)
