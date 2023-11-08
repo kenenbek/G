@@ -93,9 +93,9 @@ if __name__ == "__main__":
         z = gae_model.encode(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
         adj_reconstructed = gae_model.decode(z)
 
-        # pred_edge_weights = reconstruct_edges(z, train_edge_index)
+        pred_edge_weights = reconstruct_edges(z, train_edge_index)
 
-        recon_loss = F.mse_loss(adj_reconstructed, weighted_matrix)
+        recon_loss = F.mse_loss(pred_edge_weights, train_edge_weight)
         recon_loss.backward()
         gae_optimizer.step()
         gae_scheduler.step()
