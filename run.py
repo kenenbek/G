@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
-from mymodels import AttnGCN, TransformNet, TAGConv_3l_512h_w_k3, SAGE, AttnGCN_OLD
+from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 from utils import inductive_train, to_one_hot
 
@@ -25,7 +25,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def change_input(x_input, train_edge_index, train_edge_attr_multi):
     x_input = x_input.clone()
-    train_edge_index = train_edge_index.clone()
     train_edge_attr_multi = train_edge_attr_multi.clone()
 
     num_nodes = x_input.size(0)  # Assume data.y contains your node labels
@@ -52,7 +51,7 @@ def change_input(x_input, train_edge_index, train_edge_attr_multi):
 
     node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
     node_mask[indices] = True
-    return x_input, train_edge_index, train_edge_attr_multi, node_mask
+    return x_input, train_edge_attr_multi, node_mask
 
 
 if __name__ == "__main__":
@@ -62,7 +61,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 2000
+    wandb.config.epochs = 5000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
 
-    model = AttnGCN_OLD()
+    model = TAGConv_3l_128h_w_k3()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
@@ -96,19 +95,24 @@ if __name__ == "__main__":
         train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
     )
 
-    gae_model = model.to(device)
+    _, train_edge_weight = subgraph(
+        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
+    )
+
+    model = model.to(device)
     full_data = full_data.to(device)
     train_mask_f = train_mask_f.to(device)
     train_edge_index = train_edge_index.to(device)
+    train_edge_weight = train_edge_weight.to(device)
     train_edge_attr_multi = train_edge_attr_multi.to(device)
 
     for epoch in t:
         model.train()
         optimizer.zero_grad()
 
-        x, edges, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
 
-        out = model(x, edges, attr)
+        out = model(x, train_edge_index, train_edge_weight)
         loss = criterion(out[train_mask_sub][node_mask], full_data.y[train_mask_h][node_mask])
         loss.backward()
         optimizer.step()
