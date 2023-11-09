@@ -79,95 +79,72 @@ class AttnGCN(torch.nn.Module):
         return h
 
 
-class AttnGCN2(torch.nn.Module):
+class AttnGCN_OLD(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        torch.manual_seed(1234)
+        self.conv1 = GATv2Conv(in_channels=6,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=6,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
+        self.norm1 = BatchNorm1d(128)
 
-        self.emb1 = GCNConv(in_channels=5,
-                            out_channels=128,
-                            add_self_loops=False,
-                            normalize=False,
-                            aggr="mean"
-                            )
-
-        self.emb1_norm = BatchNorm1d(128)
-
-        self.emb2 = GCNConv(in_channels=128,
-                            out_channels=128,
-                            add_self_loops=False,
-                            normalize=False,
-                            aggr="mean"
-                            )
-
-        self.emb2_norm = BatchNorm1d(128)
-
-        self.att_conv1 = GATv2Conv(in_channels=128,
-                                   out_channels=64,
-                                   heads=2,
-                                   edge_dim=1,
-                                   aggr="mean",
-                                   concat=True,
-                                   share_weights=True)
-        self.att_conv1_norm = BatchNorm1d(128)
-
-        self.att_conv2 = GATv2Conv(in_channels=128,
-                                   out_channels=64,
-                                   heads=2,
-                                   edge_dim=1,
-                                   aggr="mean",
-                                   concat=True,
-                                   share_weights=True)
-        self.att_conv2_norm = BatchNorm1d(128)
-        # self.conv3 = GATConv(in_channels=128,
-        #                      out_channels=128,
-        #                      heads=1, 
-        #                      edge_dim=1)
+        self.conv2 = GATv2Conv(in_channels=128,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=6,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
+        self.norm2 = BatchNorm1d(128)
+        self.conv3 = GATv2Conv(in_channels=128,
+                               out_channels=128,
+                               heads=2,
+                               edge_dim=6,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
+        self.norm3 = BatchNorm1d(128)
         self.fc1 = Linear(128, 128)
-        self.fc1_norm = BatchNorm1d(128)
+        self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
-        self.fc2_norm = BatchNorm1d(128)
+        self.fc_norm2 = BatchNorm1d(128)
         self.fc3 = Linear(128, 5)
 
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.emb1(h, edge_index, edge_weight).relu()
+        h = self.conv1(h, edge_index, edge_weight)
+        h = self.norm1(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.emb1_norm(h)
 
-        h_initial = h
-        h = self.emb2(h, edge_index, edge_weight).relu()
+        h_initial = h.clone()
+        h = self.conv2(h, edge_index, edge_weight)
+        h = self.norm2(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.emb2_norm(h)
         h += h_initial
 
-        h_initial = h
-        h = self.att_conv1(h, edge_index, edge_weight).relu()
+        h_initial = h.clone()
+        h = self.conv3(h, edge_index, edge_weight)
+        h = self.norm3(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv1_norm(h)
         h += h_initial
 
-        h_initial = h
-        h = self.att_conv2(h, edge_index, edge_weight).relu()
+        h = self.fc_norm1(self.fc1(h))
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.att_conv2_norm(h)
-        h += h_initial
 
-        # h = self.conv3(h, edge_index, edge_weight).relu()
-        # h = F.dropout(h, p=self.dp, training=self.training)
-
-        h_initial = h
-        h = self.fc1(h).relu()
+        h = self.fc_norm2(self.fc2(h))
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc1_norm(h)
-        h += h_initial
-
-        h_initial = h
-        h = self.fc2(h).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc2_norm(h)
-        h += h_initial
 
         h = self.fc3(h)
 
