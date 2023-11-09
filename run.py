@@ -121,9 +121,11 @@ if __name__ == "__main__":
             optimizer.zero_grad()
             scheduler.step()
 
+            loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+            wandb.log({"loss": loss.item()})
+
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
-        wandb.log({"loss": loss.item()})
 
     # TEST one by one
     y_true, y_pred = evaluate_one_by_one(model, full_data, train_mask_f, test_mask)
