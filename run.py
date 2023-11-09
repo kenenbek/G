@@ -79,7 +79,7 @@ if __name__ == "__main__":
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
 
-    model = TAGConv_3l_128h_w_k3()
+    model = AttnGCN_OLD()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
