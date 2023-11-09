@@ -84,7 +84,7 @@ class AttnGCN_OLD(torch.nn.Module):
         super().__init__()
         self.conv1 = GATv2Conv(in_channels=6,
                                out_channels=128,
-                               heads=2,
+                               heads=1,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
@@ -92,24 +92,25 @@ class AttnGCN_OLD(torch.nn.Module):
                                add_self_loops=True)
         self.norm1 = BatchNorm1d(128)
 
-        self.conv2 = GATv2Conv(in_channels=128,
-                               out_channels=128,
-                               heads=2,
-                               edge_dim=1,
-                               aggr="add",
-                               concat=False,
-                               share_weights=False,
-                               add_self_loops=True)
-        self.norm2 = BatchNorm1d(128)
-        self.conv3 = GATv2Conv(in_channels=128,
-                               out_channels=128,
-                               heads=1,
-                               edge_dim=1,
-                               aggr="add",
-                               concat=False,
-                               share_weights=False,
-                               add_self_loops=True)
-        self.norm3 = BatchNorm1d(128)
+        self.conv_layers = torch.nn.ModuleList([])
+        self.batch_norms = torch.nn.ModuleList([])
+
+        for i in range(8):
+            self.conv_layers.append(
+                GATv2Conv(in_channels=128,
+                          out_channels=128,
+                          heads=1,
+                          edge_dim=1,
+                          aggr="add",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
+            )
+
+            self.batch_norms.append(
+                BatchNorm1d(128)
+            )
+
         self.fc1 = Linear(128, 128)
         self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
@@ -124,15 +125,11 @@ class AttnGCN_OLD(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.conv2(h, edge_index, edge_weight)
-        h = self.norm2(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.conv3(h, edge_index, edge_weight)
-        h = self.norm3(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
+        for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
+            h = conv_layer(h, edge_index, edge_weight)
+            h = batch_norm(h)
+            h = F.leaky_relu(h)
+            h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.fc_norm1(self.fc1(h))
         h = F.leaky_relu(h)
