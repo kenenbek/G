@@ -183,7 +183,7 @@ class SimpleNN(torch.nn.Module):
 class TAGConv_3l_128h_w_k3(torch.nn.Module):
     def __init__(self):
         super(TAGConv_3l_128h_w_k3, self).__init__()
-        self.conv1 = TAGConv(5, 128)
+        self.conv1 = TAGConv(6, 128)
         self.conv2 = TAGConv(128, 128)
         self.conv3 = TAGConv(128, 5)
 
