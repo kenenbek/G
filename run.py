@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 20000
+    wandb.config.epochs = 30000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -115,8 +115,11 @@ if __name__ == "__main__":
         out = model(x, train_edge_index, train_edge_weight)
         loss = criterion(out[train_mask_sub][node_mask], full_data.y[train_mask_h][node_mask])
         loss.backward()
-        optimizer.step()
-        scheduler.step()
+
+        if epoch % 1000 == 0:
+            optimizer.step()
+            optimizer.zero_grad()
+            scheduler.step()
 
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
