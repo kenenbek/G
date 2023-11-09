@@ -65,7 +65,6 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
     model = model.to(device)
     data = data.to(device)
     train_mask = train_mask.to(device)
-    test_indices = test_indices.to(device)
 
     with torch.no_grad():
         for test_index in trange(len(test_indices)):
@@ -73,7 +72,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             idx = test_indices[test_index]
 
             # Combine training indices with the current test index
-            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx])])
+            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx]).to(device)])
             sub_indices, _ = torch.sort(sub_indices)
 
             # Extract sub-graph
