@@ -31,7 +31,7 @@ def change_input(x_input, train_edge_index, train_edge_attr_multi):
     unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
-    indices = torch.randperm(num_nodes)[:int(num_nodes) // 10].to(device)
+    indices = torch.randperm(num_nodes)[:int(num_nodes) // 2635].to(device)
 
     # Update the labels of these selected nodes to the unknown label
     x_input[indices] = unknown_label
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 5000
+    wandb.config.epochs = 20000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
