@@ -6,6 +6,8 @@ from sklearn import metrics
 from tqdm import tqdm, trange
 from torch_geometric.nn.models import LabelPropagation
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 def label_propagation_one_by_one(data, train_mask, test_mask):
     model = LabelPropagation(num_layers=3, alpha=0.8)
@@ -59,6 +61,12 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
     y_true_list = []
     pred_list = []
 
+
+    model = model.to(device)
+    data = data.to(device)
+    train_mask = train_mask.to(device)
+    test_indices = test_indices.to(device)
+
     with torch.no_grad():
         for test_index in trange(len(test_indices)):
             # Get the actual node index
@@ -75,13 +83,13 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float)
+            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
             input_x = sub_data.x_one_hot.clone()
             input_x[test_node_position] = unknown_label
 
             edge_attr_multi = sub_data.edge_attr_multi.clone()
             mask = sub_data.edge_index[0] == test_node_position
-            new_edge_attr = torch.zeros_like(edge_attr_multi)
+            new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
             new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             edge_attr_multi[mask] = new_edge_attr[mask]
 
