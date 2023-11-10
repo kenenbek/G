@@ -25,7 +25,7 @@ class AttnGCN(torch.nn.Module):
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(1):
+        for i in range(0):
             self.conv_layers.append(
                 GATv2Conv(in_channels=128,
                           out_channels=128,
@@ -173,7 +173,7 @@ class TAGConv_3l_128h_w_k3(torch.nn.Module):
         super(TAGConv_3l_128h_w_k3, self).__init__()
         self.conv1 = TAGConv(6, 128)
         self.conv2 = TAGConv(128, 128)
-        self.conv3 = TAGConv(128, 128)
+        self.conv3 = TAGConv(128, 5)
 
     def forward(self, x, edge_index, edge_attr):
         x = F.elu(self.conv1(x, edge_index, edge_attr))
