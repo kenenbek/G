@@ -40,7 +40,7 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(128, 128)
+        self.fc1 = Linear(128, 5)
         self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.fc_norm2 = BatchNorm1d(128)
@@ -61,15 +61,15 @@ class AttnGCN(torch.nn.Module):
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.fc_norm1(self.fc1(h))
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
+        # h = self.fc_norm1(self.fc1(h))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc_norm2(self.fc2(h))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.fc_norm2(self.fc2(h))
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc3(h)
+        h = self.fc1(h)
 
         return h
 
