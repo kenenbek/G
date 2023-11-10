@@ -76,7 +76,7 @@ class AttnGCN_OLD(torch.nn.Module):
         super().__init__()
         self.conv1 = GATv2Conv(in_channels=6,
                                out_channels=128,
-                               heads=1,
+                               heads=2,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
@@ -87,7 +87,7 @@ class AttnGCN_OLD(torch.nn.Module):
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(8):
+        for i in range(0):
             self.conv_layers.append(
                 GATv2Conv(in_channels=128,
                           out_channels=128,
@@ -107,7 +107,9 @@ class AttnGCN_OLD(torch.nn.Module):
         self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.fc_norm2 = BatchNorm1d(128)
-        self.fc3 = Linear(128, 5)
+        self.fc3 = Linear(128, 128)
+
+        self.tag_conv = TAGConv_3l_128h_w_k3()
 
         self.dp = 0.2
 
@@ -117,22 +119,22 @@ class AttnGCN_OLD(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
-            h = conv_layer(h, edge_index, edge_weight)
-            h = batch_norm(h)
-            h = F.leaky_relu(h)
-            h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc_norm1(self.fc1(h))
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc_norm2(self.fc2(h))
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc3(h)
-
+        # for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
+        #     h = conv_layer(h, edge_index, edge_weight)
+        #     h = batch_norm(h)
+        #     h = F.leaky_relu(h)
+        #     h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc_norm1(self.fc1(h))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc_norm2(self.fc2(h))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc3(h)
+        h = self.tag_conv(h)
         return h
 
 
@@ -168,7 +170,7 @@ class SimpleNN(torch.nn.Module):
 class TAGConv_3l_128h_w_k3(torch.nn.Module):
     def __init__(self):
         super(TAGConv_3l_128h_w_k3, self).__init__()
-        self.conv1 = TAGConv(6, 128)
+        self.conv1 = TAGConv(128, 128)
         self.conv2 = TAGConv(128, 128)
         self.conv3 = TAGConv(128, 5)
 
