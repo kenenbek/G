@@ -17,7 +17,7 @@ class AttnGCN(torch.nn.Module):
                                  aggr="add",
                                  concat=False,
                                  share_weights=False,
-                                 add_self_loops=False)
+                                 add_self_loops=True)
         self.norm1 = BatchNorm1d(128)
 
         self.conv_layers = torch.nn.ModuleList([])
@@ -32,7 +32,7 @@ class AttnGCN(torch.nn.Module):
                             aggr="add",
                             concat=False,
                             share_weights=False,
-                            add_self_loops=False)
+                            add_self_loops=True)
             )
 
             self.batch_norms.append(
