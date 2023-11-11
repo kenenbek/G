@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 2000
+    wandb.config.epochs = 5
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -106,20 +106,29 @@ if __name__ == "__main__":
     train_edge_weight = train_edge_weight.to(device)
     train_edge_attr_multi = train_edge_attr_multi.to(device)
 
+    accumulated_gradients = 0
     for epoch in t:
         model.train()
         optimizer.zero_grad()
         x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
 
         out = model(x, train_edge_index, attr)
-        loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+        loss = criterion(out[train_mask_sub][node_mask], full_data.y[train_mask_h][node_mask])
 
         loss.backward()
-        optimizer.step()
-        scheduler.step()
+        accumulated_gradients += 1
 
-        wandb.log({"loss": loss.item()})
-        losses.append(loss)
+        if epoch % 200 == 0:
+            for param in model.parameters():
+                if param.grad is not None:
+                    param.grad /= accumulated_gradients
+
+            optimizer.step()
+            scheduler.step()
+
+            print_loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+            wandb.log({"loss": print_loss.item()})
+            losses.append(print_loss)
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one

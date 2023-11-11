@@ -10,14 +10,14 @@ from my_gatconv import MYGATv2Conv
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = MYGATv2Conv(in_channels=6,
-                                 out_channels=256,
-                                 heads=2,
-                                 edge_dim=6,
-                                 aggr="add",
-                                 concat=False,
-                                 share_weights=False,
-                                 add_self_loops=False)
+        self.conv1 = GATv2Conv(in_channels=6,
+                               out_channels=256,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
         self.norm1 = BatchNorm1d(256)
 
         self.conv_layers = torch.nn.ModuleList([])
@@ -25,14 +25,14 @@ class AttnGCN(torch.nn.Module):
 
         for i in range(1):
             self.conv_layers.append(
-                MYGATv2Conv(in_channels=256,
-                            out_channels=256,
-                            heads=2,
-                            edge_dim=6,
-                            aggr="add",
-                            concat=False,
-                            share_weights=False,
-                            add_self_loops=True)
+                GATv2Conv(in_channels=256,
+                          out_channels=256,
+                          heads=2,
+                          edge_dim=1,
+                          aggr="add",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
             )
 
             self.batch_norms.append(
@@ -42,14 +42,14 @@ class AttnGCN(torch.nn.Module):
 
         self.dp = 0.2
 
-    def forward(self, h, edge_index, edge_weight, test_node=-123):
-        h = self.conv1(h, edge_index, edge_weight, test_node)
+    def forward(self, h, edge_index, edge_weight):
+        h = self.conv1(h, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
         for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
-            h = conv_layer(h, edge_index, edge_weight, test_node)
+            h = conv_layer(h, edge_index, edge_weight)
             h = batch_norm(h)
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
