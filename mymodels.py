@@ -25,14 +25,14 @@ class AttnGCN(torch.nn.Module):
 
         for i in range(0):
             self.conv_layers.append(
-                GATv2Conv(in_channels=128,
-                          out_channels=128,
-                          heads=2,
-                          edge_dim=1,
-                          aggr="add",
-                          concat=False,
-                          share_weights=False,
-                          add_self_loops=True)
+                MYGATv2Conv(in_channels=128,
+                            out_channels=128,
+                            heads=2,
+                            edge_dim=1,
+                            aggr="add",
+                            concat=False,
+                            share_weights=False,
+                            add_self_loops=True)
             )
 
             self.batch_norms.append(
