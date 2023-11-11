@@ -11,19 +11,19 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = GATv2Conv(in_channels=6,
-                               out_channels=256,
+                               out_channels=128,
                                heads=2,
                                edge_dim=1,
                                aggr="add",
-                               concat=False,
-                               share_weights=False,
+                               concat=True,
+                               share_weights=True,
                                add_self_loops=True)
         self.norm1 = BatchNorm1d(256)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(1):
+        for i in range(0):
             self.conv_layers.append(
                 GATv2Conv(in_channels=256,
                           out_channels=256,

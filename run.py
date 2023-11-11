@@ -109,7 +109,6 @@ if __name__ == "__main__":
     accumulated_gradients = 0
     for epoch in t:
         model.train()
-        optimizer.zero_grad()
         x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_weight)
 
         out = model(x, train_edge_index, attr)
@@ -118,12 +117,13 @@ if __name__ == "__main__":
         loss.backward()
         accumulated_gradients += 1
 
-        if epoch % 200 == 0:
+        if epoch % 2500 == 0:
             for param in model.parameters():
                 if param.grad is not None:
                     param.grad /= accumulated_gradients
 
             optimizer.step()
+            optimizer.zero_grad()
             scheduler.step()
 
             print_loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
