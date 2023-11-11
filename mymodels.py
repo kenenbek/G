@@ -385,9 +385,9 @@ class GMM(torch.nn.Module):
         super().__init__()
         self.conv1 = GMMConv(in_channels=6,
                              out_channels=128,
-                             dim=1,
+                             dim=6,
                              kernel_size=10,
-                             separate_gaussians=True,
+                             separate_gaussians=False,
                              root_weight=True,
                              bias=True)
         self.norm1 = BatchNorm1d(128)
@@ -399,7 +399,7 @@ class GMM(torch.nn.Module):
             self.conv_layers.append(
                 GMMConv(in_channels=128,
                         out_channels=128,
-                        dim=8,
+                        dim=6,
                         kernel_size=10,
                         separate_gaussians=False,
                         root_weight=True,
