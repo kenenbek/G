@@ -203,12 +203,12 @@ class MYGATv2Conv(MessagePassing):
         self._alpha = alpha
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
 
-        res = (x_j + edge_attr) * alpha.unsqueeze(-1)
+        # res = (x_j + edge_attr) * alpha.unsqueeze(-1)
         # edge_attr_trans = edge_attr * alpha.unsqueeze(-1)
         # _, edge_attr_trans = remove_self_loops(self.edge_index, edge_attr_trans)
         # self.edge_attr_trans = edge_attr_trans
-        return res
-        # return x_j * alpha.unsqueeze(-1)
+        # return res
+        return x_j * alpha.unsqueeze(-1)
 
     def __repr__(self) -> str:
         return (f'{self.__class__.__name__}({self.in_channels}, '
