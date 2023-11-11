@@ -390,7 +390,7 @@ class GMM(torch.nn.Module):
                              separate_gaussians=True,
                              root_weight=True,
                              bias=True)
-        self.norm1 = BatchNorm1d(128)
+        self.norm1 = BatchNorm1d(64)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
