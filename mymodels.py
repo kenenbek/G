@@ -384,7 +384,7 @@ class GMM(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = GMMConv(in_channels=6,
-                             out_channels=128,
+                             out_channels=64,
                              dim=6,
                              kernel_size=10,
                              separate_gaussians=True,
@@ -410,11 +410,11 @@ class GMM(torch.nn.Module):
                 BatchNorm1d(128)
             )
 
-        self.fc1 = Linear(128, 128)
-        self.fc_norm1 = BatchNorm1d(128)
-        self.fc2 = Linear(128, 128)
-        self.fc_norm2 = BatchNorm1d(128)
-        self.fc3 = Linear(128, 5)
+        self.fc1 = Linear(64, 64)
+        self.fc_norm1 = BatchNorm1d(64)
+        self.fc2 = Linear(64, 64)
+        self.fc_norm2 = BatchNorm1d(64)
+        self.fc3 = Linear(64, 5)
 
         self.dp = 0.2
 
