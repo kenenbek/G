@@ -31,7 +31,7 @@ def change_input(x_input, train_edge_index, train_edge_attr_multi):
     unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
-    indices = torch.randperm(num_nodes)[:int(num_nodes) // 10].to(device)
+    indices = torch.randperm(num_nodes)[: 1].to(device) #int(num_nodes) // 10
 
     # Update the labels of these selected nodes to the unknown label
     x_input[indices] = unknown_label
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     for epoch in t:
         model.train()
         optimizer.zero_grad()
-        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_weight)
 
         out = model(x, train_edge_index, attr)
         loss = criterion(out[train_mask_sub][node_mask], full_data.y[train_mask_h][node_mask])
