@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
-from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD
+from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 from utils import inductive_train, to_one_hot
 
@@ -31,7 +31,7 @@ def change_input(x_input, train_edge_index, train_edge_attr_multi):
     unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
-    indices = torch.randperm(num_nodes)[: 1].to(device) #int(num_nodes) // 10
+    indices = torch.randperm(num_nodes)[: int(num_nodes) // 10].to(device)
 
     # Update the labels of these selected nodes to the unknown label
     x_input[indices] = unknown_label
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 50000
+    wandb.config.epochs = 5
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     full_data.recalculate_input_features(train_mask_h)
 
-    model = TAGConv_3l_128h_w_k3()
+    model = GMM()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
@@ -109,26 +109,18 @@ if __name__ == "__main__":
     accumulated_gradients = 0
     for epoch in t:
         model.train()
+        optimizer.zero_grad()
         x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_weight)
 
-        out = model(x, train_edge_index, attr)
-        loss = criterion(out[train_mask_sub][node_mask], full_data.y[train_mask_h][node_mask])
+        out = model(x, train_edge_index, train_edge_weight)
+        loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
 
         loss.backward()
-        accumulated_gradients += 1
+        optimizer.step()
+        scheduler.step()
 
-        if epoch % 2500 == 0:
-            for param in model.parameters():
-                if param.grad is not None:
-                    param.grad /= accumulated_gradients
-
-            optimizer.step()
-            optimizer.zero_grad()
-            scheduler.step()
-
-            print_loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
-            wandb.log({"loss": print_loss.item()})
-            losses.append(print_loss)
+        wandb.log({"loss": loss.item()})
+        losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one

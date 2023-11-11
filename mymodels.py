@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Linear, BatchNorm1d
-from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv
+from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMMConv
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
 
@@ -377,4 +377,67 @@ class TransformNet(torch.nn.Module):
 
         h = self.fc2(h)
 
+        return h
+
+
+class GMM(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = GMMConv(in_channels=6,
+                             out_channels=64,
+                             dim=8,
+                             kernel_size=10,
+                             separate_gaussians=False,
+                             root_weight=True,
+                             bias=True)
+        self.norm1 = BatchNorm1d(64)
+
+        self.conv_layers = torch.nn.ModuleList([])
+        self.batch_norms = torch.nn.ModuleList([])
+
+        for i in range(0):
+            self.conv_layers.append(
+                GMMConv(in_channels=64,
+                        out_channels=64,
+                        dim=8,
+                        kernel_size=10,
+                        separate_gaussians=False,
+                        root_weight=True,
+                        bias=True)
+            )
+
+            self.batch_norms.append(
+                BatchNorm1d(64)
+            )
+
+        self.fc1 = Linear(64, 64)
+        self.fc_norm1 = BatchNorm1d(64)
+        self.fc2 = Linear(64, 64)
+        self.fc_norm2 = BatchNorm1d(64)
+        self.fc3 = Linear(64, 5)
+
+        self.dp = 0.2
+
+    def forward(self, h, edge_index, edge_weight):
+        h = self.conv1(h, edge_index, edge_weight)
+        h = self.norm1(h)
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
+            h = conv_layer(h, edge_index, edge_weight)
+            h = batch_norm(h)
+            h = F.leaky_relu(h)
+            h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc_norm1(self.fc1(h))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc_norm2(self.fc2(h))
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc3(h)
+        h = self.tag_conv(h)
         return h
