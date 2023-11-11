@@ -387,7 +387,7 @@ class GMM(torch.nn.Module):
                              out_channels=128,
                              dim=6,
                              kernel_size=10,
-                             separate_gaussians=False,
+                             separate_gaussians=True,
                              root_weight=True,
                              bias=True)
         self.norm1 = BatchNorm1d(128)
@@ -401,7 +401,7 @@ class GMM(torch.nn.Module):
                         out_channels=128,
                         dim=6,
                         kernel_size=10,
-                        separate_gaussians=False,
+                        separate_gaussians=True,
                         root_weight=True,
                         bias=True)
             )
