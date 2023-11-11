@@ -10,9 +10,7 @@ from my_gatconv import MYGATv2Conv
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.tag_conv = TAGConv_3l_128h_w_k3()
-
-        self.conv1 = GATv2Conv(in_channels=128,
+        self.conv1 = GATv2Conv(in_channels=6,
                                out_channels=128,
                                heads=2,
                                edge_dim=1,
@@ -40,7 +38,7 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(128, 5)
+        self.fc1 = Linear(128, 128)
         self.fc_norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.fc_norm2 = BatchNorm1d(128)
@@ -49,7 +47,6 @@ class AttnGCN(torch.nn.Module):
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.tag_conv(h, edge_index, edge_weight)
         h = self.conv1(h, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
@@ -61,15 +58,15 @@ class AttnGCN(torch.nn.Module):
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
 
-        # h = self.fc_norm1(self.fc1(h))
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc_norm2(self.fc2(h))
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.fc_norm1(self.fc1(h))
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.fc1(h)
+        h = self.fc_norm2(self.fc2(h))
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc3(h)
 
         return h
 
