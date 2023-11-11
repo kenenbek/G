@@ -384,21 +384,21 @@ class GMM(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = GMMConv(in_channels=6,
-                             out_channels=64,
+                             out_channels=128,
                              dim=1,
                              kernel_size=10,
                              separate_gaussians=True,
                              root_weight=True,
                              bias=True)
-        self.norm1 = BatchNorm1d(64)
+        self.norm1 = BatchNorm1d(128)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
         for i in range(0):
             self.conv_layers.append(
-                GMMConv(in_channels=64,
-                        out_channels=64,
+                GMMConv(in_channels=128,
+                        out_channels=128,
                         dim=8,
                         kernel_size=10,
                         separate_gaussians=False,
@@ -407,14 +407,14 @@ class GMM(torch.nn.Module):
             )
 
             self.batch_norms.append(
-                BatchNorm1d(64)
+                BatchNorm1d(128)
             )
 
-        self.fc1 = Linear(64, 64)
-        self.fc_norm1 = BatchNorm1d(64)
-        self.fc2 = Linear(64, 64)
-        self.fc_norm2 = BatchNorm1d(64)
-        self.fc3 = Linear(64, 5)
+        self.fc1 = Linear(128, 128)
+        self.fc_norm1 = BatchNorm1d(128)
+        self.fc2 = Linear(128, 128)
+        self.fc_norm2 = BatchNorm1d(128)
+        self.fc3 = Linear(128, 5)
 
         self.dp = 0.2
 
