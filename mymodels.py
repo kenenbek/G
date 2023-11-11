@@ -385,7 +385,7 @@ class GMM(torch.nn.Module):
         super().__init__()
         self.conv1 = GMMConv(in_channels=6,
                              out_channels=64,
-                             dim=8,
+                             dim=1,
                              kernel_size=10,
                              separate_gaussians=False,
                              root_weight=True,
@@ -429,15 +429,14 @@ class GMM(torch.nn.Module):
             h = batch_norm(h)
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc_norm1(self.fc1(h))
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc_norm2(self.fc2(h))
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc3(h)
-        h = self.tag_conv(h)
+
+        h = self.fc_norm1(self.fc1(h))
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc_norm2(self.fc2(h))
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc3(h)
         return h
