@@ -98,20 +98,20 @@ class EncoderGAE(torch.nn.Module):
             in_channels=6,
             out_channels=2048,
         )
-        self.norm1 = BatchNorm1d(2048)
+        self.norm1 = torch.nn.Identity() # BatchNorm1d(2048)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(0):
+        for i in range(2):
             self.conv_layers.append(
                 GCNConv(
-                    in_channels=6,
+                    in_channels=2048,
                     out_channels=2048,
                 )
             )
             self.batch_norms.append(
-                BatchNorm1d(2048)
+                torch.nn.Identity()  # BatchNorm1d(2048)
             )
 
         self.fc1 = Linear(2048, 2048)
