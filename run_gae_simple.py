@@ -147,3 +147,4 @@ if __name__ == "__main__":
     wandb.finish()
 
     torch.save(pred_edge_weights, "gae_edge_attr.pt")
+    torch.save(train_edge_weight, "train_edge_attr.pt")
