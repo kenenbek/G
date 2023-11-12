@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 50000
+    wandb.config.epochs = 2000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -124,6 +124,7 @@ if __name__ == "__main__":
     train_edge_attr_multi = train_edge_attr_multi.to(device)
     train_edge_weight = train_edge_weight.to(device)
 
+    pred_edge_weights = None
     for epoch in t:
         gae_model.train()
         gae_optimizer.zero_grad()
@@ -145,5 +146,4 @@ if __name__ == "__main__":
     torch.save(gae_model.state_dict(), "gae.pt")
     wandb.finish()
 
-    gae_model.eval()
-    torch.save(gae_model(x, train_edge_index, train_edge_weight), "gae_edge_attr.pt")
+    torch.save(pred_edge_weights, "gae_edge_attr.pt")
