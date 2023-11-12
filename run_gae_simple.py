@@ -144,3 +144,6 @@ if __name__ == "__main__":
 
     torch.save(gae_model.state_dict(), "gae.pt")
     wandb.finish()
+
+    gae_model.eval()
+    torch.save(gae_model(x, train_edge_index, train_edge_weight), "gae_edge_attr.pt")
