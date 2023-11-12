@@ -17,6 +17,37 @@ from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_
 from utils import inductive_train, to_one_hot
 
 
+def change_input(x_input, train_edge_index, train_edge_attr_multi):
+    x_input = x_input.clone()
+    train_edge_attr_multi = train_edge_attr_multi.clone()
+
+    num_nodes = x_input.size(0)  # Assume data.y contains your node labels
+    unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+
+    # Randomly select 10% of your node indices
+    indices = torch.randperm(num_nodes)[: int(num_nodes) // 10].to(device)
+
+    # Update the labels of these selected nodes to the unknown label
+    x_input[indices] = unknown_label
+
+    # Assuming edge_index is of shape [2, E] and edge_attr is of shape [E, num_labels]
+    # where E is the number of edges, and that we have already computed 'indices' of nodes to change
+
+    # Create a mask for edges where the source node label has been changed to unknown
+    src_nodes = train_edge_index[0]  # Get the source nodes of all edges
+    mask = src_nodes.unsqueeze(1) == indices.unsqueeze(0)  # Compare against changed indices
+    mask = mask.any(dim=1)  # Reduce to get a mask for edges
+
+    # Update the edge attributes
+    new_edge_attr = torch.zeros_like(train_edge_attr_multi).to(device)
+    new_edge_attr[mask, -1] = torch.max(train_edge_attr_multi[mask], dim=1)[0]  # Move src label info to the last position
+    train_edge_attr_multi[mask] = new_edge_attr[mask]
+
+    node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
+    node_mask[indices] = True
+    return x_input, train_edge_attr_multi, node_mask
+
+
 def reconstruct_edges(z, edge_index):
     # Assuming data.x is a tensor of node features [num_nodes, num_features]
     # and edge_index is a tensor of shape [2, num_edges] where the first row contains
@@ -45,7 +76,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 5000
+    wandb.config.epochs = 50000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -97,7 +128,9 @@ if __name__ == "__main__":
         gae_model.train()
         gae_optimizer.zero_grad()
 
-        z = gae_model.encode(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+
+        z = gae_model.encode(x, train_edge_index, train_edge_weight)
         adj_reconstructed = gae_model.decode(z)
 
         pred_edge_weights = reconstruct_edges(z, train_edge_index)

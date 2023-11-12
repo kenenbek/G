@@ -94,47 +94,88 @@ class SimplePredictor(torch.nn.Module):
 class EncoderGAE(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = MYGATv2Conv(in_channels=6,
-                                 out_channels=2048,
-                                 heads=2,
-                                 edge_dim=6,
-                                 aggr="add",
-                                 concat=False,
-                                 share_weights=False,
-                                 add_self_loops=True)
+        self.conv1 = GCNConv(
+            in_channels=6,
+            out_channels=2048,
+        )
         self.norm1 = BatchNorm1d(2048)
 
-        self.conv2 = MYGATv2Conv(in_channels=2048,
-                                 out_channels=2048,
-                                 heads=2,
-                                 edge_dim=6,
-                                 aggr="add",
-                                 concat=False,
-                                 share_weights=False,
-                                 add_self_loops=True)
-        self.norm2 = BatchNorm1d(2048)
+        self.conv_layers = torch.nn.ModuleList([])
+        self.batch_norms = torch.nn.ModuleList([])
+
+        for i in range(0):
+            self.conv_layers.append(
+                GCNConv(
+                    in_channels=6,
+                    out_channels=2048,
+                )
+            )
+            self.batch_norms.append(
+                BatchNorm1d(2048)
+            )
 
         self.fc1 = Linear(2048, 2048)
-        self.fc_norm1 = BatchNorm1d(2048)
-        self.fc2 = Linear(2048, 2048)
-        self.fc_norm2 = BatchNorm1d(2048)
-        self.fc3 = Linear(2048, 2048)
 
-        self.dp = 0.4
+        self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
+        h = self.conv1(h, edge_index, edge_weight)
+        h = self.norm1(h)
+        h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc_norm1(self.fc1(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc_norm2(self.fc2(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc3(h)
+        for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
+            h = conv_layer(h, edge_index, edge_weight)
+            h = batch_norm(h)
+            h = F.leaky_relu(h)
+            h = F.dropout(h, p=self.dp, training=self.training)
 
         return h
+
+# class EncoderGAE(torch.nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.conv1 = MYGATv2Conv(in_channels=6,
+#                                  out_channels=2048,
+#                                  heads=2,
+#                                  edge_dim=6,
+#                                  aggr="add",
+#                                  concat=False,
+#                                  share_weights=False,
+#                                  add_self_loops=True)
+#         self.norm1 = BatchNorm1d(2048)
+#
+#         self.conv2 = MYGATv2Conv(in_channels=2048,
+#                                  out_channels=2048,
+#                                  heads=2,
+#                                  edge_dim=6,
+#                                  aggr="add",
+#                                  concat=False,
+#                                  share_weights=False,
+#                                  add_self_loops=True)
+#         self.norm2 = BatchNorm1d(2048)
+#
+#         self.fc1 = Linear(2048, 2048)
+#         self.fc_norm1 = BatchNorm1d(2048)
+#         self.fc2 = Linear(2048, 2048)
+#         self.fc_norm2 = BatchNorm1d(2048)
+#         self.fc3 = Linear(2048, 2048)
+#
+#         self.dp = 0.2
+#
+#     def forward(self, h, edge_index, edge_weight):
+#         h = self.norm1(self.conv1(h, edge_index, edge_weight)).relu()
+#         h = F.dropout(h, p=self.dp, training=self.training)
+#
+#         h = self.norm2(self.conv2(h, edge_index, edge_weight)).relu()
+#         h = F.dropout(h, p=self.dp, training=self.training)
+#
+#         h = self.fc_norm1(self.fc1(h)).relu()
+#         h = F.dropout(h, p=self.dp, training=self.training)
+#
+#         h = self.fc_norm2(self.fc2(h)).relu()
+#         h = F.dropout(h, p=self.dp, training=self.training)
+#
+#         h = self.fc3(h)
+#
+#         return h
