@@ -117,7 +117,7 @@ class EncoderGAE(torch.nn.Module):
             in_channels=256,
             out_channels=256,
         )
-        self.dp = 0.1
+        self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
         h = self.conv1(h, edge_index, edge_weight)
