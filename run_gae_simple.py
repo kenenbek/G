@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
         wandb.log({"recon_loss": recon_loss.item()})
 
-        r2 = r2_score(train_edge_weight.detach().numpy(), pred_edge_weights.detach().numpy())
+        r2 = r2_score(train_edge_weight.detach().cpu().numpy(), pred_edge_weights.detach().cpu().numpy())
         wandb.log({"r2_squared": r2.item()})
 
     torch.save(gae_model.state_dict(), "gae.pt")
