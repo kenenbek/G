@@ -130,8 +130,9 @@ if __name__ == "__main__":
         gae_optimizer.zero_grad()
 
         x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+        ones_tensor = torch.ones_like(full_data.x_one_hot[train_mask_f])
 
-        z = gae_model.encode(x, train_edge_index, train_edge_weight)
+        z = gae_model.encode(ones_tensor, train_edge_index, train_edge_weight)
         adj_reconstructed = gae_model.decode(z)
 
         pred_edge_weights = reconstruct_edges(z, train_edge_index)
