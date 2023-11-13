@@ -103,7 +103,7 @@ class EncoderGAE(torch.nn.Module):
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(2):
+        for i in range(1):
             self.conv_layers.append(
                 GCNConv(
                     in_channels=16384,
@@ -111,9 +111,12 @@ class EncoderGAE(torch.nn.Module):
                 )
             )
             self.batch_norms.append(
-                torch.nn.Identity()  # BatchNorm1d(2048)
+                BatchNorm1d(16384)  # BatchNorm1d(2048)
             )
-
+        self.conv_last = GCNConv(
+            in_channels=16384,
+            out_channels=16384,
+        )
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
@@ -128,6 +131,7 @@ class EncoderGAE(torch.nn.Module):
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
 
+        h = self.conv_last(h, edge_index, edge_weight)
         return h
 
 # class EncoderGAE(torch.nn.Module):
