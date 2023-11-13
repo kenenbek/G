@@ -103,7 +103,7 @@ class EncoderGAE(torch.nn.Module):
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(6):
+        for i in range(10):
             self.conv_layers.append(
                 GCNConv(
                     in_channels=256,
@@ -117,7 +117,7 @@ class EncoderGAE(torch.nn.Module):
             in_channels=256,
             out_channels=256,
         )
-        self.dp = 0.2
+        self.dp = 0.1
 
     def forward(self, h, edge_index, edge_weight):
         h = self.conv1(h, edge_index, edge_weight)
