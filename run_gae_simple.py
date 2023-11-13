@@ -148,7 +148,15 @@ if __name__ == "__main__":
         wandb.log({"r2_squared": r2.item()})
 
     torch.save(gae_model.state_dict(), "gae.pt")
-    wandb.finish()
 
     torch.save(pred_edge_weights, "gae_edge_attr.pt")
     torch.save(train_edge_weight, "train_edge_attr.pt")
+
+    train_edge_weight = train_edge_weight.cpu().detach().numpy()[:200]
+    pred_edge_weights = pred_edge_weights.cpu().detach().numpy()[:200]
+
+    # Log the tensor
+    wandb.log({"train_edge_weight": wandb.Table(data=train_edge_weight)})
+    wandb.log({"pred_edge_weights": wandb.Table(data=pred_edge_weights)})
+
+    wandb.finish()

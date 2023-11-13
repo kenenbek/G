@@ -96,9 +96,9 @@ class EncoderGAE(torch.nn.Module):
         super().__init__()
         self.conv1 = GCNConv(
             in_channels=6,
-            out_channels=64,
+            out_channels=8,
         )
-        self.norm1 = BatchNorm1d(64)
+        self.norm1 = BatchNorm1d(8)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
@@ -106,18 +106,18 @@ class EncoderGAE(torch.nn.Module):
         for i in range(1):
             self.conv_layers.append(
                 GCNConv(
-                    in_channels=64,
-                    out_channels=64,
+                    in_channels=8,
+                    out_channels=8,
                 )
             )
             self.batch_norms.append(
-                BatchNorm1d(64)
+                BatchNorm1d(8)
             )
         self.conv_last = GCNConv(
-            in_channels=64,
-            out_channels=64,
+            in_channels=8,
+            out_channels=8,
         )
-        self.dp = 0.05
+        self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
         h = self.conv1(h, edge_index, edge_weight)
