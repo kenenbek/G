@@ -6,7 +6,7 @@ from torch_geometric.utils import subgraph, to_dense_adj
 from torch_geometric.nn import GAE
 from tqdm import tqdm, trange
 from matplotlib import pyplot as plt
-from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import ConfusionMatrixDisplay, r2_score
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
@@ -142,6 +142,9 @@ if __name__ == "__main__":
         gae_scheduler.step()
 
         wandb.log({"recon_loss": recon_loss.item()})
+
+        r2 = r2_score(train_edge_weight, pred_edge_weights)
+        wandb.log({"r2_squared": r2.item()})
 
     torch.save(gae_model.state_dict(), "gae.pt")
     wandb.finish()
