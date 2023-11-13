@@ -152,11 +152,14 @@ if __name__ == "__main__":
     torch.save(pred_edge_weights, "gae_edge_attr.pt")
     torch.save(train_edge_weight, "train_edge_attr.pt")
 
-    train_edge_weight = train_edge_weight.cpu().detach().numpy()[:200]
-    pred_edge_weights = pred_edge_weights.cpu().detach().numpy()[:200]
+    train_edge_weight = train_edge_weight.squeeze(1).cpu().detach().numpy()[:200]
+    pred_edge_weights = pred_edge_weights.squeeze(1).cpu().detach().numpy()[:200]
 
-    # Log the tensor
-    wandb.log({"train_edge_weight": wandb.Table(data=train_edge_weight)})
-    wandb.log({"pred_edge_weights": wandb.Table(data=pred_edge_weights)})
+    logged_table = wandb.Table(columns=["True", "Pred"])
+
+    for expected, output in zip(train_edge_weight, pred_edge_weights):
+        logged_table.add_data(expected, output)
+
+    wandb.log({"comparison_edges": logged_table})
 
     wandb.finish()
