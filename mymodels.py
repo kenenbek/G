@@ -10,8 +10,8 @@ from my_gatconv import MYGATv2Conv
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GATv2Conv(in_channels=6,
-                               out_channels=128,
+        self.conv1 = GATv2Conv(in_channels=256,
+                               out_channels=256,
                                heads=2,
                                edge_dim=1,
                                aggr="add",
@@ -40,7 +40,7 @@ class AttnGCN(torch.nn.Module):
             )
         self.fc1 = Linear(256, 5)
 
-        self.dp = 0.2
+        self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
         h = self.conv1(h, edge_index, edge_weight)
