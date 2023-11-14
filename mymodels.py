@@ -15,8 +15,8 @@ class AttnGCN(torch.nn.Module):
                                heads=2,
                                edge_dim=1,
                                aggr="add",
-                               concat=True,
-                               share_weights=True,
+                               concat=False,
+                               share_weights=False,
                                add_self_loops=True)
         self.norm1 = BatchNorm1d(256)
 
