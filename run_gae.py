@@ -97,9 +97,9 @@ if __name__ == "__main__":
     gae_model = GAE(encoder=EncoderGAE(),
                     decoder=WeightedInnerProductDecoder()
                     ).to(device)
+    predictor = AttnGCN().to(device)
 
     criterion = torch.nn.CrossEntropyLoss()
-    predictor = AttnGCN()
 
     combined_parameters = list(gae_model.parameters()) + list(predictor.parameters())
 
