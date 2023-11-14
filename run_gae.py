@@ -13,7 +13,7 @@ from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from my_vgae import EncoderGAE, WeightedInnerProductDecoder, SimplePredictor
 from mymodels import AttnGCN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
-    set_global_seed, vgae_evaluate_one_by_one
+    set_global_seed, gae_evaluate_one_by_one
 from utils import inductive_train, to_one_hot
 
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 5000
+    wandb.config.epochs = 5
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -154,11 +154,11 @@ if __name__ == "__main__":
         gae_optimizer.step()
         gae_scheduler.step()
 
-        wandb.log({"recon_loss": recon_loss.item()})
-        wandb.log({"class_loss": class_loss.item()})
-
         r2 = r2_score(train_edge_weight.detach().cpu().numpy(), pred_edge_weights.detach().cpu().numpy())
-        wandb.log({"r2_squared": r2.item()})
+
+        wandb.log({"recon_loss": recon_loss.item(),
+                   "class_loss": class_loss.item(),
+                   "r2_squared": r2.item()})
 
     torch.save(gae_model.state_dict(), "gae.pt")
 
@@ -174,5 +174,32 @@ if __name__ == "__main__":
         logged_table.add_data(expected, output)
 
     wandb.log({"comparison_edges": logged_table})
+
+    # TEST one by one
+    y_true, y_pred = gae_evaluate_one_by_one(gae_model, predictor,
+                                             full_data, train_mask_f, test_mask)
+    metrics = calc_accuracy(y_true, y_pred)
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    sub_etnos = ["1", "2", "3", "4", "5"]
+
+    cm_display = ConfusionMatrixDisplay.from_predictions(y_true,
+                                                         y_pred,
+                                                         display_labels=sub_etnos,
+                                                         ax=ax)
+    fig.savefig("confusion_matrix.png")  # Save the figure to a file
+    wandb.log({"confusion_matrix": wandb.Image("confusion_matrix.png")})  # Log the saved figure to wandb
+    wandb.log(metrics)
+
+    torch.save(model.state_dict(), "attn_full.pt")
+    torch.save(y_true, "y_true.pt")
+    torch.save(y_pred, "y_pred.pt")
+
+    # Create a new artifact
+    artifact = wandb.Artifact('model-artifact', type='model')
+    # Add a file to the artifact (the model file)
+    artifact.add_file('attn_full.pt')
+    # Log the artifact
+    wandb.log_artifact(artifact)
 
     wandb.finish()

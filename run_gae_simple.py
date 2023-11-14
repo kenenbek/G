@@ -142,9 +142,8 @@ if __name__ == "__main__":
         gae_optimizer.step()
         gae_scheduler.step()
 
-        wandb.log({"recon_loss": recon_loss.item()})
-
         r2 = r2_score(train_edge_weight.detach().cpu().numpy(), pred_edge_weights.detach().cpu().numpy())
+        wandb.log({"recon_loss": recon_loss.item()})
         wandb.log({"r2_squared": r2.item()})
 
     torch.save(gae_model.state_dict(), "gae.pt")

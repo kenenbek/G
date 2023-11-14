@@ -91,7 +91,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             edge_attr_multi[mask] = new_edge_attr[mask]
 
-            out = model(input_x, sub_data.edge_index, edge_attr_multi)    # NB
+            out = model(input_x, sub_data.edge_index, sub_data.edge_attr)    # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
@@ -103,15 +103,22 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
     return y_true_list, pred_list
 
 
-def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask):
-    vgae_model.eval()
+def gae_evaluate_one_by_one(gae, predictor, data, train_mask, test_mask):
+    gae.eval()
     predictor.eval()
 
+    ones_tensor = torch.ones((train_mask.size()[0]+1, 6))
     # Get the indices of test nodes
     test_indices = torch.where(test_mask)[0].tolist()
 
     y_true_list = []
     pred_list = []
+
+    gae = gae.to(device)
+    predictor = predictor.to(device)
+    data = data.to(device)
+    train_mask = train_mask.to(device)
+    ones_tensor = ones_tensor.to(device)
 
     with torch.no_grad():
         for test_index in trange(len(test_indices)):
@@ -119,7 +126,7 @@ def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask)
             idx = test_indices[test_index]
 
             # Combine training indices with the current test index
-            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx])])
+            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx]).to(device)])
             sub_indices, _ = torch.sort(sub_indices)
 
             # Extract sub-graph
@@ -128,9 +135,8 @@ def vgae_evaluate_one_by_one(vgae_model, predictor, data, train_mask, test_mask)
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
-            # Predict on the sub-graph
-            out = vgae_model.encode(sub_data.train_x, sub_data.edge_index, sub_data.edge_attr)
-            out = predictor(out, sub_data.edge_index, sub_data.edge_attr)
+            z = gae.encode(ones_tensor, sub_data.edge_index, sub_data.edge_attr)    # NB
+            out = predictor(z, sub_data.edge_index, sub_data.edge_attr)
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
