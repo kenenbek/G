@@ -10,23 +10,23 @@ from my_gatconv import MYGATv2Conv
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GATv2Conv(in_channels=256,
-                               out_channels=256,
+        self.conv1 = GATv2Conv(in_channels=6,
+                               out_channels=128,
                                heads=2,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
                                share_weights=False,
                                add_self_loops=True)
-        self.norm1 = BatchNorm1d(256)
+        self.norm1 = BatchNorm1d(128)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
         for i in range(0):
             self.conv_layers.append(
-                GATv2Conv(in_channels=256,
-                          out_channels=256,
+                GATv2Conv(in_channels=128,
+                          out_channels=128,
                           heads=2,
                           edge_dim=1,
                           aggr="add",
@@ -36,10 +36,9 @@ class AttnGCN(torch.nn.Module):
             )
 
             self.batch_norms.append(
-                BatchNorm1d(256)
+                BatchNorm1d(128)
             )
-        self.fc1 = Linear(256, 5)
-
+        self.fc1 = Linear(128, 5)
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):

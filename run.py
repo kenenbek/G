@@ -61,13 +61,13 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 5
+    wandb.config.epochs = 3000
 
-    full_dataset = MyDataset(root="full_data/")
+    full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
-    train_indices_full = torch.load("full_data/0/train_indices.pt")
-    test_indices = torch.load("full_data/0/test_indices.pt")
+    train_indices_full = torch.load("fake_data/train_indices.pt")
+    test_indices = torch.load("fake_data/test_indices.pt")
 
     train_mask_f = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask_f[train_indices_full] = True
@@ -77,9 +77,9 @@ if __name__ == "__main__":
     assert torch.equal(train_mask_f, ~test_mask), "Error"
 
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
-    full_data.recalculate_input_features(train_mask_h)
+    # full_data.recalculate_input_features(train_mask_h)
 
-    model = GMM()
+    model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
 
-        out = model(x, train_edge_index, attr)
+        out = model(x, train_edge_index, train_edge_weight)
         loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
 
         loss.backward()
