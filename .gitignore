@@ -186,3 +186,4 @@ fabric.properties
 .DS_Store
 
 data/
+fake_data/
