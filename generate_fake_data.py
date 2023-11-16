@@ -84,7 +84,7 @@ if __name__ == '__main__':
                            [0.00579579, 0.00633572, 0.00422982, 0.00744347, 0.01977209]])
 
     ### code for modelling
-    N = 3000
+    N = 1000
     population_sizes = [N, N, N, N, N]  # [70, 463, 426, 2177, 631]
 
     means, counts, pop_index = generate_matrices(population_sizes, p=real_probs)
