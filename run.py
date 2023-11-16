@@ -143,10 +143,10 @@ if __name__ == "__main__":
     torch.save(y_pred, "y_pred.pt")
 
     # Create a new artifact
-    artifact = wandb.Artifact('model-artifact', type='model')
-    # Add a file to the artifact (the model file)
-    artifact.add_file('attn_full.pt')
-    # Log the artifact
-    wandb.log_artifact(artifact)
+    # artifact = wandb.Artifact('model-artifact', type='model')
+    # # Add a file to the artifact (the model file)
+    # artifact.add_file('attn_full.pt')
+    # # Log the artifact
+    # wandb.log_artifact(artifact)
 
     wandb.finish()
