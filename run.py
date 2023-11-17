@@ -19,6 +19,8 @@ from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
 from utils import inductive_train, to_one_hot
+from torch_geometric.transforms import GDC
+
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -65,6 +67,7 @@ if __name__ == "__main__":
 
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
+    full_data = GDC()(full_data)
     num_nodes = full_data.y.shape[0]
     train_indices_full = torch.load("fake_data/train_indices.pt")
     test_indices = torch.load("fake_data/test_indices.pt")
