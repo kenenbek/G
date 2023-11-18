@@ -85,11 +85,11 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             input_x = sub_data.x_one_hot.clone()
             input_x[test_node_position] = unknown_label
 
-            edge_attr_multi = sub_data.edge_attr_multi.clone()
-            mask = sub_data.edge_index[0] == test_node_position
-            new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
-            new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
-            edge_attr_multi[mask] = new_edge_attr[mask]
+            # edge_attr_multi = sub_data.edge_attr_multi.clone()
+            # mask = sub_data.edge_index[0] == test_node_position
+            # new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
+            # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
+            # edge_attr_multi[mask] = new_edge_attr[mask]
 
             out = model(input_x, sub_data.edge_index, sub_data.edge_attr)    # NB
 

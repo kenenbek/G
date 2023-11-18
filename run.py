@@ -27,7 +27,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def change_input(x_input, train_edge_index, train_edge_attr_multi):
     x_input = x_input.clone()
-    train_edge_attr_multi = train_edge_attr_multi.clone()
+    # train_edge_attr_multi = train_edge_attr_multi.clone()
 
     num_nodes = x_input.size(0)  # Assume data.y contains your node labels
     unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
@@ -47,9 +47,9 @@ def change_input(x_input, train_edge_index, train_edge_attr_multi):
     mask = mask.any(dim=1)  # Reduce to get a mask for edges
 
     # Update the edge attributes
-    new_edge_attr = torch.zeros_like(train_edge_attr_multi).to(device)
-    new_edge_attr[mask, -1] = torch.max(train_edge_attr_multi[mask], dim=1)[0]  # Move src label info to the last position
-    train_edge_attr_multi[mask] = new_edge_attr[mask]
+    # new_edge_attr = torch.zeros_like(train_edge_attr_multi).to(device)
+    # new_edge_attr[mask, -1] = torch.max(train_edge_attr_multi[mask], dim=1)[0]  # Move src label info to the last position
+    # train_edge_attr_multi[mask] = new_edge_attr[mask]
 
     node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
     node_mask[indices] = True
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 1000
+    wandb.config.epochs = 10
 
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
@@ -95,11 +95,11 @@ if __name__ == "__main__":
 
     # Extract the subgraph associated with the training nodes
     train_nodes = torch.nonzero(train_mask_f).squeeze()
-    train_edge_index, train_edge_attr_multi = subgraph(
-        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
-    )
+    # train_edge_index, train_edge_attr_multi = subgraph(
+    #     train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
+    # )
 
-    _, train_edge_weight = subgraph(
+    train_edge_index, train_edge_weight = subgraph(
         train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
 
@@ -108,13 +108,13 @@ if __name__ == "__main__":
     train_mask_f = train_mask_f.to(device)
     train_edge_index = train_edge_index.to(device)
     train_edge_weight = train_edge_weight.to(device)
-    train_edge_attr_multi = train_edge_attr_multi.to(device)
+    # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
     accumulated_gradients = 0
     for epoch in t:
         model.train()
         optimizer.zero_grad()
-        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, train_edge_attr_multi)
+        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, None)
 
         out = model(x, train_edge_index, train_edge_weight)
         loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
