@@ -47,7 +47,7 @@ class AttnGCN(torch.nn.Module):
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.conv0(h, edge_index, edge_weight)
+        h = self.conv0(h, edge_index)
         h = self.norm0(h)
         # h = self.conv1(h, edge_index, edge_weight)
         # h = self.norm1(h)
