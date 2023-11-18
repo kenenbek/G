@@ -63,7 +63,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 10
+    wandb.config.epochs = 1000
 
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
