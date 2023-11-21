@@ -71,7 +71,7 @@ if __name__ == "__main__":
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
     full_data.edge_attr = full_data.edge_attr.squeeze(1)
-    full_data = GDC()(full_data)
+    # full_data = GDC()(full_data)
     num_nodes = full_data.y.shape[0]
     train_indices_full = torch.load("fake_data/train_indices.pt")
     test_indices = torch.load("fake_data/test_indices.pt")
