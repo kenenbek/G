@@ -30,6 +30,11 @@ hse-run-test:
 	sbatch --constraint="type_a|type_b|type_c|type_d" --signal=INT@50 --gpus=$(GPU) -c $(CPU) -t $(T) run.sh;
 	rm run.sh
 
+hse-generate-rec:
+	echo "#!/bin/bash" > run.sh;
+	echo "srun python generate_reconstruct_matrices.py" >> run.sh;
+	sbatch --gpus=0 -c=4 -t 600 run.sh;
+	rm run.sh
 
 ex = "123"
 print:
