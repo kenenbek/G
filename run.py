@@ -18,7 +18,7 @@ from torch.optim.lr_scheduler import StepLR
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM, SimpleNN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed, prep_for_reconstruct
-from utils import inductive_train, to_one_hot
+from utils import inductive_train, to_one_hot, evaluate_one_by_one_rec
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
 
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one
-    y_true, y_pred = evaluate_one_by_one(model, full_data, train_mask_f, test_mask)
+    y_true, y_pred = evaluate_one_by_one_rec(model, full_data, train_mask_f, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))

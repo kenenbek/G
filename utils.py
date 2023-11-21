@@ -337,31 +337,68 @@ def ordinary_training(model, optimizer, scheduler, data, criterion):
     wandb.log({"loss": loss.item()})
 
 
-# def stationary_torch(A):
-#     A = torch.Tensor(A).cuda()  # Convert A to a PyTorch tensor and move to GPU
-#     eigvals, eigvecs = torch.linalg.eig(A.T)  # Compute eigenvalues and eigenvectors
-#     eigvals = eigvals.real  # Take the real part
-#     ind = torch.argmax(eigvals)  # Index of the largest eigenvalue
-#     est = eigvecs[:, ind].real  # Corresponding eigenvector
-#     pr = est / torch.sum(est) * A.shape[0]  # Normalize and scale
-#     return pr
-#
-# def prep_for_reconstruct(edge_index, n, m, dim=128):
-#     deg = torch.bincount(edge_index.reshape(-1), minlength=n).float().cuda()
-#     fr = torch.cat([edge_index[0], edge_index[1]]).cuda()
-#     to = torch.cat([edge_index[1], edge_index[0]]).cuda()
-#
-#     # Sparse matrix operations need to be adapted for PyTorch and CUDA
-#     # A = csr_matrix([...])
-#
-#     X = torch.stack([deg[i] for i in range(n)], 1).cuda()
-#     ind = torch.eye(n).cuda()[:, torch.randperm(n)[:m]]
-#     X_extended = torch.hstack([X, ind]).cuda()
-#
-#     pr = stationary(A)
-#     pr = torch.clamp(pr, min=1e-9)
-#     # rec_orig = reconstruct_full(dim, deg.cpu().numpy(), pr.cpu().numpy(), n, m, fr.cpu().numpy(), to.cpu().numpy())
-#     # rec_orig = torch.FloatTensor(rec_orig).cuda()
-#
-#     # return rec_orig
+def stationary_torch(A):
+    # Convert A to a PyTorch tensor and transpose it
+    A_torch = torch.tensor(A).type(torch.float).to(device)
 
+    # Perform eigenvalue decomposition
+    eigvals, eigvecs = torch.linalg.eig(A_torch.t())
+
+    # Find the index of the largest real part of the eigenvalues
+    _, ind = torch.max(eigvals.real, 0)
+
+    # Extract the corresponding eigenvector and normalize it
+    est = eigvecs[:, ind].real
+    pr = est / est.sum() * A_torch.shape[0]
+
+    return pr  # Convert back to numpy array if needed
+
+
+def prep_for_reconstruct_torch(edge_index, n, m, dim=128):
+    deg = torch.bincount(edge_index.reshape(-1), minlength=n).float().cuda()
+    fr = torch.cat([edge_index[0], edge_index[1]]).cuda()
+    to = torch.cat([edge_index[1], edge_index[0]]).cuda()
+
+    # Sparse matrix operations need to be adapted for PyTorch and CUDA
+    # A = csr_matrix([...])
+
+    X = torch.stack([deg[i] for i in range(n)], 1).cuda()
+    ind = torch.eye(n).cuda()[:, torch.randperm(n)[:m]]
+    X_extended = torch.hstack([X, ind]).cuda()
+
+    pr = stationary(A)
+    pr = torch.clamp(pr, min=1e-9)
+    # rec_orig = reconstruct_full(dim, deg.cpu().numpy(), pr.cpu().numpy(), n, m, fr.cpu().numpy(), to.cpu().numpy())
+    # rec_orig = torch.FloatTensor(rec_orig).cuda()
+
+    # return rec_orig
+
+
+def evaluate_one_by_one_rec(model, data, train_mask, test_mask):
+    model.eval()
+
+    # Get the indices of test nodes
+    test_indices = torch.where(test_mask)[0].tolist()
+
+    y_true_list = []
+    pred_list = []
+
+    model = model.to(device)
+    data = data.to(device)
+    train_mask = train_mask.to(device)
+
+    with torch.no_grad():
+        for i in range(1132):
+            rec_orig, test_position = torch.load(f"recs/rec_{i}.pt")
+            sub_data = torch.load(f"recs/sub_data_{i}.pt")
+
+            out = model(rec_orig, sub_data.edge_index, sub_data.edge_attr)  # NB
+
+            # Use the test_node_position to get the prediction and true label
+            pred = out[test_position].argmax(dim=0).item()
+            true_label = sub_data.y[test_position].item()
+
+            y_true_list.append(true_label)
+            pred_list.append(pred)
+
+    return y_true_list, pred_list
