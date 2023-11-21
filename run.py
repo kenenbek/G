@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
-from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM
+from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM, SimpleNN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed, prep_for_reconstruct
 from utils import inductive_train, to_one_hot
 from torch_geometric.transforms import GDC
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     # full_data.recalculate_input_features(train_mask_h)
 
-    model = AttnGCN()
+    model = SimpleNN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
