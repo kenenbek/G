@@ -32,6 +32,7 @@ hse-run-test:
 
 hse-generate-rec:
 	echo "#!/bin/bash" > run.sh;
+	echo "module load Python/Anaconda_v05.2022 CUDA/11.7" >> run.sh;
 	echo "srun python generate_reconstruct_matrices.py" >> run.sh;
 	sbatch --gpus=0 -c 4 -t 600 run.sh;
 	rm run.sh
