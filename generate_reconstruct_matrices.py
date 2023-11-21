@@ -1,10 +1,5 @@
-from matplotlib import pyplot as plt
 import torch
-import numpy as np
-import random
-from sklearn import metrics
 from tqdm import tqdm, trange
-from torch_geometric.nn.models import LabelPropagation
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
