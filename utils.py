@@ -337,31 +337,31 @@ def ordinary_training(model, optimizer, scheduler, data, criterion):
     wandb.log({"loss": loss.item()})
 
 
-def stationary_torch(A):
-    A = torch.Tensor(A).cuda()  # Convert A to a PyTorch tensor and move to GPU
-    eigvals, eigvecs = torch.linalg.eig(A.T)  # Compute eigenvalues and eigenvectors
-    eigvals = eigvals.real  # Take the real part
-    ind = torch.argmax(eigvals)  # Index of the largest eigenvalue
-    est = eigvecs[:, ind].real  # Corresponding eigenvector
-    pr = est / torch.sum(est) * A.shape[0]  # Normalize and scale
-    return pr
-
-def prep_for_reconstruct(edge_index, n, m, dim=128):
-    deg = torch.bincount(edge_index.reshape(-1), minlength=n).float().cuda()
-    fr = torch.cat([edge_index[0], edge_index[1]]).cuda()
-    to = torch.cat([edge_index[1], edge_index[0]]).cuda()
-
-    # Sparse matrix operations need to be adapted for PyTorch and CUDA
-    # A = csr_matrix([...])
-
-    X = torch.stack([deg[i] for i in range(n)], 1).cuda()
-    ind = torch.eye(n).cuda()[:, torch.randperm(n)[:m]]
-    X_extended = torch.hstack([X, ind]).cuda()
-
-    pr = stationary(A)
-    pr = torch.clamp(pr, min=1e-9)
-    # rec_orig = reconstruct_full(dim, deg.cpu().numpy(), pr.cpu().numpy(), n, m, fr.cpu().numpy(), to.cpu().numpy())
-    # rec_orig = torch.FloatTensor(rec_orig).cuda()
-
-    # return rec_orig
+# def stationary_torch(A):
+#     A = torch.Tensor(A).cuda()  # Convert A to a PyTorch tensor and move to GPU
+#     eigvals, eigvecs = torch.linalg.eig(A.T)  # Compute eigenvalues and eigenvectors
+#     eigvals = eigvals.real  # Take the real part
+#     ind = torch.argmax(eigvals)  # Index of the largest eigenvalue
+#     est = eigvecs[:, ind].real  # Corresponding eigenvector
+#     pr = est / torch.sum(est) * A.shape[0]  # Normalize and scale
+#     return pr
+#
+# def prep_for_reconstruct(edge_index, n, m, dim=128):
+#     deg = torch.bincount(edge_index.reshape(-1), minlength=n).float().cuda()
+#     fr = torch.cat([edge_index[0], edge_index[1]]).cuda()
+#     to = torch.cat([edge_index[1], edge_index[0]]).cuda()
+#
+#     # Sparse matrix operations need to be adapted for PyTorch and CUDA
+#     # A = csr_matrix([...])
+#
+#     X = torch.stack([deg[i] for i in range(n)], 1).cuda()
+#     ind = torch.eye(n).cuda()[:, torch.randperm(n)[:m]]
+#     X_extended = torch.hstack([X, ind]).cuda()
+#
+#     pr = stationary(A)
+#     pr = torch.clamp(pr, min=1e-9)
+#     # rec_orig = reconstruct_full(dim, deg.cpu().numpy(), pr.cpu().numpy(), n, m, fr.cpu().numpy(), to.cpu().numpy())
+#     # rec_orig = torch.FloatTensor(rec_orig).cuda()
+#
+#     # return rec_orig
 
