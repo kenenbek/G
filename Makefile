@@ -33,7 +33,7 @@ hse-run-test:
 hse-generate-rec:
 	echo "#!/bin/bash" > run.sh;
 	echo "srun python generate_reconstruct_matrices.py" >> run.sh;
-	sbatch --gpus=0 -c=4 -t 600 run.sh;
+	sbatch --gpus=0 -c 4 -t 600 run.sh;
 	rm run.sh
 
 ex = "123"
