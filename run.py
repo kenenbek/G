@@ -17,9 +17,12 @@ from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM
-from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed
+from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed, prep_for_reconstruct
 from utils import inductive_train, to_one_hot
 from torch_geometric.transforms import GDC
+from torch_geometric.utils import to_undirected
+
+
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -63,7 +66,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-4
-    wandb.config.epochs = 1000
+    wandb.config.epochs = 10
 
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
@@ -110,13 +113,13 @@ if __name__ == "__main__":
     train_edge_weight = train_edge_weight.to(device)
     # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
-    accumulated_gradients = 0
+    rec = prep_for_reconstruct(train_edge_index, n=train_nodes.shape[0], m=train_nodes.shape[0], dim=128)
     for epoch in t:
         model.train()
         optimizer.zero_grad()
         x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, None)
 
-        out = model(x, train_edge_index, train_edge_weight)
+        out = model(rec, train_edge_index, train_edge_weight)
         loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
 
         loss.backward()

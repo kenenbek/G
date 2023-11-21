@@ -52,6 +52,58 @@ def label_propagation_one_by_one(data, train_mask, test_mask):
     return y_true_list, pred_list
 
 
+from scipy.sparse.linalg import eigs
+from scipy.sparse.csgraph import shortest_path
+from scipy.sparse import csr_matrix
+
+
+def reconstruct_full(dim, deg, pr, n, m, fr, to):
+    selected = np.random.choice(np.arange(n), m, replace=False)
+    unselected = np.array(list(set(np.arange(n)) - set(selected)))
+    s = (deg / (pr * n * n)) ** 0.25
+    W = csr_matrix(([s[x] for x in fr], (fr, to)))
+    spd = shortest_path(W, indices=selected)
+    pos_inf = (spd == np.inf)
+    spd[pos_inf] = 0
+    spd[pos_inf] = spd.max()
+    selected_spd = spd[:, selected]
+    sspd = (selected_spd + selected_spd.T) / 2
+    sspd = sspd ** 2
+    H = np.eye(m) - np.ones(m) / n
+    Ker = - H @ sspd @ H / 2
+    w, v = np.linalg.eigh(Ker)
+    rec_unnormalized = v[:, -dim:] @ np.diag(w[-dim:])
+    rec_orig = np.zeros((n, dim))
+    rec_orig[selected] = rec_unnormalized
+    # rec_orig[unselected] = rec_unnormalized[spd[:, unselected].argmin(0)]
+    return rec_orig
+
+
+def stationary(A):
+    eig = eigs(A.T)
+    ind = eig[0].real.argsort()[-1]
+    est = eig[1][:, ind].real
+    pr = est / est.sum() * A.shape[0]
+    return pr
+
+
+def prep_for_reconstruct(edge_index, n, m, dim=128):
+    deg = torch.bincount(edge_index.reshape(-1), minlength=n)
+    fr = np.concatenate([edge_index[0].numpy(), edge_index[1].numpy()])
+    to = np.concatenate([edge_index[1].numpy(), edge_index[0].numpy()])
+    A = csr_matrix(([1 / deg[x] for x in fr], (fr, to)))
+    X = torch.tensor([[deg[i], n] for i in range(n)], dtype=torch.float)
+    ind = torch.eye(n)[:, torch.randperm(n)[:m]]
+    X_extended = torch.hstack([X, ind])
+
+    pr = stationary(A)
+    pr = np.maximum(pr, 1e-9)
+    rec_orig = reconstruct_full(dim, deg.numpy(), pr, n, m, fr, to)
+    rec_orig = torch.FloatTensor(rec_orig)
+
+    return rec_orig
+
+
 def evaluate_one_by_one(model, data, train_mask, test_mask):
     model.eval()
 
@@ -81,17 +133,18 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
-            input_x = sub_data.x_one_hot.clone()
-            input_x[test_node_position] = unknown_label
-
+            # unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+            # input_x = sub_data.x_one_hot.clone()
+            # input_x[test_node_position] = unknown_label
             # edge_attr_multi = sub_data.edge_attr_multi.clone()
             # mask = sub_data.edge_index[0] == test_node_position
             # new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
             # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             # edge_attr_multi[mask] = new_edge_attr[mask]
 
-            out = model(input_x, sub_data.edge_index, sub_data.edge_attr)    # NB
+            n = sub_data.train_x.shape[0]
+            rec = prep_for_reconstruct(sub_data.edge_index, n=n, m=n, dim=128)
+            out = model(rec, sub_data.edge_index, sub_data.edge_attr)  # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
@@ -107,7 +160,7 @@ def gae_evaluate_one_by_one(gae, predictor, data, train_mask, test_mask):
     gae.eval()
     predictor.eval()
 
-    ones_tensor = torch.ones((train_mask.size()[0]+1, 6))
+    ones_tensor = torch.ones((train_mask.size()[0] + 1, 6))
     # Get the indices of test nodes
     test_indices = torch.where(test_mask)[0].tolist()
 
@@ -135,7 +188,7 @@ def gae_evaluate_one_by_one(gae, predictor, data, train_mask, test_mask):
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
-            z = gae.encode(ones_tensor, sub_data.edge_index, sub_data.edge_attr)    # NB
+            z = gae.encode(ones_tensor, sub_data.edge_index, sub_data.edge_attr)  # NB
             out = predictor(z, sub_data.edge_index, sub_data.edge_attr)
 
             # Use the test_node_position to get the prediction and true label

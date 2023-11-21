@@ -10,19 +10,15 @@ from my_gatconv import MYGATv2Conv
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv0 = GCNConv(
-            in_channels=6,
-            out_channels=128,
-        )
-        self.norm0 = BatchNorm1d(128)
-        self.conv1 = GCNConv(in_channels=128,
-                               out_channels=128,)
-                               # heads=2,
-                               # edge_dim=1,
-                               # aggr="add",
-                               # concat=True,
-                               # share_weights=False,
-                               # add_self_loops=True)
+
+        self.conv1 = GATv2Conv(in_channels=8,
+                               out_channels=64,
+                               heads=2,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=True,
+                               share_weights=False,
+                               add_self_loops=True)
         self.norm1 = BatchNorm1d(128)
 
         self.conv_layers = torch.nn.ModuleList([])
@@ -47,8 +43,6 @@ class AttnGCN(torch.nn.Module):
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.conv0(h, edge_index)
-        h = self.norm0(h)
         h = self.conv1(h, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
@@ -142,28 +136,19 @@ class SimpleNN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.dp = 0.2
-        self.norm0 = BatchNorm1d(5)
-        self.fc1 = Linear(5, 128)
+        self.norm0 = BatchNorm1d(128)
+        self.fc1 = Linear(128, 128)
         self.norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.norm2 = BatchNorm1d(128)
-        self.fc3 = Linear(128, 128)
-        self.norm3 = BatchNorm1d(128)
-        self.fc4 = Linear(128, 128)
-        self.norm4 = BatchNorm1d(128)
-        self.fc5 = Linear(128, 5)
+        self.fc3 = Linear(128, 5)
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm0(h)
         h = self.norm1(self.fc1(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
         h = self.norm2(self.fc2(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.norm3(self.fc3(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.norm4(self.fc4(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc5(h)
+        h = self.fc3(h)
         return h
 
 
