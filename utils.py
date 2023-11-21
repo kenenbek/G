@@ -142,7 +142,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             # edge_attr_multi[mask] = new_edge_attr[mask]
 
-            n = sub_data.train_x.shape[0]
+            n = sub_data.y.shape[0]
             rec = prep_for_reconstruct(sub_data.edge_index, n=n, m=n, dim=128)
             out = model(rec, sub_data.edge_index, sub_data.edge_attr)  # NB
 
