@@ -388,7 +388,7 @@ def evaluate_one_by_one_rec(model, data, train_mask, test_mask):
     train_mask = train_mask.to(device)
 
     with torch.no_grad():
-        for i in range(1132):
+        for i in trange(1132):
             rec_orig, test_position = torch.load(f"recs/rec_{i}.pt")
             sub_data = torch.load(f"recs/sub_data_{i}.pt")
 
@@ -402,3 +402,60 @@ def evaluate_one_by_one_rec(model, data, train_mask, test_mask):
             pred_list.append(pred)
 
     return y_true_list, pred_list
+
+
+import torch
+import torch_geometric
+from torch_geometric.utils import subgraph, to_networkx
+import networkx as nx
+import random
+
+import torch
+import torch_geometric
+from torch_geometric.utils import subgraph, to_networkx
+import networkx as nx
+import random
+
+
+def create_connected_subgraph_with_mask_random(data, lower_bound=0.95, upper_bound=1.0):
+    """
+    Create a connected subgraph from a PyG graph data and return node mask.
+    Runs on GPU if available, otherwise on CPU.
+
+    :param data: PyG Data object representing the graph.
+    :param lower_bound: Lower bound for the percentage of nodes to include.
+    :param upper_bound: Upper bound for the percentage of nodes to include.
+    :return: Connected subgraph as a PyG Data object and node mask.
+    """
+
+    # Ensure the data is on the correct device
+    data = data.to(device)
+
+    # Convert to NetworkX graph
+    G = to_networkx(data, to_undirected=True)
+
+    num_nodes = len(G)
+    subgraph_size = int(
+        num_nodes * torch.rand(1, device=device).item() * (upper_bound - lower_bound) + lower_bound * num_nodes)
+
+    start_node = random.choice(list(G.nodes))
+    visited = {start_node}
+    queue = [start_node]
+
+    while len(visited) < subgraph_size:
+        current = queue.pop(0)
+        for neighbor in G.neighbors(current):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+                if len(visited) == subgraph_size:
+                    break
+
+    subgraph_nodes = torch.tensor(list(visited), device=device)
+    edge_index, edge_weight = subgraph(subgraph_nodes, data.edge_index,
+                                       edge_attr=data.edge_attr, num_nodes=num_nodes, relabel_nodes=True)
+
+    node_mask = torch.zeros(num_nodes, dtype=torch.bool, device=device)
+    node_mask[subgraph_nodes] = True
+
+    return edge_index, edge_weight, node_mask

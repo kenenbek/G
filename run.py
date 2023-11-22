@@ -17,13 +17,11 @@ from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM, SimpleNN
-from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, set_global_seed, prep_for_reconstruct
-from utils import inductive_train, to_one_hot, evaluate_one_by_one_rec
+from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
+    set_global_seed, prep_for_reconstruct
+from utils import inductive_train, to_one_hot, evaluate_one_by_one_rec, create_connected_subgraph_with_mask_random
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
-
-
-
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -68,28 +66,28 @@ if __name__ == "__main__":
     wandb.config.weight_decay = 5e-4
     wandb.config.epochs = 1000
 
-    full_dataset = MyDataset(root="fake_data/")
+    full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
     full_data.edge_attr = full_data.edge_attr.squeeze(1)
     # full_data = GDC()(full_data)
     num_nodes = full_data.y.shape[0]
-    train_indices_full = torch.load("fake_data/train_indices.pt")
-    test_indices = torch.load("fake_data/test_indices.pt")
+    train_indices = torch.load("full_data/0/train_indices.pt")
+    test_indices = torch.load("full_data/0/test_indices.pt")
 
-    train_mask_f = torch.zeros(num_nodes, dtype=torch.bool)
-    train_mask_f[train_indices_full] = True
+    train_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    train_mask[train_indices] = True
     test_mask = torch.zeros(num_nodes, dtype=torch.bool)
     test_mask[test_indices] = True
 
-    assert torch.equal(train_mask_f, ~test_mask), "Error"
+    assert torch.equal(train_mask, ~test_mask), "Error"
 
-    train_mask_sub, train_mask_h = create_hidden_train_mask(train_indices_full, num_nodes, hide_frac=0.0)
     # full_data.recalculate_input_features(train_mask_h)
 
     model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
-    scheduler = StepLR(optimizer, step_size=500, gamma=0.1)   # Decay the learning rate by a factor of 0.1 every 10 epochs
+    scheduler = StepLR(optimizer, step_size=500,
+                       gamma=0.1)  # Decay the learning rate by a factor of 0.1 every 10 epochs
 
     # wandb.watch(model, log="all", log_freq=10)
 
@@ -97,30 +95,32 @@ if __name__ == "__main__":
     losses = []
 
     # Extract the subgraph associated with the training nodes
-    train_nodes = torch.nonzero(train_mask_f).squeeze()
     # train_edge_index, train_edge_attr_multi = subgraph(
     #     train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
     # )
 
     train_edge_index, train_edge_weight = subgraph(
-        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
+        train_indices, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
+    train_subgraph = full_data.subgraph(train_indices)
 
     model = model.to(device)
     full_data = full_data.to(device)
-    train_mask_f = train_mask_f.to(device)
+    train_mask = train_mask.to(device)
     train_edge_index = train_edge_index.to(device)
     train_edge_weight = train_edge_weight.to(device)
     # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
-    rec = prep_for_reconstruct(train_edge_index, n=train_nodes.shape[0], m=train_nodes.shape[0], dim=128)
     for epoch in t:
         model.train()
         optimizer.zero_grad()
-        x, attr, node_mask = change_input(full_data.x_one_hot[train_mask_f], train_edge_index, None)
 
-        out = model(rec, train_edge_index, train_edge_weight)
-        loss = criterion(out[train_mask_sub], full_data.y[train_mask_h])
+        r_edge_index, r_edge_weight, r_mask = create_connected_subgraph_with_mask_random(train_subgraph)
+
+        x, attr, noisy_mask = change_input(full_data.x_one_hot[train_mask][r_mask],
+                                           r_edge_index, None)
+        out = model(x, r_edge_index, r_edge_weight)
+        loss = criterion(out, full_data.y[train_mask][r_mask])
 
         loss.backward()
         optimizer.step()
@@ -131,7 +131,7 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one
-    y_true, y_pred = evaluate_one_by_one_rec(model, full_data, train_mask_f, test_mask)
+    y_true, y_pred = evaluate_one_by_one_rec(model, full_data, train_mask, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
