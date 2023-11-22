@@ -131,7 +131,7 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one
-    y_true, y_pred = evaluate_one_by_one_rec(model, full_data, train_mask, test_mask)
+    y_true, y_pred = evaluate_one_by_one(model, full_data, train_mask, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
