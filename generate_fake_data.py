@@ -101,7 +101,7 @@ if __name__ == '__main__':
     labels = dict(sorted(labels.items()))
     labels = torch.Tensor(list(labels.values())).type(torch.long)
 
-    one_hot_labels = F.one_hot(labels, num_classes=6).type(torch.float)
+    one_hot_labels = F.one_hot(labels, num_classes=5).type(torch.float)
 
     edge_index = torch.tensor(edge_list).type(torch.long).T
     edge_attr = torch.tensor(edge_attr).type(torch.float)
