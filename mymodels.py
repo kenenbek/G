@@ -130,8 +130,10 @@ class GCN(torch.nn.Module):
             aggr="max"
         )
 
-        self.attn_conv = GATv2Conv(in_channels=160,
-                                   out_channels=160,
+        self.intermediate = Linear(160, 32)
+
+        self.attn_conv = GATv2Conv(in_channels=32,
+                                   out_channels=32,
                                    heads=1,
                                    edge_dim=1,
                                    aggr="add",
@@ -139,12 +141,12 @@ class GCN(torch.nn.Module):
                                    share_weights=False,
                                    add_self_loops=True
                                    )
-        self.attn_norm = BatchNorm1d(160)
+        self.attn_norm = BatchNorm1d(32)
 
-        self.norm1 = BatchNorm1d(160)
-        self.fc1 = Linear(160, 160)
-        self.norm_fc1 = BatchNorm1d(160)
-        self.fc2 = Linear(160, 5)
+        self.norm1 = BatchNorm1d(32)
+        self.fc1 = Linear(32, 32)
+        self.norm_fc1 = BatchNorm1d(32)
+        self.fc2 = Linear(32, 5)
 
         self.dp = 0.2
 
@@ -159,6 +161,8 @@ class GCN(torch.nn.Module):
         h = self.norm1(h)
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.intermediate(h)
 
         h = self.attn_conv(h, edge_index, edge_weight)
         h = self.norm1(h)
