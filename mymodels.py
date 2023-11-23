@@ -140,7 +140,7 @@ class GCN(torch.nn.Module):
                                    share_weights=False,
                                    add_self_loops=True
                                    )
-        self.attn_norm = BatchNorm1d(160)
+        self.attn_norm = BatchNorm1d(640)
 
         self.fc1 = Linear(640, 640)
         self.norm_fc1 = BatchNorm1d(640)
