@@ -129,7 +129,7 @@ class GCN(torch.nn.Module):
             normalize=False,
             aggr="max"
         )
-
+        self.norm1 = BatchNorm1d(160)
         self.intermediate = Linear(160, 32)
 
         self.attn_conv = GATv2Conv(in_channels=32,
@@ -143,7 +143,6 @@ class GCN(torch.nn.Module):
                                    )
         self.attn_norm = BatchNorm1d(32)
 
-        self.norm1 = BatchNorm1d(32)
         self.fc1 = Linear(32, 32)
         self.norm_fc1 = BatchNorm1d(32)
         self.fc2 = Linear(32, 5)
