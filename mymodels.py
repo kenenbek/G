@@ -93,40 +93,59 @@ class GCN(torch.nn.Module):
 
         self.conv1_sum_ibd = GCNConv(
             in_channels=5,
-            out_channels=128,
+            out_channels=32,
             add_self_loops=False,
             normalize=False,
             aggr="add"
         )
-        self.conv1_mean_ind = GCNConv(
+        self.conv1_mean_ibd = GCNConv(
             in_channels=5,
-            out_channels=128,
+            out_channels=32,
             add_self_loops=False,
             normalize=False,
             aggr="mean"
         )
 
+        self.conv1_max_ibd = GCNConv(
+            in_channels=5,
+            out_channels=32,
+            add_self_loops=False,
+            normalize=False,
+            aggr="max"
+        )
+
         self.conv1_num_edges = GCNConv(
             in_channels=5,
-            out_channels=128,
+            out_channels=32,
             add_self_loops=False,
             normalize=False,
             aggr="add"
         )
-        self.norm1 = BatchNorm1d(384)
-        self.fc1 = Linear(384, 128)
-        self.norm_fc1 = BatchNorm1d(128)
-        self.fc2 = Linear(128, 5)
+
+        self.conv1_num_edges_max = GCNConv(
+            in_channels=5,
+            out_channels=32,
+            add_self_loops=False,
+            normalize=False,
+            aggr="max"
+        )
+
+        self.norm1 = BatchNorm1d(160)
+        self.fc1 = Linear(160, 160)
+        self.norm_fc1 = BatchNorm1d(160)
+        self.fc2 = Linear(160, 5)
 
         self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
 
         h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
-        h2 = self.conv1_mean_ind(h, edge_index, edge_weight)
-        h3 = self.conv1_num_edges(h, edge_index)
+        h2 = self.conv1_mean_ibd(h, edge_index, edge_weight)
+        h3 = self.conv1_max_ibd(h, edge_index, edge_weight)
+        h4 = self.conv1_num_edges(h, edge_index)
+        h5 = self.conv1_num_edges_max(h, edge_index)
 
-        h = torch.cat((h1, h2, h3), dim=-1)
+        h = torch.cat((h1, h2, h3, h4, h5), dim=-1)
         h = self.norm1(h)
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
