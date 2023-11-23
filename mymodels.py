@@ -134,7 +134,7 @@ class GCN(torch.nn.Module):
                                    out_channels=160,
                                    heads=2,
                                    edge_dim=1,
-                                   aggr="max",
+                                   aggr="add",
                                    concat=False,
                                    share_weights=False,
                                    add_self_loops=True
