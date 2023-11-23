@@ -133,7 +133,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+            unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
             input_x = sub_data.x_one_hot.clone()
             input_x[test_node_position] = unknown_label
             # edge_attr_multi = sub_data.edge_attr_multi.clone()

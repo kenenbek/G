@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
-from mymodels import AttnGCN, TransformNet, TAGConv_3l_128h_w_k3, SAGE, AttnGCN_OLD, GMM, SimpleNN
+from mymodels import AttnGCN, SimpleNN, GCN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
     set_global_seed, prep_for_reconstruct
 from utils import inductive_train, to_one_hot, evaluate_one_by_one_rec, create_connected_subgraph_with_mask_random
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     # full_data.recalculate_input_features(train_mask_h)
 
-    model = AttnGCN()
+    model = GCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -115,12 +115,8 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        r_edge_index, r_edge_weight, r_mask = create_connected_subgraph_with_mask_random(train_subgraph)
-
-        x, attr, noisy_mask = change_input(full_data.x_one_hot[train_mask][r_mask],
-                                           r_edge_index, None)
-        out = model(x, r_edge_index, r_edge_weight)
-        loss = criterion(out, full_data.y[train_mask][r_mask])
+        out = model(full_data.x_one_hot[train_mask], train_edge_index, train_edge_weight)
+        loss = criterion(out, full_data.y[train_mask])
 
         loss.backward()
         optimizer.step()
@@ -157,3 +153,9 @@ if __name__ == "__main__":
     # wandb.log_artifact(artifact)
 
     wandb.finish()
+
+#
+# r_edge_index, r_edge_weight, r_mask = create_connected_subgraph_with_mask_random(train_subgraph)
+#
+#         x, attr, noisy_mask = change_input(full_data.x_one_hot[train_mask][r_mask],
+#                                            r_edge_index, None)
