@@ -66,13 +66,13 @@ if __name__ == "__main__":
     wandb.config.weight_decay = 5e-4
     wandb.config.epochs = 1000
 
-    full_dataset = MyDataset(root="full_data/")
+    full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
     full_data.edge_attr = full_data.edge_attr.squeeze(1)
     # full_data = GDC()(full_data)
     num_nodes = full_data.y.shape[0]
-    train_indices = torch.load("full_data/0/train_indices.pt")
-    test_indices = torch.load("full_data/0/test_indices.pt")
+    train_indices = torch.load("fake_data/train_indices.pt")
+    test_indices = torch.load("fake_data/test_indices.pt")
 
     train_mask = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask[train_indices] = True
