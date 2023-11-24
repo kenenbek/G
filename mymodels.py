@@ -144,7 +144,7 @@ class GCN(torch.nn.Module):
                                    )
         self.attn_norm = BatchNorm1d(192)
 
-        self.fc1 = Linear(325, 325)
+        self.fc1 = Linear(5, 5)
         self.norm_fc1 = BatchNorm1d(325)
         self.fc2 = Linear(325, 325)
         self.norm_fc2 = BatchNorm1d(325)
@@ -156,43 +156,44 @@ class GCN(torch.nn.Module):
         self.dp = 0.2
 
     def forward(self, h, edge_num, edge_index, edge_weight):
-        h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
-        h2 = self.conv1_mean_ibd(h, edge_index, edge_weight)
-        h3 = self.conv1_max_ibd(h, edge_index, edge_weight)
-        h4 = self.conv1_num_edges(h, edge_index)
-        h5 = self.conv1_num_edges_max(h, edge_index)
-
-        h = torch.cat((h1, h2, h3, h4, h5, edge_num), dim=-1)
-        h = self.norm1(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
+        # h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
+        # h2 = self.conv1_mean_ibd(h, edge_index, edge_weight)
+        # h3 = self.conv1_max_ibd(h, edge_index, edge_weight)
+        # h4 = self.conv1_num_edges(h, edge_index)
+        # h5 = self.conv1_num_edges_max(h, edge_index)
+        #
+        # h = torch.cat((h1, h2, h3, h4, h5, edge_num), dim=-1)
+        # h = self.norm1(h)
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
 
         # h = self.attn_conv(h, edge_index, edge_weight)
         # h = self.attn_norm(h)
         # h = F.leaky_relu(h)
         # h = F.dropout(h, p=self.dp, training=self.training)
 
+        # h = self.fc1(h)
+        # h = self.norm_fc1(h)
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc2(h)
+        # h = self.norm_fc2(h)
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc3(h)
+        # h = self.norm_fc3(h)
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        #
+        # h = self.fc4(h)
+        # h = self.norm_fc4(h)
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = edge_num
         h = self.fc1(h)
-        h = self.norm_fc1(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc2(h)
-        h = self.norm_fc2(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc3(h)
-        h = self.norm_fc3(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc4(h)
-        h = self.norm_fc4(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc5(h)
 
         return h
 
