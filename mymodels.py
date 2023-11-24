@@ -108,14 +108,6 @@ class GCN(torch.nn.Module):
             aggr="mean"
         )
 
-        self.conv1_max_ibd = GCNConv(
-            in_channels=5,
-            out_channels=64,
-            add_self_loops=False,
-            normalize=False,
-            aggr="max"
-        )
-
         self.conv1_num_edges = GCNConv(
             in_channels=5,
             out_channels=64,
@@ -124,17 +116,10 @@ class GCN(torch.nn.Module):
             aggr="add"
         )
 
-        self.conv1_num_edges_max = GCNConv(
-            in_channels=5,
-            out_channels=64,
-            add_self_loops=False,
-            normalize=False,
-            aggr="max"
-        )
-        self.norm1 = BatchNorm1d(325)
+        self.norm1 = BatchNorm1d(132)
 
-        self.attn_conv = GATv2Conv(in_channels=325,
-                                   out_channels=325,
+        self.attn_conv = GATv2Conv(in_channels=132,
+                                   out_channels=132,
                                    heads=2,
                                    edge_dim=1,
                                    aggr="mean",
@@ -142,61 +127,24 @@ class GCN(torch.nn.Module):
                                    share_weights=False,
                                    add_self_loops=True
                                    )
-        self.attn_norm = BatchNorm1d(192)
+        self.attn_norm = BatchNorm1d(264)
 
-        self.fc1 = Linear(650, 5)
-        self.norm_fc1 = BatchNorm1d(325)
-        self.fc2 = Linear(325, 5)
-        self.norm_fc2 = BatchNorm1d(325)
-        self.fc3 = Linear(325, 325)
-        self.norm_fc3 = BatchNorm1d(325)
-        self.fc4 = Linear(325, 325)
-        self.norm_fc4 = BatchNorm1d(325)
-        self.fc5 = Linear(325, 5)
-        self.dp = 0.2
+        self.fc1 = Linear(269, 5)
 
     def forward(self, h, edge_num, edge_index, edge_weight):
         h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
         h2 = self.conv1_mean_ibd(h, edge_index, edge_weight)
-        h3 = self.conv1_max_ibd(h, edge_index, edge_weight)
-        h4 = self.conv1_num_edges(h, edge_index)
-        h5 = self.conv1_num_edges_max(h, edge_index)
-        #
-        h = torch.cat((h1, h2, h3, h4, h5, edge_num), dim=-1)
-        # h = self.norm1(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
+        h3 = self.conv1_num_edges(h, edge_index)
+
+        h = torch.cat((h1, h2, h3), dim=-1)
+        h = self.norm1(h)
+        h = F.leaky_relu(h)
 
         h = self.attn_conv(h, edge_index, edge_weight)
-        # h = self.attn_norm(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.attn_norm(h)
+        h = F.leaky_relu(h)
 
-        # h = self.fc1(h)
-        # h = self.norm_fc1(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc2(h)
-        # h = self.norm_fc2(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc3(h)
-        # h = self.norm_fc3(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc4(h)
-        # h = self.norm_fc4(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-
-        # h = self.fc1(h)
-        # h = self.norm_fc1(h)
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
+        h = torch.cat((h, edge_num), dim=-1)
         h = self.fc1(h)
 
         return h
