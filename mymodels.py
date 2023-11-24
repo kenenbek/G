@@ -193,7 +193,7 @@ class GCN(torch.nn.Module):
         # h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.fc1(h)
-        h = self.norm_fc1(h)
+        # h = self.norm_fc1(h)
         # h = F.leaky_relu(h)
         # h = F.dropout(h, p=self.dp, training=self.training)
         #
