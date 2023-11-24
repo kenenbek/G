@@ -199,9 +199,9 @@ class GCN_simple(torch.nn.Module):
             aggr="mean"
         )
 
-        self.norm1 = BatchNorm1d(10)
+        self.norm1 = BatchNorm1d(5)
 
-        self.fc1 = Linear(10, 30)
+        self.fc1 = Linear(5, 30)
         self.norm_fc1 = BatchNorm1d(30)
         self.fc2 = Linear(30, 5)
         self.dp = 0.0
