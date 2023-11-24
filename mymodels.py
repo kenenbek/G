@@ -73,8 +73,8 @@ class SimpleNN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.dp = 0.2
-        self.norm0 = BatchNorm1d(128)
-        self.fc1 = Linear(128, 128)
+        self.norm0 = BatchNorm1d(5)
+        self.fc1 = Linear(5, 128)
         self.norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.norm2 = BatchNorm1d(128)

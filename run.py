@@ -69,7 +69,6 @@ if __name__ == "__main__":
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
     full_data.edge_attr = full_data.edge_attr.squeeze(1)
-    # full_data = GDC()(full_data)
     num_nodes = full_data.y.shape[0]
     train_indices = torch.load("fake_data/train_indices.pt")
     test_indices = torch.load("fake_data/test_indices.pt")
@@ -81,9 +80,9 @@ if __name__ == "__main__":
 
     assert torch.equal(train_mask, ~test_mask), "Error"
 
-    # full_data.recalculate_input_features(train_mask_h)
+    full_data.recalculate_input_features(train_mask)
 
-    model = GCN()
+    model = SimpleNN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -115,7 +114,7 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        out = model(full_data.x_one_hot[train_mask], train_edge_index, train_edge_weight)
+        out = model(full_data.edge_num[train_mask], train_edge_index, train_edge_weight)
         loss = criterion(out, full_data.y[train_mask])
 
         loss.backward()

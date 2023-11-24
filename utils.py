@@ -133,16 +133,16 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-            input_x = sub_data.x_one_hot.clone()
-            input_x[test_node_position] = unknown_label
+            # unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
+            # input_x = sub_data.x_one_hot.clone()
+            # input_x[test_node_position] = unknown_label
             # edge_attr_multi = sub_data.edge_attr_multi.clone()
             # mask = sub_data.edge_index[0] == test_node_position
             # new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
             # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             # edge_attr_multi[mask] = new_edge_attr[mask]
 
-            out = model(input_x, sub_data.edge_index, sub_data.edge_attr)  # NB
+            out = model(sub_data.edge_num, sub_data.edge_index, sub_data.edge_attr)  # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
