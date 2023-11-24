@@ -182,33 +182,34 @@ class GCN_simple(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.norm0 = BatchNorm1d(5)
+        self.norm1 = BatchNorm1d(5)
 
-        self.conv1_sum_ibd = GCNConv(
-            in_channels=5,
-            out_channels=5,
-            add_self_loops=False,
-            normalize=False,
-            aggr="add"
-        )
-        self.conv1_mean_ibd = GCNConv(
-            in_channels=5,
-            out_channels=5,
-            add_self_loops=False,
-            normalize=False,
-            aggr="mean"
-        )
+        self.attn_conv = GATv2Conv(in_channels=5,
+                                   out_channels=128,
+                                   heads=2,
+                                   edge_dim=1,
+                                   aggr="mean",
+                                   concat=False,
+                                   share_weights=False,
+                                   add_self_loops=True
+                                   )
+        self.attn_norm = BatchNorm1d(128)
 
-        self.simple_nn = SimpleNN()
+        self.fc1 = Linear(128, 128)
+        self.norm_fc1 = BatchNorm1d(128)
+        self.fc2 = Linear(128, 5)
+        self.dp = 0.2
 
     def forward(self, h, edge_index, edge_weight):
-        h = self.norm0(h)
+        h = self.norm1(h)
 
-        h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
-        h2 = self.conv1_mean_ibd(h, edge_index, edge_weight)
+        h = self.attn_conv(h, edge_index, edge_weight)
 
-        h = torch.where(h2 == 0, torch.tensor(0.0).to(device), h1 / h2)
+        h = self.fc1(h)
+        h = self.norm_fc1(h)
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.simple_nn(h, edge_index, edge_weight)
+        h = self.fc2(h)
 
         return h
