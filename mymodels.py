@@ -199,12 +199,7 @@ class GCN_simple(torch.nn.Module):
             aggr="mean"
         )
 
-        self.norm1 = BatchNorm1d(5)
-
-        self.fc1 = Linear(5, 30)
-        self.norm_fc1 = BatchNorm1d(30)
-        self.fc2 = Linear(30, 5)
-        self.dp = 0.0
+        self.simple_nn = SimpleNN()
 
     def forward(self, h, edge_index, edge_weight):
         h = self.norm0(h)
@@ -214,15 +209,6 @@ class GCN_simple(torch.nn.Module):
 
         h = torch.where(h2 == 0, torch.tensor(0.0).to(device), h1 / h2)
 
-        h = self.norm1(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc1(h)
-        h = self.norm_fc1(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=self.training)
-
-        h = self.fc2(h)
+        h = self.simple_nn(h)
 
         return h
