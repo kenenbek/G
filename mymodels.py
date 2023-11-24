@@ -6,6 +6,8 @@ import torch.nn.functional as F
 
 from my_gatconv import MYGATv2Conv
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 class AttnGCN(torch.nn.Module):
     def __init__(self):
@@ -154,7 +156,7 @@ class GCN(torch.nn.Module):
         h4 = self.conv1_num_edges(h, edge_index)
         h5 = self.conv1_num_edges_max(h, edge_index)
 
-        num_edges = torch.where(h2 == 0, torch.tensor(0.0), h1 / h2)
+        num_edges = torch.where(h2 == 0, torch.tensor(0.0).to(device), h1 / h2)
 
         h = torch.cat((h1, h2, h3, h4, h5, num_edges), dim=-1)
         h = self.norm1(h)
