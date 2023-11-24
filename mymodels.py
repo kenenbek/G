@@ -163,8 +163,8 @@ class GCN(torch.nn.Module):
         h5 = self.conv1_num_edges_max(h, edge_index)
         #
         h = torch.cat((h1, h2, h3, h4, h5, edge_num), dim=-1)
-        h = self.norm1(h)
-        #h = F.leaky_relu(h)
+        # h = self.norm1(h)
+        # h = F.leaky_relu(h)
         # h = F.dropout(h, p=self.dp, training=self.training)
 
         # h = self.attn_conv(h, edge_index, edge_weight)
@@ -194,8 +194,8 @@ class GCN(torch.nn.Module):
 
         h = self.fc1(h)
         h = self.norm_fc1(h)
-        #h = F.leaky_relu(h)
-        #h = F.dropout(h, p=self.dp, training=self.training)
+        # h = F.leaky_relu(h)
+        # h = F.dropout(h, p=self.dp, training=self.training)
         #
         h = self.fc2(h)
 
