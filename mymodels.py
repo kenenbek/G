@@ -191,7 +191,7 @@ class GCN_simple(torch.nn.Module):
                                    aggr="mean",
                                    concat=False,
                                    share_weights=False,
-                                   add_self_loops=True
+                                   add_self_loops=False
                                    )
         self.attn_norm = BatchNorm1d(128)
 
