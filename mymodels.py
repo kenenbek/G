@@ -209,6 +209,6 @@ class GCN_simple(torch.nn.Module):
 
         h = torch.where(h2 == 0, torch.tensor(0.0).to(device), h1 / h2)
 
-        h = self.simple_nn(h)
+        h = self.simple_nn(h, edge_index, edge_weight)
 
         return h
