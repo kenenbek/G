@@ -131,7 +131,7 @@ class GCN(torch.nn.Module):
             normalize=False,
             aggr="max"
         )
-        self.norm1 = BatchNorm1d(384)
+        self.norm1 = BatchNorm1d(325)
 
         self.attn_conv = GATv2Conv(in_channels=160,
                                    out_channels=160,
@@ -144,9 +144,9 @@ class GCN(torch.nn.Module):
                                    )
         self.attn_norm = BatchNorm1d(192)
 
-        self.fc1 = Linear(384, 384)
-        self.norm_fc1 = BatchNorm1d(384)
-        self.fc2 = Linear(384, 5)
+        self.fc1 = Linear(325, 325)
+        self.norm_fc1 = BatchNorm1d(325)
+        self.fc2 = Linear(325, 5)
         self.dp = 0.2
 
     def forward(self, h, edge_num, edge_index, edge_weight):
