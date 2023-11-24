@@ -228,10 +228,15 @@ def calc_accuracy(y_true, y_pred):
     recall_macro = metrics.recall_score(y_true, y_pred, average='macro', zero_division=1)
     f1_macro = metrics.f1_score(y_true, y_pred, average='macro', zero_division=1)
 
+    precision_w = metrics.precision_score(y_true, y_pred, average='weighted', zero_division=1)
+    recall_w = metrics.recall_score(y_true, y_pred, average='weighted', zero_division=1)
+    f1_w = metrics.f1_score(y_true, y_pred, average='weighted', zero_division=1)
+
     # Print results
     print(f'Accuracy: {accuracy:.4f}')
     print(f'Micro-Averaged Precision: {precision_micro:.4f}, Recall: {recall_micro:.4f}, F1 Score: {f1_micro:.4f}')
     print(f'Macro-Averaged Precision: {precision_macro:.4f}, Recall: {recall_macro:.4f}, F1 Score: {f1_macro:.4f}')
+    print(f'Weighted-Averaged Precision: {precision_w:.4f}, Recall: {recall_w:.4f}, F1 Score: {f1_w:.4f}')
 
     stats = {
         "Accuracy": accuracy,
@@ -240,7 +245,10 @@ def calc_accuracy(y_true, y_pred):
         "Micro-Averaged F1 Score": f1_micro,
         "Macro-Averaged Precision": precision_macro,
         "Macro-Averaged Recall": recall_macro,
-        "Macro-Averaged F1 Score": f1_macro
+        "Macro-Averaged F1 Score": f1_macro,
+        "Weighted-Averaged Precision": precision_w,
+        "Weighted-Averaged Recall": recall_w,
+        "Weighted-Averaged F1 Score": f1_w
     }
 
     return stats
