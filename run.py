@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
-from mymodels import AttnGCN, SimpleNN, GCN
+from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
     set_global_seed, prep_for_reconstruct
 from utils import inductive_train, to_one_hot, evaluate_one_by_one_rec, create_connected_subgraph_with_mask_random
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     _, edge_num = recalculate_input_features(full_data, train_mask)
     full_data.edge_num = edge_num
 
-    model = SimpleNN()
+    model = GCN_simple()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
