@@ -109,6 +109,35 @@ class MyDataset(Dataset):
         data = torch.load(osp.join(self.processed_dir, f'data_{idx}.pt'))
         return data
 
+    def recalculate_input_features(self, train_mask):
+        available_node_indices = torch.nonzero(train_mask).squeeze()
+        known_training_set = set(available_node_indices.tolist())
+
+        hidden_x_data = {}
+        edge_num = {}
+        for i in range(self.x.shape[0]):
+            hidden_x_data[i] = [0, 0, 0, 0, 0]
+            edge_num[i] = [0, 0, 0, 0, 0]
+
+        for i, edge in tqdm(enumerate(self.edge_index.t())):
+            start_node = edge[0].item()
+            dest_node = edge[1].item()
+
+            start_ethnicity = self.y[start_node].item()
+
+            if start_node in known_training_set:
+                hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
+                edge_num[dest_node][start_ethnicity] += 1
+
+        hidden_x_data = dict(sorted(hidden_x_data.items()))
+        hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
+
+        edge_num = dict(sorted(edge_num.items()))
+        edge_num = torch.Tensor(list(edge_num.values())).contiguous()
+
+        self.train_x = hidden_x
+        self.edge_num = edge_num
+
 
 from torch_geometric.transforms import BaseTransform
 
@@ -219,35 +248,6 @@ class MyData(Data):
         hidden_x_data = torch.Tensor(list(hidden_x_data.values())).contiguous()
 
         self.x_one_hot_hidden = hidden_x_data
-
-    def recalculate_input_features(self, train_mask):
-        available_node_indices = torch.nonzero(train_mask).squeeze()
-        known_training_set = set(available_node_indices.tolist())
-
-        hidden_x_data = {}
-        edge_num = {}
-        for i in range(self.x.shape[0]):
-            hidden_x_data[i] = [0, 0, 0, 0, 0]
-            edge_num[i] = [0, 0, 0, 0, 0]
-
-        for i, edge in tqdm(enumerate(self.edge_index.t())):
-            start_node = edge[0].item()
-            dest_node = edge[1].item()
-
-            start_ethnicity = self.y[start_node].item()
-
-            if start_node in known_training_set:
-                hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
-                edge_num[dest_node][start_ethnicity] += 1
-
-        hidden_x_data = dict(sorted(hidden_x_data.items()))
-        hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
-
-        edge_num = dict(sorted(edge_num.items()))
-        edge_num = torch.Tensor(list(edge_num.values())).contiguous()
-
-        self.train_x = hidden_x
-        self.train_edge_num = edge_num
 
 
 def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):

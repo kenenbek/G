@@ -15,7 +15,7 @@ from collections import defaultdict
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
-from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, MyData
+from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
 from mymodels import AttnGCN, SimpleNN, GCN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
     set_global_seed, prep_for_reconstruct
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     wandb.config.weight_decay = 5e-4
     wandb.config.epochs = 5000
 
-    full_dataset = MyData(root="fake_data/")
+    full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
     full_data.edge_attr = full_data.edge_attr.squeeze(1)
     num_nodes = full_data.y.shape[0]
