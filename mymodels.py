@@ -146,7 +146,13 @@ class GCN(torch.nn.Module):
 
         self.fc1 = Linear(325, 325)
         self.norm_fc1 = BatchNorm1d(325)
-        self.fc2 = Linear(325, 5)
+        self.fc2 = Linear(325, 325)
+        self.norm_fc2 = BatchNorm1d(325)
+        self.fc3 = Linear(325, 325)
+        self.norm_fc3 = BatchNorm1d(325)
+        self.fc4 = Linear(325, 325)
+        self.norm_fc4 = BatchNorm1d(325)
+        self.fc5 = Linear(325, 5)
         self.dp = 0.2
 
     def forward(self, h, edge_num, edge_index, edge_weight):
@@ -172,6 +178,21 @@ class GCN(torch.nn.Module):
         h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.fc2(h)
+        h = self.norm_fc2(h)
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc3(h)
+        h = self.norm_fc3(h)
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc4(h)
+        h = self.norm_fc4(h)
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=self.training)
+
+        h = self.fc5(h)
 
         return h
 
