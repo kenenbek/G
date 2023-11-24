@@ -127,9 +127,9 @@ class GCN(torch.nn.Module):
                                    share_weights=False,
                                    add_self_loops=True
                                    )
-        self.attn_norm = (384)
+        self.attn_norm = LayerNorm(192)
 
-        self.fc1 = Linear(389, 5)
+        self.fc1 = Linear(197, 5)
 
     def forward(self, h, edge_num, edge_index, edge_weight):
         h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
