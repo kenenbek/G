@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BatchNorm1d
+from torch.nn import Linear, BatchNorm1d, LayerNorm
 from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMMConv
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
@@ -120,14 +120,14 @@ class GCN(torch.nn.Module):
 
         self.attn_conv = GATv2Conv(in_channels=192,
                                    out_channels=192,
-                                   heads=2,
+                                   heads=1,
                                    edge_dim=1,
                                    aggr="mean",
                                    concat=True,
                                    share_weights=False,
                                    add_self_loops=True
                                    )
-        self.attn_norm = BatchNorm1d(384)
+        self.attn_norm = (384)
 
         self.fc1 = Linear(389, 5)
 
