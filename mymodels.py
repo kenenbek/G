@@ -131,7 +131,7 @@ class GCN(torch.nn.Module):
             normalize=False,
             aggr="max"
         )
-        self.norm1 = BatchNorm1d(325)
+        self.norm1 = BatchNorm1d(5)
 
         self.attn_conv = GATv2Conv(in_channels=160,
                                    out_channels=160,
@@ -167,6 +167,7 @@ class GCN(torch.nn.Module):
         # h = F.dropout(h, p=self.dp, training=self.training)
 
         h = edge_num
+        h = self.norm1(h)
         h = self.fc1(h)
         h = self.norm_fc1(h)
         h = F.leaky_relu(h)
