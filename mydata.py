@@ -109,34 +109,34 @@ class MyDataset(Dataset):
         data = torch.load(osp.join(self.processed_dir, f'data_{idx}.pt'))
         return data
 
-    def recalculate_input_features(self, train_mask):
-        available_node_indices = torch.nonzero(train_mask).squeeze()
-        known_training_set = set(available_node_indices.tolist())
 
-        hidden_x_data = {}
-        edge_num = {}
-        for i in range(self.x.shape[0]):
-            hidden_x_data[i] = [0, 0, 0, 0, 0]
-            edge_num[i] = [0, 0, 0, 0, 0]
+def recalculate_input_features(full_data, train_mask):
+    available_node_indices = torch.nonzero(train_mask).squeeze()
+    known_training_set = set(available_node_indices.tolist())
 
-        for i, edge in tqdm(enumerate(self.edge_index.t())):
-            start_node = edge[0].item()
-            dest_node = edge[1].item()
+    hidden_x_data = {}
+    edge_num = {}
+    for i in range(full_data.x.shape[0]):
+        hidden_x_data[i] = [0, 0, 0, 0, 0]
+        edge_num[i] = [0, 0, 0, 0, 0]
 
-            start_ethnicity = self.y[start_node].item()
+    for i, edge in tqdm(enumerate(full_data.edge_index.t())):
+        start_node = edge[0].item()
+        dest_node = edge[1].item()
 
-            if start_node in known_training_set:
-                hidden_x_data[dest_node][start_ethnicity] += self.edge_attr[i]
-                edge_num[dest_node][start_ethnicity] += 1
+        start_ethnicity = full_data.y[start_node].item()
 
-        hidden_x_data = dict(sorted(hidden_x_data.items()))
-        hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
+        if start_node in known_training_set:
+            hidden_x_data[dest_node][start_ethnicity] += full_data.edge_attr[i]
+            edge_num[dest_node][start_ethnicity] += 1
 
-        edge_num = dict(sorted(edge_num.items()))
-        edge_num = torch.Tensor(list(edge_num.values())).contiguous()
+    hidden_x_data = dict(sorted(hidden_x_data.items()))
+    hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
 
-        self.train_x = hidden_x
-        self.edge_num = edge_num
+    edge_num = dict(sorted(edge_num.items()))
+    edge_num = torch.Tensor(list(edge_num.values())).contiguous()
+
+    return hidden_x, edge_num
 
 
 from torch_geometric.transforms import BaseTransform

@@ -15,7 +15,7 @@ from collections import defaultdict
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
-from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask
+from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
 from mymodels import AttnGCN, SimpleNN, GCN
 from utils import evaluate_one_by_one, evaluate_batch, evaluate_one_by_one_load_from_file, calc_accuracy, \
     set_global_seed, prep_for_reconstruct
@@ -68,7 +68,6 @@ if __name__ == "__main__":
 
     full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
-    full_data.edge_attr = full_data.edge_attr.squeeze(1)
     num_nodes = full_data.y.shape[0]
     train_indices = torch.load("fake_data/train_indices.pt")
     test_indices = torch.load("fake_data/test_indices.pt")
@@ -80,7 +79,8 @@ if __name__ == "__main__":
 
     assert torch.equal(train_mask, ~test_mask), "Error"
 
-    full_data.recalculate_input_features(train_mask)
+    _, edge_num = recalculate_input_features(full_data, train_mask)
+    full_data.edge_num = edge_num
 
     model = SimpleNN()
     criterion = torch.nn.CrossEntropyLoss()
