@@ -138,11 +138,9 @@ class GCN(torch.nn.Module):
 
         h = torch.cat((h1, h2, h3), dim=-1)
         h = self.norm1(h)
-        h = F.leaky_relu(h)
 
         h = self.attn_conv(h, edge_index, edge_weight)
         h = self.attn_norm(h)
-        h = F.leaky_relu(h)
 
         h = torch.cat((h, edge_num), dim=-1)
         h = self.fc1(h)
