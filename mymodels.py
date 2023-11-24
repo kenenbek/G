@@ -138,13 +138,13 @@ class GCN(torch.nn.Module):
                                    heads=2,
                                    edge_dim=1,
                                    aggr="mean",
-                                   concat=False,
+                                   concat=True,
                                    share_weights=False,
                                    add_self_loops=True
                                    )
         self.attn_norm = BatchNorm1d(192)
 
-        self.fc1 = Linear(325, 5)
+        self.fc1 = Linear(650, 5)
         self.norm_fc1 = BatchNorm1d(325)
         self.fc2 = Linear(325, 5)
         self.norm_fc2 = BatchNorm1d(325)
