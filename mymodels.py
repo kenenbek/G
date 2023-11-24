@@ -162,7 +162,7 @@ class GCN(torch.nn.Module):
         h4 = self.conv1_num_edges(h, edge_index)
         h5 = self.conv1_num_edges_max(h, edge_index)
         #
-        h = torch.cat((h1, h2, h3, h4, h5), dim=-1)
+        h = torch.cat((h1, h2, h3, h4, h5, edge_num), dim=-1)
         h = self.norm1(h)
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
