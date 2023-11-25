@@ -116,9 +116,14 @@ def recalculate_input_features(full_data, train_mask):
 
     hidden_x_data = {}
     edge_num = {}
+    neighbors = {}
+    big_features = {}
+
     for i in range(full_data.x.shape[0]):
         hidden_x_data[i] = [0, 0, 0, 0, 0]
         edge_num[i] = [0, 0, 0, 0, 0]
+        neighbors[i] = [[], [], [], [], []]
+        big_features[i] = []
 
     for i, edge in tqdm(enumerate(full_data.edge_index.t())):
         start_node = edge[0].item()
@@ -129,6 +134,17 @@ def recalculate_input_features(full_data, train_mask):
         if start_node in known_training_set:
             hidden_x_data[dest_node][start_ethnicity] += full_data.edge_attr[i]
             edge_num[dest_node][start_ethnicity] += 1
+            neighbors[dest_node][start_ethnicity].append(full_data.edge_attr[i])
+
+    for i in range(full_data.x.shape[0]):
+        for j in range(len(neighbors[i])):
+            if len(neighbors[i][j]) == 0:
+                big_features[i].extend([0, 0, 0])
+            else:
+                mean = np.mean(neighbors[i][j])
+                std = np.std(neighbors[i][j])
+                num = len(neighbors[i][j])
+                big_features[i].extend([mean, std, num])
 
     hidden_x_data = dict(sorted(hidden_x_data.items()))
     hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
@@ -136,7 +152,10 @@ def recalculate_input_features(full_data, train_mask):
     edge_num = dict(sorted(edge_num.items()))
     edge_num = torch.Tensor(list(edge_num.values())).contiguous()
 
-    return hidden_x, edge_num
+    big_features = dict(sorted(big_features.items()))
+    big_features = torch.Tensor(list(big_features.values())).contiguous()
+
+    return hidden_x, edge_num, big_features
 
 
 from torch_geometric.transforms import BaseTransform
