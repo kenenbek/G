@@ -82,7 +82,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = SimpleNN()
+    model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,

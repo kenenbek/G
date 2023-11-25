@@ -11,6 +11,30 @@ from node2vec import Node2Vec
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+def fine_tune(sub_data, input_x, test_node_position, model, steps=50):
+    model.train()
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=5e-3)
+
+    train_mask = torch.ones(sub_data.size(0), dtype=torch.bool)
+    train_mask[test_node_position] = False
+
+    for i in range(steps):
+        optimizer.zero_grad()
+
+        out = model(input_x,
+                    sub_data.big_features,
+                    sub_data.edge_index,
+                    sub_data.edge_wegiht
+                    )
+        loss = criterion(out[train_mask], sub_data.y[train_mask])
+
+        loss.backward()
+        optimizer.step()
+
+    return model
+
+
 def evaluate_one_by_one(model, data, train_mask, test_mask):
     model.eval()
 
@@ -49,8 +73,13 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             # edge_attr_multi[mask] = new_edge_attr[mask]
 
+            model = fine_tune(sub_data, input_x, test_node_position, model, steps=50)
+            model.eval()
+
             out = model(input_x,
-                        sub_data.big_features, sub_data.edge_index, sub_data.edge_attr)  # NB
+                        sub_data.big_features,
+                        sub_data.edge_index,
+                        sub_data.edge_attr)  # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
