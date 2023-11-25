@@ -74,7 +74,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             # edge_attr_multi[mask] = new_edge_attr[mask]
 
-            model = fine_tune(sub_data, input_x, test_node_position, model, steps=50)
+            # model = fine_tune(sub_data, input_x, test_node_position, model, steps=50)
             model.eval()
 
             out = model(input_x,
