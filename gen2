@@ -1,0 +1,11 @@
+#%Module
+
+proc ModulesHelp { } {
+    puts "Sets up environment for myenv virtual environment"
+}
+
+module-whatis "Sets up environment for myenv virtual environment"
+
+setenv VIRTUAL_ENV gen2
+prepend-path PATH $env(VIRTUAL_ENV)/bin
+prepend-path PYTHONPATH $env(VIRTUAL_ENV)/lib/python3.11/site-packages  ;# Adjust the Python version
