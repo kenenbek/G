@@ -140,10 +140,13 @@ class GCN(torch.nn.Module):
                                    )
         self.attn_norm = LayerNorm(192)
 
+        self.mean_norm = LayerNorm(5)
+        self.std_norm = LayerNorm(5)
         self.edge_norm = LayerNorm(5)
-        self.fc1 = Linear(197, 5)
+        self.fc1 = Linear(207, 207)
+        self.fc2 = Linear(207, 5)
 
-    def forward(self, h, edge_num, edge_index, edge_weight):
+    def forward(self, h, big_features, edge_index, edge_weight):
         h1 = self.conv1_sum_ibd(h, edge_index, edge_weight)
         h1 = self.norm1(h1)
         h2 = self.conv1_mean_ibd(h, edge_index, edge_weight)
@@ -153,13 +156,15 @@ class GCN(torch.nn.Module):
 
         h = torch.cat((h1, h2, h3), dim=-1)
 
-        h = self.attn_conv(h, edge_index, edge_weight)
-        h = self.attn_norm(h)
+        # h = self.attn_conv(h, edge_index, edge_weight)
+        # h = self.attn_norm(h)
 
-        edge_num = self.edge_norm(edge_num)
-        h = torch.cat((h, edge_num), dim=-1)
-        h = self.fc1(h)
+        h = torch.cat((h, self.mean_norm(big_features[:, :5]),
+                       self.std_norm(big_features[:, 5:10]),
+                       self.edge_norm(big_features[:, 10:15])), dim=-1)
 
+        h = self.fc1(h).relu()
+        h = self.fc2(h)
         return h
 
 
