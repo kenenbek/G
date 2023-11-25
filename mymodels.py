@@ -136,7 +136,7 @@ class GCN(torch.nn.Module):
                                    share_weights=False,
                                    add_self_loops=True
                                    )
-        self.attn_norm = LayerNorm(207)
+        self.attn_norm = LayerNorm(192)
 
         self.mean_norm = LayerNorm(5)
         self.std_norm = LayerNorm(5)
@@ -150,7 +150,7 @@ class GCN(torch.nn.Module):
         h3 = self.conv1_num_edges(h, edge_index).relu()
         h = torch.cat((h1, h2, h3), dim=-1)
         h = self.norm1(h)
-        
+
         h = self.attn_conv(h, edge_index, edge_weight).relu()
         h = self.attn_norm(h)
 
