@@ -42,8 +42,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 space = [
     Integer(8, 128, name='embedding_size'),
-    Integer(8, 128, name='walk_length'),
-    Integer(8, 128, name='context_size'),
+    Integer(64, 256, name='walk_length'),
+    Integer(8, 64, name='context_size'),
     Integer(8, 128, name='walks_per_node')
 ]
 
