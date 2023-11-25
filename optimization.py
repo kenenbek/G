@@ -74,6 +74,8 @@ def objective(**params):
         # print(f'Epoch {epoch}, Loss: {loss}')
 
     y_true, y_pred = evaluate_batch(model, full_data, test_mask)
+    y_true = y_true.to('cpu').detach().numpy()
+    y_pred = y_pred.to('cpu').detach().numpy()
     stats = calc_accuracy(y_true, y_pred)
     print(stats["x"])
     return stats["x"]  # Negative accuracy because gp_minimize seeks to minimize the objective
