@@ -28,6 +28,6 @@ if __name__ == '__main__':
         # Find the position of the test node in the subgraph
         test_node_position = torch.where(sub_indices == idx)[0].item()
         n = sub_data.y.shape[0]
-        # rec = prep_for_reconstruct(sub_data.edge_index, n=n, m=n, dim=128)
-        # torch.save((rec, test_node_position), f"recs/rec_{test_index}.pt")
+        rec = prep_for_reconstruct(sub_data.edge_index, n=n, m=n, dim=128)
+        torch.save((rec, test_node_position), f"recs/rec_{test_index}.pt")
         torch.save(sub_data, f"recs/sub_data_{test_index}.pt")
