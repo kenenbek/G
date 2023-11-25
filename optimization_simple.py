@@ -2,12 +2,12 @@ import torch
 from torch_geometric.nn import Node2Vec
 import torch_geometric.transforms as T
 from torch_geometric.data import DataLoader
+from torch_geometric.utils import subgraph
 from skopt import gp_minimize
 from skopt.space import Real, Integer
 from skopt.utils import use_named_args
 import numpy as np
 import wandb
-import pickle
 
 from mydata import MyDataset, recalculate_input_features
 from utils import evaluate_batch, calc_accuracy
@@ -32,6 +32,10 @@ test_mask[test_indices] = True
 
 assert torch.equal(train_mask, ~test_mask), "Error"
 
+_, edge_num, big_features = recalculate_input_features(full_data, train_mask)
+full_data.edge_num = edge_num
+full_data.big_features = big_features
+
 # Placeholder for Node2Vec parameters
 embedding_size = 64
 walk_length = 20
@@ -39,6 +43,11 @@ context_size = 10
 walks_per_node = 10
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+train_edge_index, train_edge_weight = subgraph(
+        train_indices, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
+    )
+
 model = Node2Vec(full_data.edge_index,
                  embedding_dim=embedding_size,
                  walk_length=walk_length,
@@ -54,35 +63,23 @@ space = [
 ]
 
 
-@use_named_args(space)
-def objective(**params):
-    model = Node2Vec(full_data.edge_index,
-                     embedding_dim=params['embedding_size'],
-                     walk_length=params['walk_length'],
-                     context_size=params['context_size'],
-                     walks_per_node=params['walks_per_node'],
-                     num_negative_samples=1).to(device)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    criterion = torch.nn.CrossEntropyLoss()
-
-    model.train()
-    for epoch in range(10):
-        optimizer.zero_grad()
-        output = model(None)
-        loss = criterion(output[train_mask], full_data.y[train_mask])
-        loss.backward()
-        optimizer.step()
-        # print(f'Epoch {epoch}, Loss: {loss}')
-
-    y_true, y_pred = evaluate_batch(model, full_data, test_mask)
-    stats = calc_accuracy(y_true, y_pred)
-
-    return stats["x"]  # Negative accuracy because gp_minimize seeks to minimize the objective
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+criterion = torch.nn.CrossEntropyLoss()
 
 
-result = gp_minimize(objective, space, n_calls=10, random_state=0)
+# Training loop (simplified)
+model.train()
+for epoch in range(1000):
+    optimizer.zero_grad()
+    output = model(None)
+    loss = criterion(output[train_mask], full_data.y[train_mask])
+    loss.backward()
+    optimizer.step()
+    print(f'Epoch {epoch}, Loss: {loss}')
 
-print("Best parameters: {}".format(result.x))
-with open('optimization.pickle', 'wb') as handle:
-    pickle.dump(result, handle, protocol=pickle.HIGHEST_PROTOCOL)
+# Evaluate the model and return a metric (e.g., accuracy)
+# Note: Implement the evaluation logic based on your dataset
+y_true, y_pred = evaluate_batch(model, full_data, test_mask)
+calc_accuracy(y_true, y_pred)
+
+

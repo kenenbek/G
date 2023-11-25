@@ -100,7 +100,7 @@ def get_neighbors(node_id, edge_index):
 def evaluate_batch(model, full_data, test_mask):
     model.eval()
 
-    out = model(full_data.train_x, full_data.edge_index, full_data.edge_attr)
+    out = model(None)
     pred = out.argmax(dim=1)
 
     y_true = full_data.y[test_mask]
@@ -140,7 +140,8 @@ def calc_accuracy(y_true, y_pred):
         "Macro-Averaged F1 Score": f1_macro,
         "Weighted-Averaged Precision": precision_w,
         "Weighted-Averaged Recall": recall_w,
-        "Weighted-Averaged F1 Score": f1_w
+        "Weighted-Averaged F1 Score": f1_w,
+        "x": f1_w,
     }
 
     return stats
