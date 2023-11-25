@@ -65,7 +65,7 @@ def objective(**params):
     criterion = torch.nn.CrossEntropyLoss()
 
     model.train()
-    for epoch in range(10):
+    for epoch in range(1000):
         optimizer.zero_grad()
         output = model(None)
         loss = criterion(output[train_mask], full_data.y[train_mask])
@@ -81,7 +81,7 @@ def objective(**params):
     return stats["x"]  # Negative accuracy because gp_minimize seeks to minimize the objective
 
 
-result = gp_minimize(objective, space, n_calls=10, random_state=0)
+result = gp_minimize(objective, space, n_calls=2000, random_state=0)
 
 print("Best parameters: {}".format(result.x))
 with open('optimization.pickle', 'wb') as handle:

@@ -16,7 +16,7 @@ hse-opt:
 	echo "#!/bin/bash" > run.sh;
 	echo "module load Python/Anaconda_v05.2022 CUDA/11.7" >> run.sh;
 	echo "srun python optimization.py" >> run.sh;
-	sbatch --constraint="type_a|type_b|type_c|type_d" --signal=INT@50 --gpus=$(GPU) -c $(CPU) -t $(T) run.sh;
+	sbatch --constraint="type_a|type_b|type_c|type_d" --signal=INT@50 --gpus=$(GPU) -c $(CPU) -t 2000 run.sh;
 	rm run.sh
 
 hse-run-gae:
