@@ -78,15 +78,15 @@ class SimpleNN(torch.nn.Module):
         self.norm1 = BatchNorm1d(128)
         self.fc2 = Linear(128, 128)
         self.norm2 = BatchNorm1d(128)
-        self.fc3 = Linear(128, 5)
+        self.fc3 = Linear(15, 5)
 
     def forward(self, h, big_features, edge_index, edge_weight):
         h = big_features
-        h = self.norm1(self.fc1(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.norm2(self.fc2(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc3(h)
+        # h = self.norm1(self.fc1(h)).relu()
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        # h = self.norm2(self.fc2(h)).relu()
+        # h = F.dropout(h, p=self.dp, training=self.training)
+        h = self.fc1(h)
         return h
 
 
