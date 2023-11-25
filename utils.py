@@ -12,25 +12,26 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def fine_tune(sub_data, input_x, test_node_position, model, steps=50):
-    model.train()
-    criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=5e-3)
+    with torch.enable_grad():
+        model.train()
+        criterion = torch.nn.CrossEntropyLoss()
+        optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=5e-3)
 
-    train_mask = torch.ones(sub_data.size(0), dtype=torch.bool)
-    train_mask[test_node_position] = False
+        train_mask = torch.ones(sub_data.size(0), dtype=torch.bool)
+        train_mask[test_node_position] = False
 
-    for i in range(steps):
-        optimizer.zero_grad()
+        for i in range(steps):
+            optimizer.zero_grad()
 
-        out = model(input_x,
-                    sub_data.big_features,
-                    sub_data.edge_index,
-                    sub_data.edge_attr
-                    )
-        loss = criterion(out[train_mask], sub_data.y[train_mask])
+            out = model(input_x,
+                        sub_data.big_features,
+                        sub_data.edge_index,
+                        sub_data.edge_attr
+                        )
+            loss = criterion(out[train_mask], sub_data.y[train_mask])
 
-        loss.backward()
-        optimizer.step()
+            loss.backward()
+            optimizer.step()
 
     return model
 
