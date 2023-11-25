@@ -129,7 +129,7 @@ class GCN(torch.nn.Module):
 
         self.attn_conv = GATv2Conv(in_channels=192,
                                    out_channels=192,
-                                   heads=2,
+                                   heads=1,
                                    edge_dim=1,
                                    aggr="mean",
                                    concat=False,
