@@ -90,7 +90,9 @@ class SimpleNN(torch.nn.Module):
         # h = F.dropout(h, p=self.dp, training=self.training)
         # h = self.norm2(self.fc2(h)).relu()
         # h = F.dropout(h, p=self.dp, training=self.training)
-        h = torch.cat((self.mean_norm(big_features[0]), self.std_norm(big_features[1]), self.edge_norm(big_features[2])), dim=-1)
+        h = torch.cat((self.mean_norm(big_features[:, :5]),
+                       self.std_norm(big_features[:, 5:10]),
+                       self.edge_norm(big_features[:, 10:15])), dim=-1)
         h = self.fc1(h)
         return h
 

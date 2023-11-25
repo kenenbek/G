@@ -117,13 +117,18 @@ def recalculate_input_features(full_data, train_mask):
     hidden_x_data = {}
     edge_num = {}
     neighbors = {}
-    big_features = {}
+
+    means = {}
+    stds = {}
+    edges = {}
 
     for i in range(full_data.x.shape[0]):
         hidden_x_data[i] = [0, 0, 0, 0, 0]
         edge_num[i] = [0, 0, 0, 0, 0]
         neighbors[i] = [[], [], [], [], []]
-        big_features[i] = []
+        means[i] = []
+        stds[i] = []
+        edges[i] = []
 
     for i, edge in tqdm(enumerate(full_data.edge_index.t())):
         start_node = edge[0].item()
@@ -139,24 +144,27 @@ def recalculate_input_features(full_data, train_mask):
     for i in range(full_data.x.shape[0]):
         for j in range(len(neighbors[i])):
             if len(neighbors[i][j]) == 0:
-                big_features[i].extend([0, 0, 0])
+                means[i].append(0)
+                stds[i].append(0)
+                edges[i].append(0)
             else:
-                mean = np.mean(neighbors[i][j])
-                std = np.std(neighbors[i][j])
-                num = len(neighbors[i][j])
-                big_features[i].extend([mean, std, num])
+                means[i].append(np.mean(neighbors[i][j]))
+                stds[i].append(np.std(neighbors[i][j]))
+                edges[i].append(len(neighbors[i][j]))
 
-    hidden_x_data = dict(sorted(hidden_x_data.items()))
-    hidden_x = torch.Tensor(list(hidden_x_data.values())).contiguous()
+    hidden_x_data = convert_dict_to_tensor(hidden_x_data)
+    edge_num = convert_dict_to_tensor(edge_num)
+    means = convert_dict_to_tensor(means)
+    stds = convert_dict_to_tensor(stds)
+    edges = convert_dict_to_tensor(edges)
 
-    edge_num = dict(sorted(edge_num.items()))
-    edge_num = torch.Tensor(list(edge_num.values())).contiguous()
+    return hidden_x_data, edge_num, torch.cat((means, stds, edges), dim=-1)
 
-    big_features = dict(sorted(big_features.items()))
-    big_features = torch.Tensor(list(big_features.values())).contiguous()
 
-    return hidden_x, edge_num, big_features
-
+def convert_dict_to_tensor(d):
+    d = dict(sorted(d.items()))
+    d = torch.Tensor(list(d.values())).contiguous()
+    return d
 
 from torch_geometric.transforms import BaseTransform
 
