@@ -103,14 +103,14 @@ class GCN(torch.nn.Module):
         super().__init__()
 
         self.conv1_sum_ibd = GCNConv(
-            in_channels=5,
+            in_channels=20,
             out_channels=64,
             add_self_loops=False,
             normalize=False,
             aggr="add"
         )
         self.conv1_mean_ibd = GCNConv(
-            in_channels=5,
+            in_channels=20,
             out_channels=64,
             add_self_loops=False,
             normalize=False,
@@ -118,7 +118,7 @@ class GCN(torch.nn.Module):
         )
 
         self.conv1_num_edges = GCNConv(
-            in_channels=5,
+            in_channels=20,
             out_channels=64,
             add_self_loops=False,
             normalize=False,
@@ -141,22 +141,25 @@ class GCN(torch.nn.Module):
         self.mean_norm = LayerNorm(5)
         self.std_norm = LayerNorm(5)
         self.edge_norm = LayerNorm(5)
-        self.fc1 = Linear(207, 207)
-        self.fc2 = Linear(207, 5)
+        self.fc1 = Linear(192, 192)
+        self.fc2 = Linear(192, 5)
 
     def forward(self, h, big_features, edge_index, edge_weight):
+        big_features = torch.cat((self.mean_norm(big_features[:, :5]),
+                                  self.std_norm(big_features[:, 5:10]),
+                                  self.edge_norm(big_features[:, 10:15])), dim=-1)
+
+        h = torch.cat((h, big_features), dim=-1)
+
         h1 = self.conv1_sum_ibd(h, edge_index, edge_weight).relu()
         h2 = self.conv1_mean_ibd(h, edge_index, edge_weight).relu()
         h3 = self.conv1_num_edges(h, edge_index).relu()
+
         h = torch.cat((h1, h2, h3), dim=-1)
         h = self.norm1(h)
 
         # h = self.attn_conv(h, edge_index, edge_weight).relu()
         # h = self.attn_norm(h)
-        #
-        h = torch.cat((h, self.mean_norm(big_features[:, :5]),
-                       self.std_norm(big_features[:, 5:10]),
-                       self.edge_norm(big_features[:, 10:15])), dim=-1)
 
         h = self.fc1(h).relu()
         h = self.fc2(h)
