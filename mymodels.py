@@ -105,14 +105,14 @@ class GCN(torch.nn.Module):
         self.conv1_sum_ibd = GCNConv(
             in_channels=5,
             out_channels=64,
-            add_self_loops=True,
+            add_self_loops=False,
             normalize=False,
             aggr="add"
         )
         self.conv1_mean_ibd = GCNConv(
             in_channels=5,
             out_channels=64,
-            add_self_loops=True,
+            add_self_loops=False,
             normalize=False,
             aggr="mean"
         )
@@ -120,7 +120,7 @@ class GCN(torch.nn.Module):
         self.conv1_num_edges = GCNConv(
             in_channels=5,
             out_channels=64,
-            add_self_loops=True,
+            add_self_loops=False,
             normalize=False,
             aggr="add"
         )
