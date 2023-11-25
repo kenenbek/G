@@ -132,9 +132,9 @@ def recalculate_input_features(full_data, train_mask):
         start_ethnicity = full_data.y[start_node].item()
 
         if start_node in known_training_set:
-            hidden_x_data[dest_node][start_ethnicity] += full_data.edge_attr[i]
+            hidden_x_data[dest_node][start_ethnicity] += full_data.edge_attr[i].item()
             edge_num[dest_node][start_ethnicity] += 1
-            neighbors[dest_node][start_ethnicity].append(full_data.edge_attr[i])
+            neighbors[dest_node][start_ethnicity].append(full_data.edge_attr[i].item())
 
     for i in range(full_data.x.shape[0]):
         for j in range(len(neighbors[i])):
