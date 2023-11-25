@@ -39,12 +39,6 @@ context_size = 10
 walks_per_node = 10
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = Node2Vec(full_data.edge_index,
-                 embedding_dim=embedding_size,
-                 walk_length=walk_length,
-                 context_size=context_size,
-                 walks_per_node=walks_per_node,
-                 num_negative_samples=1).to(device)
 
 space = [
     Integer(8, 128, name='embedding_size'),
@@ -52,6 +46,10 @@ space = [
     Integer(8, 128, name='context_size'),
     Integer(8, 128, name='walks_per_node')
 ]
+
+full_data = full_data.to(device)
+train_mask = train_mask.to(device)
+test_mask = test_mask.to(device)
 
 
 @use_named_args(space)
@@ -77,7 +75,7 @@ def objective(**params):
 
     y_true, y_pred = evaluate_batch(model, full_data, test_mask)
     stats = calc_accuracy(y_true, y_pred)
-
+    print(stats["x"])
     return stats["x"]  # Negative accuracy because gp_minimize seeks to minimize the objective
 
 
