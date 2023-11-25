@@ -25,7 +25,7 @@ def fine_tune(sub_data, input_x, test_node_position, model, steps=50):
         out = model(input_x,
                     sub_data.big_features,
                     sub_data.edge_index,
-                    sub_data.edge_wegiht
+                    sub_data.edge_attr
                     )
         loss = criterion(out[train_mask], sub_data.y[train_mask])
 
