@@ -148,11 +148,11 @@ class GCN(torch.nn.Module):
         h1 = self.conv1_sum_ibd(h, edge_index, edge_weight).relu()
         h2 = self.conv1_mean_ibd(h, edge_index, edge_weight).relu()
         h3 = self.conv1_num_edges(h, edge_index).relu()
-
         h = torch.cat((h1, h2, h3), dim=-1)
         h = self.norm1(h)
-        h = self.attn_conv(h, edge_index, edge_weight)
-        # h = self.attn_norm(h)
+        
+        h = self.attn_conv(h, edge_index, edge_weight).relu()
+        h = self.attn_norm(h)
 
         h = torch.cat((h, self.mean_norm(big_features[:, :5]),
                        self.std_norm(big_features[:, 5:10]),
