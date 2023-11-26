@@ -81,7 +81,7 @@ def objective(**params):
     return stats["x"]  # Negative accuracy because gp_minimize seeks to minimize the objective
 
 
-result = gp_minimize(objective, space, n_calls=2000, random_state=0)
+result = gp_minimize(objective, space, n_calls=500, random_state=0)
 
 print("Best parameters: {}".format(result.x))
 with open('optimization.pickle', 'wb') as handle:
