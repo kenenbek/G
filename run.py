@@ -82,7 +82,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = GCN()
+    model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -114,10 +114,9 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        x_input, _, _ = change_input(full_data.x_one_hot[train_mask], train_edge_index, None)
+        #x_input, _, _ = change_input(full_data.x_one_hot[train_mask], train_edge_index, None)
 
-        out = model(x_input,
-                    full_data.big_features[train_mask],
+        out = model(full_data.big_features[train_mask],
                     train_edge_index, train_edge_weight)
         loss = criterion(out, full_data.y[train_mask])
 
