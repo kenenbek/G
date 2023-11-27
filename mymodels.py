@@ -1,6 +1,6 @@
 import torch
 from torch.nn import Linear, BatchNorm1d, LayerNorm
-from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMMConv
+from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMMConv, GINConv
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
 
@@ -67,10 +67,15 @@ class SimpleNN(torch.nn.Module):
         super().__init__()
         self.dp = 0.2
         self.norm0 = BatchNorm1d(15)
-        self.fc1 = Linear(15, 5)
+        self.fc1 = Linear(15, 64)
+        self.fc2 = Linear(64, 64)
+        self.fc3 = Linear(64, 5)
 
-    def forward(self, h, edge_index, edge_weight):
-        h = self.fc1(h)
+    def forward(self, x_input, h, edge_index, edge_weight):
+        h = self.norm0(h)
+        h = self.fc1(h).relu()
+        h = self.fc2(h).relu()
+        h = self.fc3(h)
         return h
 
 
@@ -174,6 +179,29 @@ class GCN_simple(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=self.training)
 
+        h = self.fc2(h)
+
+        return h
+
+
+class GINNet(torch.nn.Module):
+    def __init__(self, num_features, dim):
+        super(GINNet, self).__init__()
+
+        nn1 = torch.nn.Sequential(torch.nn.Linear(num_features, dim), torch.nn.ReLU(), torch.nn.Linear(dim, dim))
+        self.conv1 = GINConv(nn1)
+
+        nn2 = torch.nn.Sequential(torch.nn.Linear(dim, dim), torch.nn.ReLU(), torch.nn.Linear(dim, dim))
+        self.conv2 = GINConv(nn2)
+
+        self.fc1 = torch.nn.Linear(dim, dim)
+        self.fc2 = torch.nn.Linear(dim, 2)  # Assuming binary classification for simplicity
+
+    def forward(self, h, bf, edge_index, edge_weight):
+        h = F.relu(self.conv1(h, edge_index))
+        h = F.relu(self.conv2(h, edge_index))
+
+        h = F.relu(self.fc1(h))
         h = self.fc2(h)
 
         return h
