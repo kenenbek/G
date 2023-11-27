@@ -21,7 +21,7 @@ class AttnGCN(torch.nn.Module):
                                concat=False,
                                share_weights=False,
                                add_self_loops=True)
-        self.norm1 = BatchNorm1d(32)
+        self.norm1 = BatchNorm1d(256)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
@@ -41,7 +41,8 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(32, 5)
+        self.fc1 = Linear(256, 256)
+        self.fc1 = Linear(256, 5)
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
@@ -65,8 +66,8 @@ class AttnGCN(torch.nn.Module):
         # h = F.leaky_relu(h)
         # h = F.dropout(h, p=self.dp, training=self.training)
 
-        h = self.fc1(h)
-
+        h = self.fc1(h).relu()
+        h = self.fc2(h)
         return h
 
 
