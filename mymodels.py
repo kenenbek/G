@@ -13,35 +13,35 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = GATv2Conv(in_channels=5,
-                               out_channels=1024,
-                               heads=4,
+                               out_channels=256,
+                               heads=2,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
                                share_weights=False,
-                               add_self_loops=True)
-        self.norm1 = BatchNorm1d(1024)
+                               add_self_loops=False)
+        self.norm1 = BatchNorm1d(256)
 
         self.conv_layers = torch.nn.ModuleList([])
         self.batch_norms = torch.nn.ModuleList([])
 
-        for i in range(0):
+        for i in range(1):
             self.conv_layers.append(
-                GATv2Conv(in_channels=128,
-                          out_channels=128,
+                GATv2Conv(in_channels=256,
+                          out_channels=256,
                           heads=2,
                           edge_dim=1,
-                          aggr="mean",
+                          aggr="add",
                           concat=False,
                           share_weights=False,
                           add_self_loops=True)
             )
 
             self.batch_norms.append(
-                BatchNorm1d(128)
+                BatchNorm1d(256)
             )
-        self.fc1 = Linear(1024, 1024)
-        self.fc2 = Linear(1024, 5)
+        self.fc1 = Linear(256, 256)
+        self.fc2 = Linear(256, 5)
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
@@ -55,14 +55,6 @@ class AttnGCN(torch.nn.Module):
             h = batch_norm(h)
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
-
-        # h = self.fc_norm1(self.fc1(h))
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
-        #
-        # h = self.fc_norm2(self.fc2(h))
-        # h = F.leaky_relu(h)
-        # h = F.dropout(h, p=self.dp, training=self.training)
 
         h = self.fc1(h).relu()
         h = self.fc2(h)
