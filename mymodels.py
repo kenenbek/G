@@ -38,7 +38,7 @@ class AttnGCN(torch.nn.Module):
             )
 
             self.batch_norms.append(
-                BatchNorm1d(256)
+                BatchNorm1d(1024)
             )
         self.fc1 = Linear(1039, 256)
         self.fc2 = Linear(256, 5)
