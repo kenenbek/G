@@ -15,10 +15,10 @@ class AttnGCN(torch.nn.Module):
         self.norm0 = BatchNorm1d(15)
         self.conv1 = GATv2Conv(in_channels=15,
                                out_channels=32,
-                               heads=2,
+                               heads=8,
                                edge_dim=1,
-                               aggr="max",
-                               concat=True,
+                               aggr="mean",
+                               concat=False,
                                share_weights=False,
                                add_self_loops=True)
         self.norm1 = BatchNorm1d(64)
@@ -41,7 +41,7 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(64, 5)
+        self.fc1 = Linear(32, 5)
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
