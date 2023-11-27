@@ -12,7 +12,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-
+        self.norm0 = BatchNorm1d(15)
         self.conv1 = GATv2Conv(in_channels=15,
                                out_channels=32,
                                heads=2,
@@ -45,6 +45,7 @@ class AttnGCN(torch.nn.Module):
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
+        h = self.norm0(h)
         h = self.conv1(h, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
