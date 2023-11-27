@@ -77,7 +77,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             #model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
             #model.eval()
 
-            out = model(x_input,
+            out = model(x_input, sub_data.big_features,
                         sub_data.edge_index,
                         sub_data.edge_attr)  # NB
 
