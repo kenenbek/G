@@ -42,7 +42,7 @@ class AttnGCN(torch.nn.Module):
                 BatchNorm1d(128)
             )
         self.fc1 = Linear(256, 256)
-        self.fc1 = Linear(256, 5)
+        self.fc2 = Linear(256, 5)
         self.dp = 0.0
 
     def forward(self, h, edge_index, edge_weight):
