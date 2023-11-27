@@ -66,8 +66,8 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
             # Clean subgraph
             unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-            input_x = sub_data.x_one_hot.clone()
-            input_x[test_node_position] = unknown_label
+            x_input = sub_data.x_one_hot.clone()
+            x_input[test_node_position] = unknown_label
             # edge_attr_multi = sub_data.edge_attr_multi.clone()
             # mask = sub_data.edge_index[0] == test_node_position
             # new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
@@ -77,7 +77,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             #model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
             #model.eval()
 
-            out = model(sub_data.big_features,
+            out = model(x_input,
                         sub_data.edge_index,
                         sub_data.edge_attr)  # NB
 
