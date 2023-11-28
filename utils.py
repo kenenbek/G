@@ -176,7 +176,7 @@ def filter_graph_by_class(full_data, train_mask, target_class):
 
 
 def create_5_graphs(full_data, train_mask):
-    subgraphs = []
+    sub_data_s = []
 
     train_nodes = train_mask.nonzero(as_tuple=True)[0]
 
@@ -203,9 +203,9 @@ def create_5_graphs(full_data, train_mask):
             edge_attr=filtered_edge_weights
         )
 
-        subgraphs.append(sub_data)
+        sub_data_s.append(sub_data)
 
-    return subgraphs
+    return sub_data_s
 
 
 def change_input(x_input, q=10):
@@ -225,6 +225,9 @@ def change_input(x_input, q=10):
     node_mask[indices] = True
     return x_input, node_mask
 
+def change_input_for_5_subgraphs(changed_x_input, sub_data_s):
+    for sub_data in sub_data_s:
+        sub_data.x_one_hot
 
 
 

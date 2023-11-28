@@ -83,7 +83,7 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=2)
+        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=1)
 
         out = model(x_input, full_data.big_features[train_mask],
                     train_edge_index, train_edge_weight)
