@@ -74,7 +74,8 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
                 x_input[test_node_position] = unknown_label
 
                 out = model(x_input, sub_data.edge_index, sub_data.edge_attr)  # NB
-                pred = out[test_node_position].max(dim=0).item()
+                #pred = out[test_node_position].argmax(dim=0).item()
+                pred = out[test_node_position][i].item()
                 preds.append(pred)
 
             pred = np.argmax(preds)
