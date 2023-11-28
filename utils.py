@@ -73,7 +73,9 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
                 x_input = sub_data.x_one_hot.clone()
                 x_input[test_node_position] = unknown_label
 
-                out = model(x_input, sub_data.edge_index, sub_data.edge_attr)  # NB
+                sub_data_10_filtered = create_10_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
+
+                out = model(x_input, sub_data_10_filtered)  # NB
                 #pred = out[test_node_position].argmax(dim=0).item()
                 pred = out[test_node_position][i].item()
                 preds.append(pred)
@@ -206,6 +208,24 @@ def change_input(x_input, q=10):
     node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
     node_mask[indices] = True
     return x_input, node_mask
+
+
+def create_10_graphs(y, train_edge_index, train_edge_weight):
+    sub_data_s = []
+
+    for src in range(5):
+        for dst in range(src, 5):
+            nodes_class_src = (y == src).nonzero(as_tuple=True)[0]
+            nodes_class_dst = (y == dst).nonzero(as_tuple=True)[0]
+
+            src_nodes, dest_nodes = train_edge_index
+            mask = torch.isin(src_nodes, nodes_class_src) & torch.isin(dest_nodes, nodes_class_dst)
+            filtered_edge_index = train_edge_index[:, mask]
+            filtered_edge_weights = train_edge_weight[mask]
+
+            sub_data_s.append((filtered_edge_index, filtered_edge_weights))
+
+    return sub_data_s
 
 # edge_attr_multi = sub_data.edge_attr_multi.clone()
 # mask = sub_data.edge_index[0] == test_node_position

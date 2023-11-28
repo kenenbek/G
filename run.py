@@ -18,12 +18,11 @@ from torch.optim.lr_scheduler import StepLR
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
 from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple, BigAttn
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
-    set_global_seed, change_input, create_5_graphs
+    set_global_seed, change_input, create_5_graphs, create_10_graphs
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 if __name__ == "__main__":
     set_global_seed(42)
@@ -51,7 +50,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = AttnGCN()
+    model = BigAttn()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -78,9 +77,9 @@ if __name__ == "__main__":
     train_edge_weight = train_edge_weight.to(device)
     # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
-    sub_data_5_filtered = create_5_graphs(full_data.y[train_mask],
-                                          train_edge_index,
-                                          train_edge_weight)
+    sub_data_10_filtered = create_10_graphs(full_data.y[train_mask],
+                                            train_edge_index,
+                                            train_edge_weight)
 
     for epoch in t:
         model.train()
@@ -88,7 +87,7 @@ if __name__ == "__main__":
 
         x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
-        out = model(full_data.x_one_hot[train_mask], train_edge_index, train_edge_weight)
+        out = model(full_data.x_one_hot[train_mask], sub_data_10_filtered)
         loss = criterion(out, full_data.y[train_mask])
 
         loss.backward()
@@ -119,4 +118,3 @@ if __name__ == "__main__":
     torch.save(y_pred, "y_pred.pt")
 
     wandb.finish()
-
