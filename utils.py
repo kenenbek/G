@@ -66,9 +66,9 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-            x_input = sub_data.x_one_hot.clone()
-            x_input[test_node_position] = unknown_label
+            #unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
+            #x_input = sub_data.x_one_hot.clone()
+            #x_input[test_node_position] = unknown_label
             # edge_attr_multi = sub_data.edge_attr_multi.clone()
             # mask = sub_data.edge_index[0] == test_node_position
             # new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
@@ -78,9 +78,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
             # model.eval()
 
-            sub_data_5_filtered = create_5_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
-
-            out = model(sub_data.big_features, sub_data_5_filtered)  # NB
+            out = model(sub_data.x_one_hot, sub_data.edge_index, sub_data.edge_attr)  # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
