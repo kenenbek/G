@@ -88,8 +88,8 @@ if __name__ == "__main__":
 
         x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
-        out = model(x_input, sub_data_5_filtered)
-        loss = criterion(out[node_mask], full_data.y[train_mask][node_mask])
+        out = model(full_data.big_features[train_mask], sub_data_5_filtered)
+        loss = criterion(out, full_data.y[train_mask])
 
         loss.backward()
         optimizer.step()

@@ -80,7 +80,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
             sub_data_5_filtered = create_5_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
 
-            out = model(x_input, sub_data_5_filtered)  # NB
+            out = model(sub_data.big_features, sub_data_5_filtered)  # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()

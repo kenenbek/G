@@ -18,7 +18,7 @@ class BigAttn(torch.nn.Module):
 
         for i in range(5):
             self.conv_layers.append(
-                GATv2Conv(in_channels=5,
+                GATv2Conv(in_channels=15,
                           out_channels=128,
                           heads=2,
                           edge_dim=1,
