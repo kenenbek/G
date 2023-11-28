@@ -78,9 +78,9 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
             # model.eval()
 
-            out = model(x_input, sub_data.big_features,
-                        sub_data.edge_index,
-                        sub_data.edge_attr)  # NB
+            sub_data_5_filtered = create_5_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
+
+            out = model(x_input, sub_data_5_filtered)  # NB
 
             # Use the test_node_position to get the prediction and true label
             pred = out[test_node_position].argmax(dim=0).item()
@@ -175,17 +175,11 @@ def filter_graph_by_class(full_data, train_mask, target_class):
     return subgraph
 
 
-def create_5_graphs(full_data, train_mask):
+def create_5_graphs(y, train_edge_index, train_edge_weight):
     sub_data_s = []
 
-    train_nodes = train_mask.nonzero(as_tuple=True)[0]
-
-    train_edge_index, train_edge_weight = subgraph(
-        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
-    )
-
     for target_class in range(5):
-        target_nodes = (full_data.y == target_class).nonzero(as_tuple=True)[0]
+        target_nodes = (y == target_class).nonzero(as_tuple=True)[0]
 
         # Extract source and target nodes from edge_index
         src_nodes, dest_nodes = train_edge_index
@@ -196,14 +190,7 @@ def create_5_graphs(full_data, train_mask):
         filtered_edge_index = train_edge_index[:, mask]
         filtered_edge_weights = train_edge_weight[mask]
 
-        sub_data = Data(
-            x_one_hot=full_data.x_one_hot[train_mask],
-            y=full_data.y[train_mask],
-            edge_index=filtered_edge_index,
-            edge_attr=filtered_edge_weights
-        )
-
-        sub_data_s.append(sub_data)
+        sub_data_s.append((filtered_edge_index, filtered_edge_weights))
 
     return sub_data_s
 
@@ -225,9 +212,6 @@ def change_input(x_input, q=10):
     node_mask[indices] = True
     return x_input, node_mask
 
-def change_input_for_5_subgraphs(changed_x_input, sub_data_s):
-    for sub_data in sub_data_s:
-        sub_data.x_one_hot
 
 
 

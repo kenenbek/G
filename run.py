@@ -16,9 +16,9 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
-from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple
+from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple, BigAttn
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
-    set_global_seed, change_input
+    set_global_seed, change_input, create_5_graphs
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-3
-    wandb.config.epochs = 1200
+    wandb.config.epochs = 3
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = AttnGCN()
+    model = BigAttn()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -70,7 +70,6 @@ if __name__ == "__main__":
     train_edge_index, train_edge_weight = subgraph(
         train_indices, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
-    train_subgraph = full_data.subgraph(train_indices)
 
     model = model.to(device)
     full_data = full_data.to(device)
@@ -79,14 +78,17 @@ if __name__ == "__main__":
     train_edge_weight = train_edge_weight.to(device)
     # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
+    sub_data_5_filtered = create_5_graphs(full_data.y[train_mask],
+                                          train_edge_index,
+                                          train_edge_weight)
+
     for epoch in t:
         model.train()
         optimizer.zero_grad()
 
-        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=1)
+        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
-        out = model(x_input, full_data.big_features[train_mask],
-                    train_edge_index, train_edge_weight)
+        out = model(x_input, sub_data_5_filtered)
         loss = criterion(out[node_mask], full_data.y[train_mask][node_mask])
 
         loss.backward()
@@ -116,17 +118,5 @@ if __name__ == "__main__":
     torch.save(y_true, "y_true.pt")
     torch.save(y_pred, "y_pred.pt")
 
-    # Create a new artifact
-    # artifact = wandb.Artifact('model-artifact', type='model')
-    # # Add a file to the artifact (the model file)
-    # artifact.add_file('attn_full.pt')
-    # # Log the artifact
-    # wandb.log_artifact(artifact)
-
     wandb.finish()
 
-#
-# r_edge_index, r_edge_weight, r_mask = create_connected_subgraph_with_mask_random(train_subgraph)
-#
-#         x, attr, noisy_mask = change_input(full_data.x_one_hot[train_mask][r_mask],
-#                                            r_edge_index, None)

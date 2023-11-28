@@ -9,6 +9,51 @@ from my_gatconv import MYGATv2Conv
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+class BigAttn(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.conv_layers = torch.nn.ModuleList([])
+        self.batch_norms = torch.nn.ModuleList([])
+
+        for i in range(5):
+            self.conv_layers.append(
+                GATv2Conv(in_channels=5,
+                          out_channels=128,
+                          heads=1,
+                          edge_dim=1,
+                          aggr="mean",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
+            )
+
+            self.batch_norms.append(
+                BatchNorm1d(128)
+            )
+        self.fc1 = Linear(640, 640)
+        self.fc2 = Linear(640, 5)
+        self.dp = 0.0
+
+    def forward(self, x_input, sub_data_5_filtered):
+        res1 = []
+
+        for conv_layer, batch_norm, (edge_index, edge_weight) in zip(self.conv_layers, self.batch_norms, sub_data_5_filtered):
+            h = conv_layer(x_input, edge_index, edge_weight)
+            h = batch_norm(h)
+            h = F.leaky_relu(h)
+            h = F.dropout(h, p=self.dp, training=self.training)
+
+            res1.append(h)
+
+        h = torch.cat(res1, dim=-1)
+        h = self.fc1(h).relu()
+        h = self.fc2(h)
+        return h
+
+
+
+
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
