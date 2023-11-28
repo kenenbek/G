@@ -114,9 +114,9 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        x_input, _, node_mask = change_input(full_data.x_one_hot[train_mask], train_edge_index, None)
+        #x_input, _, node_mask = change_input(full_data.x_one_hot[train_mask], train_edge_index, None)
 
-        out = model(x_input, full_data.big_features[train_mask],
+        out = model(full_data.x_one_hot[train_mask], full_data.big_features[train_mask],
                     train_edge_index, train_edge_weight)
         loss = criterion(out, full_data.y[train_mask])
 
