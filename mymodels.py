@@ -31,7 +31,7 @@ class BigAttn(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(32)
             )
-        self.fc1 = Linear(335, 320)
+        self.fc1 = Linear(320, 320)
         self.fc2 = Linear(320, 5)
         self.dp = 0.0
 
@@ -47,7 +47,6 @@ class BigAttn(torch.nn.Module):
             res1.append(h)
 
         h = torch.cat(res1, dim=-1)
-        h = torch.cat((h, bf), dim=-1)
         h = self.fc1(h).relu()
         h = self.fc2(h)
         return h
