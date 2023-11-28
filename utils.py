@@ -75,7 +75,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
                 sub_data_10_filtered = create_10_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
 
-                out = model(x_input, sub_data.big_features, sub_data_10_filtered)  # NB
+                out = model(x_input, sub_data.big_features, sub_data_10_filtered, sub_data.edge_index, sub_data.edge_attr)  # NB
                 #pred = out[test_node_position].argmax(dim=0).item()
                 pred = out[test_node_position][i].item()
                 preds.append(pred)
