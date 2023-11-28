@@ -65,11 +65,11 @@ if __name__ == "__main__":
     wandb.config.weight_decay = 5e-3
     wandb.config.epochs = 1200
 
-    full_dataset = MyDataset(root="fake_data/")
+    full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
-    train_indices = torch.load("fake_data/train_indices.pt")
-    test_indices = torch.load("fake_data/test_indices.pt")
+    train_indices = torch.load("full_data/0/train_indices.pt")
+    test_indices = torch.load("full_data/0/test_indices.pt")
 
     train_mask = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask[train_indices] = True
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = AttnGCN()
+    model = SimpleNN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
