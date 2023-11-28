@@ -6,7 +6,8 @@ from sklearn import metrics
 from tqdm import tqdm, trange
 from torch_geometric.nn.models import LabelPropagation
 from node2vec import Node2Vec
-
+from torch_geometric.data import Data
+from torch_geometric.utils import subgraph
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -74,8 +75,8 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
             # edge_attr_multi[mask] = new_edge_attr[mask]
 
-            #model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
-            #model.eval()
+            # model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
+            # model.eval()
 
             out = model(x_input, sub_data.big_features,
                         sub_data.edge_index,
@@ -157,20 +158,72 @@ def set_global_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 
-def node2vec():
-    node2vec = Node2Vec(nx_graph, dimensions=64, walk_length=30, num_walks=200)
+def filter_graph_by_class(full_data, train_mask, target_class):
+    # Step 1: Identify nodes belonging to the target class
+    target_nodes = (full_data.y == target_class).nonzero(as_tuple=True)[0]
+
+    # Step 2: Filter edges
+    # Extract source and target nodes from edge_index
+    src_nodes, dest_nodes = full_data.edge_index
+    # Check if the source nodes are in target_nodes
+    mask = torch.isin(src_nodes, target_nodes)
+    # Select only the edges that satisfy the condition
+    filtered_edge_index = full_data.edge_index[:, mask]
+
+    # Step 3: Create a new subgraph
+    subgraph = Data(x=full_data.x[train_mask], edge_index=filtered_edge_index, y=full_data.y)
+    return subgraph
 
 
+def create_5_graphs(full_data, train_mask):
+    subgraphs = []
+
+    train_nodes = train_mask.nonzero(as_tuple=True)[0]
+
+    train_edge_index, train_edge_weight = subgraph(
+        train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
+    )
+
+    for target_class in range(5):
+        target_nodes = (full_data.y == target_class).nonzero(as_tuple=True)[0]
+
+        # Extract source and target nodes from edge_index
+        src_nodes, dest_nodes = train_edge_index
+        # Check if the source nodes are in target_nodes
+        mask = torch.isin(src_nodes, target_nodes)
+
+        # Select only the edges that satisfy the condition
+        filtered_edge_index = train_edge_index[:, mask]
+        filtered_edge_weights = train_edge_weight[mask]
+
+        sub_data = Data(
+            x_one_hot=full_data.x_one_hot[train_mask],
+            y=full_data.y[train_mask],
+            edge_index=filtered_edge_index,
+            edge_attr=filtered_edge_weights
+        )
+
+        subgraphs.append(sub_data)
+
+    return subgraphs
 
 
+def change_input(x_input, q=10):
+    x_input = x_input.clone()
+    # train_edge_attr_multi = train_edge_attr_multi.clone()
 
+    num_nodes = x_input.size(0)  # Assume data.y contains your node labels
+    unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
 
+    # Randomly select 10% of your node indices
+    indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)
 
+    # Update the labels of these selected nodes to the unknown label
+    x_input[indices] = unknown_label
 
-
-
-
-
+    node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
+    node_mask[indices] = True
+    return x_input, node_mask
 
 
 

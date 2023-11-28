@@ -18,42 +18,11 @@ from torch.optim.lr_scheduler import StepLR
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
 from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
-    set_global_seed
+    set_global_seed, change_input
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-
-def change_input(x_input, train_edge_index, train_edge_attr_multi):
-    x_input = x_input.clone()
-    # train_edge_attr_multi = train_edge_attr_multi.clone()
-
-    num_nodes = x_input.size(0)  # Assume data.y contains your node labels
-    unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-
-    # Randomly select 10% of your node indices
-    indices = torch.randperm(num_nodes)[: int(num_nodes) // 10].to(device)
-
-    # Update the labels of these selected nodes to the unknown label
-    x_input[indices] = unknown_label
-
-    # Assuming edge_index is of shape [2, E] and edge_attr is of shape [E, num_labels]
-    # where E is the number of edges, and that we have already computed 'indices' of nodes to change
-
-    # Create a mask for edges where the source node label has been changed to unknown
-    src_nodes = train_edge_index[0]  # Get the source nodes of all edges
-    mask = src_nodes.unsqueeze(1) == indices.unsqueeze(0)  # Compare against changed indices
-    mask = mask.any(dim=1)  # Reduce to get a mask for edges
-
-    # Update the edge attributes
-    # new_edge_attr = torch.zeros_like(train_edge_attr_multi).to(device)
-    # new_edge_attr[mask, -1] = torch.max(train_edge_attr_multi[mask], dim=1)[0]  # Move src label info to the last position
-    # train_edge_attr_multi[mask] = new_edge_attr[mask]
-
-    node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
-    node_mask[indices] = True
-    return x_input, train_edge_attr_multi, node_mask
 
 
 if __name__ == "__main__":
@@ -114,11 +83,11 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        #x_input, _, node_mask = change_input(full_data.x_one_hot[train_mask], train_edge_index, None)
+        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=2)
 
-        out = model(full_data.x_one_hot[train_mask], full_data.big_features[train_mask],
+        out = model(x_input, full_data.big_features[train_mask],
                     train_edge_index, train_edge_weight)
-        loss = criterion(out, full_data.y[train_mask])
+        loss = criterion(out[node_mask], full_data.y[train_mask][node_mask])
 
         loss.backward()
         optimizer.step()
