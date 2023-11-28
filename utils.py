@@ -73,7 +73,8 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
                 x_input = sub_data.x_one_hot.clone()
                 x_input[test_node_position] = unknown_label
 
-                sub_data_10_filtered = create_10_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
+                sub_data_10_filtered = create_10_graphs(sub_data.y, sub_data.big_features,
+                                                        sub_data.edge_index, sub_data.edge_attr)
 
                 out = model(x_input, sub_data_10_filtered)  # NB
                 #pred = out[test_node_position].argmax(dim=0).item()
