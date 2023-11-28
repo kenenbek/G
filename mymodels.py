@@ -13,11 +13,14 @@ class BigAttn(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.conv_layers = torch.nn.ModuleList([])
-        self.batch_norms = torch.nn.ModuleList([])
+        self.conv_layers_1 = torch.nn.ModuleList([])
+        self.batch_norms_1 = torch.nn.ModuleList([])
+
+        self.conv_layers_2 = torch.nn.ModuleList([])
+        self.batch_norms_2 = torch.nn.ModuleList([])
 
         for i in range(10):
-            self.conv_layers.append(
+            self.conv_layers_1.append(
                 GATv2Conv(in_channels=5,
                           out_channels=32,
                           heads=2,
@@ -28,19 +31,42 @@ class BigAttn(torch.nn.Module):
                           add_self_loops=True)
             )
 
-            self.batch_norms.append(
+            self.batch_norms_1.append(
                 BatchNorm1d(32)
             )
+
+            self.conv_layers_2.append(
+                GATv2Conv(in_channels=32,
+                          out_channels=32,
+                          heads=2,
+                          edge_dim=1,
+                          aggr="mean",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
+            )
+
+            self.batch_norms_2.append(
+                BatchNorm1d(32)
+            )
+
         self.fc1 = Linear(320, 320)
         self.fc2 = Linear(320, 5)
         self.dp = 0.0
 
-    def forward(self, x_input, bf, sub_data_5_filtered):
+    def forward(self, x_input, bf, sub_data_10):
         res1 = []
 
-        for conv_layer, batch_norm, (edge_index, edge_weight) in zip(self.conv_layers, self.batch_norms, sub_data_5_filtered):
-            h = conv_layer(x_input, edge_index, edge_weight)
-            h = batch_norm(h)
+        for i in range(10):
+            edge_index, edge_weight = sub_data_10[i]
+
+            h = self.conv_layers_1[i](x_input, edge_index, edge_weight)
+            h = self.batch_norms_1[i](h)
+            h = F.leaky_relu(h)
+            h = F.dropout(h, p=self.dp, training=self.training)
+
+            h = self.conv_layers_2[i](h, edge_index, edge_weight)
+            h = self.batch_norms_2[i](h)
             h = F.leaky_relu(h)
             h = F.dropout(h, p=self.dp, training=self.training)
 
