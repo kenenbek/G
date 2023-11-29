@@ -8,6 +8,7 @@ from torch_geometric.nn.models import LabelPropagation
 from node2vec import Node2Vec
 from torch_geometric.data import Data
 from torch_geometric.utils import subgraph
+import torch.nn.functional as F
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -80,7 +81,8 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
 
                 out = model(x_input, sub_data.big_features, sub_data_25_filtered, sub_data.edge_index, sub_data.edge_attr)  # NB
                 #pred = out[test_node_position].argmax(dim=0).item()
-                pred = out[test_node_position][i].item()
+                test_node_probs = F.softmax(out[test_node_position], dim=-1)
+                pred = test_node_probs[i].item()
                 preds.append(pred)
 
             pred = np.argmax(preds)
