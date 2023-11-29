@@ -21,7 +21,7 @@ class BigAttn(torch.nn.Module):
 
         self.big_norm = BatchNorm1d(128)
 
-        for i in range(10):
+        for i in range(25):
             self.conv_layers_1.append(
                 GATv2Conv(in_channels=5,
                           out_channels=128,
