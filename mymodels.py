@@ -24,7 +24,7 @@ class BigAttn(torch.nn.Module):
         for i in range(25):
             self.conv_layers_1.append(
                 GATv2Conv(in_channels=5,
-                          out_channels=64,
+                          out_channels=32,
                           heads=2,
                           edge_dim=1,
                           aggr="mean",
@@ -34,11 +34,11 @@ class BigAttn(torch.nn.Module):
             )
 
             self.batch_norms_1.append(
-                BatchNorm1d(64)
+                BatchNorm1d(32)
             )
 
-        self.fc1 = Linear(1600, 1600)
-        self.fc2 = Linear(1600, 5)
+        self.fc1 = Linear(800, 800)
+        self.fc2 = Linear(800, 5)
         self.dp = 0.0
 
     def forward(self, x_input, bf, sub_data_25, train_edge_index, train_edge_weight):
