@@ -19,15 +19,6 @@ class BigAttn(torch.nn.Module):
         self.conv_layers_2 = torch.nn.ModuleList([])
         self.batch_norms_2 = torch.nn.ModuleList([])
 
-        self.big_conv = GATv2Conv(in_channels=5,
-                                  out_channels=128,
-                                  heads=2,
-                                  edge_dim=1,
-                                  aggr="mean",
-                                  concat=False,
-                                  share_weights=False,
-                                  add_self_loops=True)
-
         self.big_norm = BatchNorm1d(128)
 
         for i in range(10):
@@ -46,19 +37,15 @@ class BigAttn(torch.nn.Module):
                 BatchNorm1d(128)
             )
 
-        self.fc1 = Linear(1408, 1408)
-        self.fc2 = Linear(1408, 5)
+        self.fc1 = Linear(3200, 3200)
+        self.fc2 = Linear(3200, 5)
         self.dp = 0.0
 
-    def forward(self, x_input, bf, sub_data_10, train_edge_index, train_edge_weight):
+    def forward(self, x_input, bf, sub_data_25, train_edge_index, train_edge_weight):
         res1 = []
 
-        big_h = self.big_conv(x_input, train_edge_index, train_edge_weight)
-        big_h = self.big_norm(big_h)
-        big_h = F.leaky_relu(big_h)
-
-        for i in range(10):
-            edge_index, edge_weight = sub_data_10[i]
+        for i in range(25):
+            edge_index, edge_weight = sub_data_25[i]
 
             h = self.conv_layers_1[i](x_input, edge_index, edge_weight)
             h = self.batch_norms_1[i](h)
@@ -68,7 +55,6 @@ class BigAttn(torch.nn.Module):
             res1.append(h)
 
         h = torch.cat(res1, dim=-1)
-        h = torch.cat((h, big_h), dim=-1)
         h = self.fc1(h).relu()
         h = self.fc2(h)
         return h

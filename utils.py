@@ -73,9 +73,12 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
                 x_input = sub_data.x_one_hot.clone()
                 x_input[test_node_position] = unknown_label
 
-                sub_data_10_filtered = create_10_graphs(sub_data.y, sub_data.edge_index, sub_data.edge_attr)
+                y = sub_data.y.clone()
+                y[test_node_position] = i
 
-                out = model(x_input, sub_data.big_features, sub_data_10_filtered, sub_data.edge_index, sub_data.edge_attr)  # NB
+                sub_data_25_filtered = create_25_graphs(y, sub_data.edge_index, sub_data.edge_attr)
+
+                out = model(x_input, sub_data.big_features, sub_data_25_filtered, sub_data.edge_index, sub_data.edge_attr)  # NB
                 #pred = out[test_node_position].argmax(dim=0).item()
                 pred = out[test_node_position][i].item()
                 preds.append(pred)
@@ -210,11 +213,11 @@ def change_input(x_input, q=10):
     return x_input, node_mask
 
 
-def create_10_graphs(y, train_edge_index, train_edge_weight):
+def create_25_graphs(y, train_edge_index, train_edge_weight):
     sub_data_s = []
 
     for src in range(5):
-        for dst in range(src, 5):
+        for dst in range(5):
             nodes_class_src = (y == src).nonzero(as_tuple=True)[0]
             nodes_class_dst = (y == dst).nonzero(as_tuple=True)[0]
 

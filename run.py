@@ -18,7 +18,7 @@ from torch.optim.lr_scheduler import StepLR
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
 from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple, BigAttn
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
-    set_global_seed, change_input, create_5_graphs, create_10_graphs
+    set_global_seed, change_input, create_5_graphs, create_25_graphs
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     train_edge_weight = train_edge_weight.to(device)
     # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
-    sub_data_10_filtered = create_10_graphs(full_data.y[train_mask],
+    sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
                                             train_edge_index,
                                             train_edge_weight)
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
         out = model(full_data.x_one_hot[train_mask], full_data.big_features[train_mask],
-                    sub_data_10_filtered, train_edge_index, train_edge_weight)
+                    sub_data_25_filtered, train_edge_index, train_edge_weight)
         loss = criterion(out, full_data.y[train_mask])
 
         loss.backward()
