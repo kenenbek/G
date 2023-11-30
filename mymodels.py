@@ -37,6 +37,21 @@ class BigAttn(torch.nn.Module):
                 BatchNorm1d(128)
             )
 
+            self.conv_layers_2.append(
+                GATv2Conv(in_channels=128,
+                          out_channels=128,
+                          heads=2,
+                          edge_dim=1,
+                          aggr="mean",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
+            )
+
+            self.batch_norms_2.append(
+                BatchNorm1d(128)
+            )
+
         self.fc1 = Linear(3200, 3200)
         self.fc2 = Linear(3200, 5)
         self.dp = 0.0
