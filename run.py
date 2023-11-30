@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
         x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
-        out = model(full_data.x_one_hot[train_mask], full_data.big_features[train_mask],
+        out = model(x_input, full_data.big_features[train_mask],
                     sub_data_25_filtered, train_edge_index, train_edge_weight)
         loss = criterion(out, full_data.y[train_mask])
 
