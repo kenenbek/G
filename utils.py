@@ -220,8 +220,8 @@ def create_25_graphs(y, train_edge_index, train_edge_weight):
 
     for src in range(5):
         for dst in range(5):
-            nodes_class_src = (y == src).nonzero(as_tuple=True)[0]
-            nodes_class_dst = (y == dst).nonzero(as_tuple=True)[0]
+            nodes_class_src = (y == src | y == -1).nonzero(as_tuple=True)[0]
+            nodes_class_dst = (y == dst | y == -1).nonzero(as_tuple=True)[0]
 
             src_nodes, dest_nodes = train_edge_index
             mask = torch.isin(src_nodes, nodes_class_src) & torch.isin(dest_nodes, nodes_class_dst)

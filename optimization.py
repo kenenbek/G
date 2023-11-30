@@ -51,6 +51,8 @@ full_data = full_data.to(device)
 train_mask = train_mask.to(device)
 test_mask = test_mask.to(device)
 
+nodes = torch.arange(full_data.y.size(0)).to(device)
+
 
 @use_named_args(space)
 def objective(**params):
@@ -64,11 +66,13 @@ def objective(**params):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
     criterion = torch.nn.CrossEntropyLoss()
 
+    pos_sample = model.pos_sample(nodes)
+    neg_sample = model.neg_sample(nodes)
+
     model.train()
     for epoch in range(1000):
         optimizer.zero_grad()
-        output = model(None)
-        loss = criterion(output[train_mask], full_data.y[train_mask])
+        loss = model.loss(pos_sample, neg_sample)
         loss.backward()
         optimizer.step()
         # print(f'Epoch {epoch}, Loss: {loss}')

@@ -55,23 +55,20 @@ model = Node2Vec(full_data.edge_index,
                  walks_per_node=walks_per_node,
                  num_negative_samples=1).to(device)
 
-space = [
-    Integer(8, 128, name='embedding_size'),
-    Integer(8, 128, name='walk_length'),
-    Integer(8, 128, name='context_size'),
-    Integer(8, 128, name='walks_per_node')
-]
-
-
 optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 criterion = torch.nn.CrossEntropyLoss()
 
-
+nodes = torch.arange(full_data.y.size(0)).to(device)
+pos_sample = model.pos_sample(nodes)
+neg_sample = model.neg_sample(nodes)
 # Training loop (simplified)
+
 model.train()
-for epoch in range(1000):
+for epoch in range(10):
     optimizer.zero_grad()
     output = model(None)
+    print(output.shape)
+    print(full_data.y.shape)
     loss = criterion(output[train_mask], full_data.y[train_mask])
     loss.backward()
     optimizer.step()
