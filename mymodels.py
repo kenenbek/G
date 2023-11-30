@@ -30,7 +30,7 @@ class BigAttn(torch.nn.Module):
                           aggr="mean",
                           concat=False,
                           share_weights=False,
-                          add_self_loops=True)
+                          add_self_loops=False)
             )
 
             self.batch_norms_1.append(
