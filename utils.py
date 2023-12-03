@@ -220,7 +220,7 @@ def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1):
     num_labels_to_change = int(len(y) * q)
 
     # Randomly choose indices to change
-    indices_to_change = torch.randperm(len(y))[:num_labels_to_change]
+    indices_to_change = torch.randperm(len(y))[:num_labels_to_change].to(device)
 
     # Assign random labels to these indices
     y[indices_to_change] = torch.randint(0, 5, (num_labels_to_change,))
