@@ -14,7 +14,7 @@ class BigAttn(torch.nn.Module):
         super().__init__()
 
         n_sub_graphs = 25
-        feature_dim = 64
+        feature_dim = 128
 
         self.conv_layers_1a = torch.nn.ModuleList([])
         self.batch_norms_1a = torch.nn.ModuleList([])
