@@ -16,16 +16,20 @@ class BigAttn(torch.nn.Module):
         n_sub_graphs = 25
         feature_dim = 64
 
-        self.conv_layers_1 = torch.nn.ModuleList([])
-        self.batch_norms_1 = torch.nn.ModuleList([])
+        self.conv_layers_1a = torch.nn.ModuleList([])
+        self.batch_norms_1a = torch.nn.ModuleList([])
+        self.conv_layers_1b = torch.nn.ModuleList([])
+        self.batch_norms_1b = torch.nn.ModuleList([])
 
-        self.conv_layers_2 = torch.nn.ModuleList([])
-        self.batch_norms_2 = torch.nn.ModuleList([])
+        self.conv_layers_2a = torch.nn.ModuleList([])
+        self.batch_norms_2a = torch.nn.ModuleList([])
+        self.conv_layers_2b = torch.nn.ModuleList([])
+        self.batch_norms_2b = torch.nn.ModuleList([])
 
         self.big_norm = BatchNorm1d(feature_dim)
 
         for i in range(n_sub_graphs):
-            self.conv_layers_1.append(
+            self.conv_layers_1a.append(
                 GATv2Conv(in_channels=5,
                           out_channels=feature_dim,
                           heads=2,
@@ -36,11 +40,25 @@ class BigAttn(torch.nn.Module):
                           add_self_loops=False)
             )
 
-            self.batch_norms_1.append(
+            self.batch_norms_1a.append(
+                BatchNorm1d(feature_dim)
+            )
+            self.conv_layers_1b.append(
+                GATv2Conv(in_channels=5,
+                          out_channels=feature_dim,
+                          heads=2,
+                          edge_dim=1,
+                          aggr="add",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=False)
+            )
+
+            self.batch_norms_1b.append(
                 BatchNorm1d(feature_dim)
             )
 
-            self.conv_layers_2.append(
+            self.conv_layers_2a.append(
                 GATv2Conv(in_channels=feature_dim,
                           out_channels=feature_dim,
                           heads=2,
@@ -51,17 +69,31 @@ class BigAttn(torch.nn.Module):
                           add_self_loops=True)
             )
 
-            self.batch_norms_2.append(
+            self.batch_norms_2a.append(
                 BatchNorm1d(feature_dim)
             )
 
-        fc_dim = n_sub_graphs * feature_dim
+            self.conv_layers_2b.append(
+                GATv2Conv(in_channels=feature_dim,
+                          out_channels=feature_dim,
+                          heads=2,
+                          edge_dim=1,
+                          aggr="add",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
+            )
+
+            self.batch_norms_2b.append(
+                BatchNorm1d(feature_dim)
+            )
+
+        fc_dim = 2 * n_sub_graphs * feature_dim
         self.fc1 = Linear(fc_dim, fc_dim)
         self.norm1 = BatchNorm1d(fc_dim)
         self.fc2 = Linear(fc_dim, fc_dim)
         self.norm2 = BatchNorm1d(fc_dim)
         self.fc3 = Linear(fc_dim, 5)
-        self.dp = 0.0
 
     def forward(self, x_input, bf, sub_data_25, train_edge_index, train_edge_weight):
         res1 = []
@@ -69,11 +101,14 @@ class BigAttn(torch.nn.Module):
         for i in range(25):
             edge_index, edge_weight = sub_data_25[i]
 
-            h = self.conv_layers_1[i](x_input, edge_index, edge_weight)
-            h = self.batch_norms_1[i](h)
+            h = self.conv_layers_1a[i](x_input, edge_index, edge_weight)
+            h = self.batch_norms_1a[i](h)
             h = F.leaky_relu(h)
-            h = F.dropout(h, p=self.dp, training=self.training)
+            res1.append(h)
 
+            h = self.conv_layers_1b[i](x_input, edge_index, edge_weight)
+            h = self.batch_norms_1b[i](h)
+            h = F.leaky_relu(h)
             res1.append(h)
 
         h = torch.cat(res1, dim=-1)
