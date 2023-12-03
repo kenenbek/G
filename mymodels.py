@@ -104,11 +104,21 @@ class BigAttn(torch.nn.Module):
             h = self.conv_layers_1a[i](x_input, edge_index, edge_weight)
             h = self.batch_norms_1a[i](h)
             h = F.leaky_relu(h)
+
+            h = self.conv_layers_2a[i](h, edge_index, edge_weight)
+            h = self.batch_norms_2a[i](h)
+            h = F.leaky_relu(h)
+
             res1.append(h)
 
             h = self.conv_layers_1b[i](x_input, edge_index, edge_weight)
             h = self.batch_norms_1b[i](h)
             h = F.leaky_relu(h)
+
+            h = self.conv_layers_2b[i](h, edge_index, edge_weight)
+            h = self.batch_norms_2b[i](h)
+            h = F.leaky_relu(h)
+
             res1.append(h)
 
         h = torch.cat(res1, dim=-1)
