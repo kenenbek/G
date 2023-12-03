@@ -14,7 +14,7 @@ class BigAttn(torch.nn.Module):
         super().__init__()
 
         n_sub_graphs = 25
-        feature_dim = 64
+        feature_dim = 256
 
         self.conv_layers_1 = torch.nn.ModuleList([])
         self.batch_norms_1 = torch.nn.ModuleList([])
@@ -22,7 +22,7 @@ class BigAttn(torch.nn.Module):
         self.conv_layers_2 = torch.nn.ModuleList([])
         self.batch_norms_2 = torch.nn.ModuleList([])
 
-        self.big_norm = BatchNorm1d(128)
+        self.big_norm = BatchNorm1d(feature_dim)
 
         for i in range(n_sub_graphs):
             self.conv_layers_1.append(
@@ -42,7 +42,7 @@ class BigAttn(torch.nn.Module):
 
             # self.conv_layers_2.append(
             #     GATv2Conv(in_channels=16,
-            #               out_channels=16,
+            #               out_channels=,
             #               heads=2,
             #               edge_dim=1,
             #               aggr="mean",
@@ -55,8 +55,12 @@ class BigAttn(torch.nn.Module):
             #     BatchNorm1d(16)
             # )
 
-        self.fc1 = Linear(n_sub_graphs * feature_dim, n_sub_graphs * feature_dim)
-        self.fc2 = Linear(n_sub_graphs * feature_dim, 5)
+        fc_dim = n_sub_graphs * feature_dim
+        self.fc1 = Linear(fc_dim, fc_dim)
+        self.norm1 = BatchNorm1d(fc_dim)
+        self.fc2 = Linear(fc_dim, fc_dim)
+        self.norm2 = BatchNorm1d(fc_dim)
+        self.fc3 = Linear(fc_dim, 5)
         self.dp = 0.0
 
     def forward(self, x_input, bf, sub_data_25, train_edge_index, train_edge_weight):
@@ -73,8 +77,9 @@ class BigAttn(torch.nn.Module):
             res1.append(h)
 
         h = torch.cat(res1, dim=-1)
-        h = self.fc1(h).relu()
-        h = self.fc2(h)
+        h = self.norm1(self.fc1(h)).relu()
+        h = self.norm2(self.fc2(h)).relu()
+        h = self.fc3(h)
         return h
 
 
