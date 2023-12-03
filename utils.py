@@ -77,7 +77,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
                 y = sub_data.y.clone()
                 y[test_node_position] = i
 
-                sub_data_25_filtered = create_25_graphs(y, sub_data.edge_index, sub_data.edge_attr)
+                _, sub_data_25_filtered = create_25_graphs(y, sub_data.edge_index, sub_data.edge_attr, test=True)
 
                 out = model(x_input, sub_data.big_features, sub_data_25_filtered, sub_data.edge_index, sub_data.edge_attr)  # NB
                 #pred = out[test_node_position].argmax(dim=0).item()
@@ -215,15 +215,16 @@ def change_input(x_input, q=10):
     return x_input, node_mask
 
 
-def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1):
-    y = y.clone()
-    num_labels_to_change = int(len(y) * q)
+def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1, test=False):
+    if not test:
+        y = y.clone()
+        num_labels_to_change = int(len(y) * q)
 
-    # Randomly choose indices to change
-    indices_to_change = torch.randperm(len(y))[:num_labels_to_change].to(device)
+        # Randomly choose indices to change
+        indices_to_change = torch.randperm(len(y))[:num_labels_to_change].to(device)
 
-    # Assign random labels to these indices
-    y[indices_to_change] = torch.randint(0, 5, (num_labels_to_change,)).to(device)
+        # Assign random labels to these indices
+        y[indices_to_change] = torch.randint(0, 5, (num_labels_to_change,)).to(device)
 
     sub_data_s = []
     for src in range(5):
