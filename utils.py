@@ -237,7 +237,7 @@ def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1):
             filtered_edge_weights = train_edge_weight[mask]
 
             sub_data_s.append((filtered_edge_index, filtered_edge_weights))
-    modified_x_one_hot = F.one_hot(y, num_classes=5)
+    modified_x_one_hot = F.one_hot(y, num_classes=5).type(torch.float)
     return modified_x_one_hot, sub_data_s
 
 # edge_attr_multi = sub_data.edge_attr_multi.clone()
