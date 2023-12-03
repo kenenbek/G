@@ -215,13 +215,21 @@ def change_input(x_input, q=10):
     return x_input, node_mask
 
 
-def create_25_graphs(y, train_edge_index, train_edge_weight):
-    sub_data_s = []
+def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1):
+    y = y.clone()
+    num_labels_to_change = int(len(y) * q)
 
+    # Randomly choose indices to change
+    indices_to_change = torch.randperm(len(y))[:num_labels_to_change]
+
+    # Assign random labels to these indices
+    y[indices_to_change] = torch.randint(0, 5, (num_labels_to_change,))
+
+    sub_data_s = []
     for src in range(5):
         for dst in range(5):
-            nodes_class_src = ((y == src) | (y == -1)).nonzero(as_tuple=True)[0]
-            nodes_class_dst = ((y == dst) | (y == -1)).nonzero(as_tuple=True)[0]
+            nodes_class_src = (y == src).nonzero(as_tuple=True)[0]
+            nodes_class_dst = (y == dst).nonzero(as_tuple=True)[0]
 
             src_nodes, dest_nodes = train_edge_index
             mask = torch.isin(src_nodes, nodes_class_src) & torch.isin(dest_nodes, nodes_class_dst)
@@ -229,8 +237,8 @@ def create_25_graphs(y, train_edge_index, train_edge_weight):
             filtered_edge_weights = train_edge_weight[mask]
 
             sub_data_s.append((filtered_edge_index, filtered_edge_weights))
-
-    return sub_data_s
+    modified_x_one_hot = F.one_hot(y, num_classes=5)
+    return modified_x_one_hot, sub_data_s
 
 # edge_attr_multi = sub_data.edge_attr_multi.clone()
 # mask = sub_data.edge_index[0] == test_node_position

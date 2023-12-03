@@ -79,13 +79,17 @@ if __name__ == "__main__":
 
     sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
                                             train_edge_index,
-                                            train_edge_weight)
+                                            train_edge_weight,
+                                            q=0.1)
 
     for epoch in t:
         model.train()
         optimizer.zero_grad()
 
-        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
+        x_input, sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
+                                                         train_edge_index,
+                                                         train_edge_weight,
+                                                         q=0.1)
 
         out = model(x_input, full_data.big_features[train_mask],
                     sub_data_25_filtered, train_edge_index, train_edge_weight)
