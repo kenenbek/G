@@ -14,7 +14,7 @@ class BigAttn(torch.nn.Module):
         super().__init__()
 
         n_sub_graphs = 25
-        feature_dim = 256
+        feature_dim = 128
 
         self.conv_layers_1 = torch.nn.ModuleList([])
         self.batch_norms_1 = torch.nn.ModuleList([])
@@ -40,20 +40,20 @@ class BigAttn(torch.nn.Module):
                 BatchNorm1d(feature_dim)
             )
 
-            # self.conv_layers_2.append(
-            #     GATv2Conv(in_channels=16,
-            #               out_channels=,
-            #               heads=2,
-            #               edge_dim=1,
-            #               aggr="mean",
-            #               concat=False,
-            #               share_weights=False,
-            #               add_self_loops=True)
-            # )
-            #
-            # self.batch_norms_2.append(
-            #     BatchNorm1d(16)
-            # )
+            self.conv_layers_2.append(
+                GATv2Conv(in_channels=feature_dim,
+                          out_channels=feature_dim,
+                          heads=2,
+                          edge_dim=1,
+                          aggr="mean",
+                          concat=False,
+                          share_weights=False,
+                          add_self_loops=True)
+            )
+
+            self.batch_norms_2.append(
+                BatchNorm1d(feature_dim)
+            )
 
         fc_dim = n_sub_graphs * feature_dim
         self.fc1 = Linear(fc_dim, fc_dim)
