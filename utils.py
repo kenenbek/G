@@ -66,6 +66,50 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
+            # Clean subgraph
+            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+            x_input = sub_data.x_one_hot.clone()
+            x_input[test_node_position] = unknown_label
+
+            out = model(x_input, sub_data.big_features, None, sub_data.edge_index, sub_data.edge_attr)  # NB
+
+            pred = out[test_node_position].argmax(dim=0).item()
+            true_label = sub_data.y[test_node_position].item()
+
+            y_true_list.append(true_label)
+            pred_list.append(pred)
+
+    return y_true_list, pred_list
+
+
+def evaluate_one_by_one_mmm(model, data, train_mask, test_mask):
+    model.eval()
+
+    # Get the indices of test nodes
+    test_indices = torch.where(test_mask)[0].tolist()
+
+    y_true_list = []
+    pred_list = []
+
+    model = model.to(device)
+    data = data.to(device)
+    train_mask = train_mask.to(device)
+
+    with torch.no_grad():
+        for test_index in trange(len(test_indices)):
+            # Get the actual node index
+            idx = test_indices[test_index]
+
+            # Combine training indices with the current test index
+            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx]).to(device)])
+            sub_indices, _ = torch.sort(sub_indices)
+
+            # Extract sub-graph
+            sub_data = data.subgraph(sub_indices)
+
+            # Find the position of the test node in the subgraph
+            test_node_position = torch.where(sub_indices == idx)[0].item()
+
             preds = []
             for i in range(5):
                 # Clean subgraph
