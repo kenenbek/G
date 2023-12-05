@@ -131,14 +131,14 @@ class BigAttn(torch.nn.Module):
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GATv2Conv(in_channels=5,
+        self.conv1 = GATv2Conv(in_channels=6,
                                out_channels=128,
                                heads=2,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
                                share_weights=False,
-                               add_self_loops=True)
+                               add_self_loops=False)
         self.norm1 = BatchNorm1d(128)
 
         self.conv_layers = torch.nn.ModuleList([])
