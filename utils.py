@@ -202,7 +202,7 @@ def change_input(x_input, q=10):
     # train_edge_attr_multi = train_edge_attr_multi.clone()
 
     num_nodes = x_input.size(0)  # Assume data.y contains your node labels
-    unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
+    unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
     indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)
