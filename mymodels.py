@@ -131,7 +131,7 @@ class BigAttn(torch.nn.Module):
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = GATv2Conv(in_channels=6,
+        self.conv1 = GATv2Conv(in_channels=15,
                                out_channels=128,
                                heads=2,
                                edge_dim=1,
@@ -141,7 +141,7 @@ class AttnGCN(torch.nn.Module):
                                add_self_loops=False)
         self.norm1 = BatchNorm1d(128)
 
-        self.conv2 = GATv2Conv(in_channels=6,
+        self.conv2 = GATv2Conv(in_channels=15,
                                out_channels=128,
                                heads=2,
                                edge_dim=1,
@@ -175,12 +175,12 @@ class AttnGCN(torch.nn.Module):
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
         res = []
-        h = self.conv1(x_input, edge_index, edge_weight)
+        h = self.conv1(bf, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
         res.append(h)
 
-        h = self.conv2(x_input, edge_index, edge_weight)
+        h = self.conv2(bf, edge_index, edge_weight)
         h = self.norm2(h)
         h = F.leaky_relu(h)
         res.append(h)
