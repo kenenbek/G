@@ -33,11 +33,11 @@ if __name__ == "__main__":
     wandb.config.weight_decay = 5e-3
     wandb.config.epochs = 1000
 
-    full_dataset = MyDataset(root="full_data/")
+    full_dataset = MyDataset(root="fake_data/")
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
-    train_indices = torch.load("full_data/0/train_indices.pt")
-    test_indices = torch.load("full_data/0/test_indices.pt")
+    train_indices = torch.load("fake_data/train_indices.pt")
+    test_indices = torch.load("fake_data/test_indices.pt")
 
     train_mask = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask[train_indices] = True
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = BigAttn()
+    model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -86,10 +86,12 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        x_input, sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
-                                                         train_edge_index,
-                                                         train_edge_weight,
-                                                         q=0.05)
+        # x_input, sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
+        #                                                  train_edge_index,
+        #                                                  train_edge_weight,
+        #                                                  q=0.05)
+
+        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
         out = model(x_input, full_data.big_features[train_mask],
                     sub_data_25_filtered, train_edge_index, train_edge_weight)
