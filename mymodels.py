@@ -169,7 +169,7 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(256, 128)
+        self.fc1 = Linear(128, 128)
         self.fc2 = Linear(128, 5)
         self.dp = 0.0
 
@@ -180,10 +180,10 @@ class AttnGCN(torch.nn.Module):
         h = F.leaky_relu(h)
         res.append(h)
 
-        h = self.conv2(bf, edge_index, edge_weight)
-        h = self.norm2(h)
-        h = F.leaky_relu(h)
-        res.append(h)
+        # h = self.conv2(bf, edge_index, edge_weight)
+        # h = self.norm2(h)
+        # h = F.leaky_relu(h)
+        # res.append(h)
 
         for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
             h = conv_layer(h, edge_index, edge_weight)
