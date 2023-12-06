@@ -202,9 +202,9 @@ class SimpleNN(torch.nn.Module):
         super().__init__()
         self.dp = 0.2
         self.norm0 = BatchNorm1d(15)
-        self.fc1 = Linear(15, 32)
-        self.norm1 = BatchNorm1d(32)
-        self.fc2 = Linear(32, 5)
+        self.fc1 = Linear(15, 16)
+        self.norm1 = BatchNorm1d(16)
+        self.fc2 = Linear(16, 5)
 
     def forward(self, x_input, bf, graph25, edge_index, edge_weight):
         # h = self.norm0(h)
