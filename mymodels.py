@@ -170,8 +170,8 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(n_features, 64)
-        self.fc2 = Linear(64, 5)
+        self.fc1 = Linear(n_features, 128)
+        self.fc2 = Linear(128, 5)
         self.dp = 0.0
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
