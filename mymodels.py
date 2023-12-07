@@ -131,7 +131,7 @@ class BigAttn(torch.nn.Module):
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        n_features = 2048
+        n_features = 4096
         self.conv1 = GATv2Conv(in_channels=15,
                                out_channels=n_features,
                                heads=1,
@@ -170,8 +170,8 @@ class AttnGCN(torch.nn.Module):
             self.batch_norms.append(
                 BatchNorm1d(128)
             )
-        self.fc1 = Linear(n_features, n_features)
-        self.fc2 = Linear(n_features, 5)
+        self.fc1 = Linear(n_features, 64)
+        self.fc2 = Linear(64, 5)
         self.dp = 0.0
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
