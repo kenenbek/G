@@ -136,7 +136,7 @@ class AttnGCN(torch.nn.Module):
                                out_channels=n_features,
                                heads=1,
                                edge_dim=1,
-                               aggr="sum",
+                               aggr="mean",
                                concat=False,
                                share_weights=False,
                                add_self_loops=True)
