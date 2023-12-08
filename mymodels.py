@@ -131,7 +131,7 @@ class BigAttn(torch.nn.Module):
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        n_features = 64
+        n_features = 128
         self.conv1 = GATv2Conv(in_channels=15,
                                out_channels=n_features,
                                heads=25,
