@@ -24,23 +24,24 @@ from torch_geometric.utils import (
 from torch_geometric.utils.sparse import set_sparse_value
 
 
-class MYGATv2Conv(MessagePassing):
+class MyGATv2Conv(MessagePassing):
+
     _alpha: OptTensor
 
     def __init__(
-            self,
-            in_channels: Union[int, Tuple[int, int]],
-            out_channels: int,
-            heads: int = 1,
-            concat: bool = True,
-            negative_slope: float = 0.2,
-            dropout: float = 0.0,
-            add_self_loops: bool = True,
-            edge_dim: Optional[int] = None,
-            fill_value: Union[float, Tensor, str] = 'mean',
-            bias: bool = True,
-            share_weights: bool = False,
-            **kwargs,
+        self,
+        in_channels: Union[int, Tuple[int, int]],
+        out_channels: int,
+        heads: int = 1,
+        concat: bool = True,
+        negative_slope: float = 0.2,
+        dropout: float = 0.0,
+        add_self_loops: bool = True,
+        edge_dim: Optional[int] = None,
+        fill_value: Union[float, Tensor, str] = 'mean',
+        bias: bool = True,
+        share_weights: bool = False,
+        **kwargs,
     ):
         super().__init__(node_dim=0, **kwargs)
 
@@ -88,6 +89,7 @@ class MYGATv2Conv(MessagePassing):
             self.register_parameter('bias', None)
 
         self._alpha = None
+
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -99,16 +101,25 @@ class MYGATv2Conv(MessagePassing):
         glorot(self.att)
         zeros(self.bias)
 
-    def forward(self, x: Union[Tensor, PairTensor], edge_index: Adj,
-                edge_attr: OptTensor = None,
-                return_attention_weights: bool = None, test_node: int = -123):
-        # type: (Union[Tensor, PairTensor], Tensor, OptTensor, NoneType) -> Tensor  # noqa
-        # type: (Union[Tensor, PairTensor], SparseTensor, OptTensor, NoneType) -> Tensor  # noqa
-        # type: (Union[Tensor, PairTensor], Tensor, OptTensor, bool) -> Tuple[Tensor, Tuple[Tensor, Tensor]]  # noqa
-        # type: (Union[Tensor, PairTensor], SparseTensor, OptTensor, bool) -> Tuple[Tensor, SparseTensor]  # noqa
+    def forward(
+        self,
+        x: Union[Tensor, PairTensor],
+        edge_index: Adj,
+        edge_attr: OptTensor = None,
+        return_attention_weights: bool = None,
+    ):
+        # forward_type: (Union[Tensor, PairTensor], Tensor, OptTensor, NoneType) -> Tensor  # noqa
+        # forward_type: (Union[Tensor, PairTensor], SparseTensor, OptTensor, NoneType) -> Tensor  # noqa
+        # forward_type: (Union[Tensor, PairTensor], Tensor, OptTensor, bool) -> Tuple[Tensor, Tuple[Tensor, Tensor]]  # noqa
+        # forward_type: (Union[Tensor, PairTensor], SparseTensor, OptTensor, bool) -> Tuple[Tensor, SparseTensor]  # noqa
         r"""Runs the forward pass of the module.
 
         Args:
+            x (torch.Tensor or (torch.Tensor, torch.Tensor)): The input node
+                features.
+            edge_index (torch.Tensor or SparseTensor): The edge indices.
+            edge_attr (torch.Tensor, optional): The edge features.
+                (default: :obj:`None`)
             return_attention_weights (bool, optional): If set to :obj:`True`,
                 will additionally return the tuple
                 :obj:`(edge_index, attention_weights)`, holding the computed
@@ -154,15 +165,9 @@ class MYGATv2Conv(MessagePassing):
                         "simultaneously is currently not yet supported for "
                         "'edge_index' in a 'SparseTensor' form")
 
-        if not self.training:
-            edge_index, edge_attr = self._remove_one_self_loop(edge_index=edge_index,
-                                                               edge_attr=edge_attr,
-                                                               node_i=test_node)
-
         # propagate_type: (x: PairTensor, edge_attr: OptTensor)
-        self.edge_index = edge_index
         out = self.propagate(edge_index, x=(x_l, x_r), edge_attr=edge_attr,
-                             size=None)
+                             size=None, xx="xxxxxx")
 
         alpha = self._alpha
         assert alpha is not None
@@ -187,11 +192,13 @@ class MYGATv2Conv(MessagePassing):
             elif isinstance(edge_index, SparseTensor):
                 return out, edge_index.set_value(alpha, layout='coo')
         else:
-            return out  # , self.edge_attr_trans
+            return out
 
     def message(self, x_j: Tensor, x_i: Tensor, edge_attr: OptTensor,
                 index: Tensor, ptr: OptTensor,
-                size_i: Optional[int]) -> Tensor:
+                size_i: Optional[int], xx) -> Tensor:
+        print(xx)
+
         x = x_i + x_j
 
         if edge_attr is not None:
@@ -207,23 +214,8 @@ class MYGATv2Conv(MessagePassing):
         alpha = softmax(alpha, index, ptr, size_i)
         self._alpha = alpha
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
-
-        # res = (x_j + edge_attr) * alpha.unsqueeze(-1)
-        # edge_attr_trans = edge_attr * alpha.unsqueeze(-1)
-        # _, edge_attr_trans = remove_self_loops(self.edge_index, edge_attr_trans)
-        # self.edge_attr_trans = edge_attr_trans
-        # return res
         return x_j * alpha.unsqueeze(-1)
 
     def __repr__(self) -> str:
         return (f'{self.__class__.__name__}({self.in_channels}, '
                 f'{self.out_channels}, heads={self.heads})')
-
-    def _remove_one_self_loop(self, edge_index, edge_attr, node_i):
-        mask = ~((edge_index[0] == node_i) & (edge_index[1] == node_i))
-
-        # Apply the mask
-        edge_index = edge_index[:, mask]
-        edge_attr = edge_attr[mask]
-
-        return edge_index, edge_attr
