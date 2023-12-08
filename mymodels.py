@@ -4,7 +4,7 @@ from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMM
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
 
-from my_gatconv import MYGATv2Conv
+from my_gatconv import MyGATv2Conv
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -131,10 +131,10 @@ class BigAttn(torch.nn.Module):
 class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        n_features = 512
+        n_features = 64
         self.conv1 = GATv2Conv(in_channels=15,
                                out_channels=n_features,
-                               heads=1,
+                               heads=25,
                                edge_dim=1,
                                aggr="mean",
                                concat=False,
@@ -142,34 +142,6 @@ class AttnGCN(torch.nn.Module):
                                add_self_loops=True)
         self.norm1 = BatchNorm1d(n_features)
 
-        self.conv2 = GATv2Conv(in_channels=15,
-                               out_channels=128,
-                               heads=2,
-                               edge_dim=1,
-                               aggr="mean",
-                               concat=False,
-                               share_weights=False,
-                               add_self_loops=False)
-        self.norm2 = BatchNorm1d(128)
-
-        self.conv_layers = torch.nn.ModuleList([])
-        self.batch_norms = torch.nn.ModuleList([])
-
-        for i in range(0):
-            self.conv_layers.append(
-                GATv2Conv(in_channels=128,
-                          out_channels=128,
-                          heads=2,
-                          edge_dim=1,
-                          aggr="add",
-                          concat=False,
-                          share_weights=False,
-                          add_self_loops=True)
-            )
-
-            self.batch_norms.append(
-                BatchNorm1d(128)
-            )
         self.fc1 = Linear(n_features, 128)
         self.fc2 = Linear(128, 5)
         self.dp = 0.0
@@ -180,17 +152,6 @@ class AttnGCN(torch.nn.Module):
         h = self.norm1(h)
         h = F.leaky_relu(h)
         res.append(h)
-
-        # h = self.conv2(bf, edge_index, edge_weight)
-        # h = self.norm2(h)
-        # h = F.leaky_relu(h)
-        # res.append(h)
-
-        for conv_layer, batch_norm in zip(self.conv_layers, self.batch_norms):
-            h = conv_layer(h, edge_index, edge_weight)
-            h = batch_norm(h)
-            h = F.leaky_relu(h)
-            h = F.dropout(h, p=self.dp, training=self.training)
 
         h = torch.cat(res, dim=-1)
         h = self.fc1(h).relu()
