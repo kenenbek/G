@@ -163,7 +163,7 @@ class AttnGCN(torch.nn.Module):
 class SimpleNN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        dp = 0.2
+        dp = 0.05
         hidden_dim = 16
         self.model = Sequential(
             Linear(2635, hidden_dim),
