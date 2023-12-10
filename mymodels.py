@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BatchNorm1d, LayerNorm, Sequential, LeakyReLU
+from torch.nn import Linear, BatchNorm1d, LayerNorm, Sequential, LeakyReLU, Dropout
 from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMMConv, GINConv
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
@@ -163,19 +163,24 @@ class AttnGCN(torch.nn.Module):
 class SimpleNN(torch.nn.Module):
     def __init__(self):
         super().__init__()
+        dp = 0.4
         self.model = Sequential(
             Linear(2635, 2635),
             BatchNorm1d(2635),
             LeakyReLU(),
+            Dropout(p=dp),
             Linear(2635, 2635),
             BatchNorm1d(2635),
             LeakyReLU(),
+            Dropout(p=dp),
             Linear(2635, 2635),
             BatchNorm1d(2635),
             LeakyReLU(),
+            Dropout(p=dp),
             Linear(2635, 2635),
             BatchNorm1d(2635),
             LeakyReLU(),
+            Dropout(p=dp),
             Linear(2635, 5),
         )
 
