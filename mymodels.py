@@ -163,25 +163,26 @@ class AttnGCN(torch.nn.Module):
 class SimpleNN(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        dp = 0.9
+        dp = 0.2
+        hidden_dim = 128
         self.model = Sequential(
-            Linear(2635, 2635),
-            BatchNorm1d(2635),
+            Linear(2635, hidden_dim),
+            BatchNorm1d(hidden_dim),
             LeakyReLU(),
             Dropout(p=dp),
-            Linear(2635, 2635),
-            BatchNorm1d(2635),
+            Linear(hidden_dim, hidden_dim),
+            BatchNorm1d(hidden_dim),
             LeakyReLU(),
             Dropout(p=dp),
-            Linear(2635, 2635),
-            BatchNorm1d(2635),
+            Linear(hidden_dim, hidden_dim),
+            BatchNorm1d(hidden_dim),
             LeakyReLU(),
             Dropout(p=dp),
-            Linear(2635, 2635),
-            BatchNorm1d(2635),
+            Linear(hidden_dim, hidden_dim),
+            BatchNorm1d(hidden_dim),
             LeakyReLU(),
             Dropout(p=dp),
-            Linear(2635, 5),
+            Linear(hidden_dim, 5),
         )
 
     def forward(self, h):
