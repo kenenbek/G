@@ -57,8 +57,6 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             single = weighted_adj_matrix[test_node_position]
             single = torch.cat((single[:test_node_position], single[test_node_position + 1:]))
 
-            print(single)
-            print(single.shape)
             out = model(single.unsqueeze(0))
 
             pred = out[0].argmax(dim=0).item()
@@ -77,7 +75,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-3
-    wandb.config.epochs = 10
+    wandb.config.epochs = 1000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
