@@ -57,7 +57,9 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             single = weighted_adj_matrix[test_node_position]
             single = torch.cat((single[:test_node_position], single[test_node_position + 1:]))
 
-            out = model(single)
+            print(single)
+            print(single.shape)
+            out = model(single.unsqueeze(0))
 
             pred = out.argmax(dim=0).item()
             true_label = sub_data.y[test_node_position].item()
