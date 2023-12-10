@@ -158,7 +158,7 @@ def recalculate_input_features(full_data, train_mask):
     stds = convert_dict_to_tensor(stds)
     edges = convert_dict_to_tensor(edges)
 
-    return hidden_x_data, edge_num, torch.cat((means, stds, edges), dim=-1)
+    return hidden_x_data, edge_num, torch.cat((means, stds, edges), dim=-1), neighbors
 
 
 def convert_dict_to_tensor(d):
