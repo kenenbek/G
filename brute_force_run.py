@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     assert torch.equal(train_mask, ~test_mask), "Error"
 
-    _, edge_num, big_features = recalculate_input_features(full_data, train_mask)
+    _, edge_num, big_features, neighbors = recalculate_input_features(full_data, train_mask)
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
