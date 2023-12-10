@@ -140,7 +140,7 @@ class AttnGCN(torch.nn.Module):
                                concat=True,
                                share_weights=False,
                                add_self_loops=True)
-        self.norm1 = BatchNorm1d(n_features)
+        self.norm1 = BatchNorm1d(n_features*25)
 
         self.fc1 = Linear(n_features*25, n_features*25)
         self.fc2 = Linear(n_features*25, 5)
