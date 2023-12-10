@@ -52,7 +52,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
-            weighted_adj_matrix = to_dense_adj(sub_data.edge_index, edge_attr=sub_data.edge_weight)[0].squeeze(2)
+            weighted_adj_matrix = to_dense_adj(sub_data.edge_index, edge_attr=sub_data.edge_attr)[0].squeeze(2)
 
             single = weighted_adj_matrix[test_node_position]
             single = torch.cat((single[:test_node_position], single[test_node_position + 1:]))
