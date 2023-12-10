@@ -61,7 +61,7 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
             print(single.shape)
             out = model(single.unsqueeze(0))
 
-            pred = out.argmax(dim=0).item()
+            pred = out[0].argmax(dim=0).item()
             true_label = sub_data.y[test_node_position].item()
 
             y_true_list.append(true_label)
