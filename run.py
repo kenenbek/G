@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
-from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple, BigAttn
+from mymodels import AttnGCN, SimpleNN, GCN, GCN_simple, BigAttn, Transformer
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
     set_global_seed, change_input, create_5_graphs, create_25_graphs
 from torch_geometric.transforms import GDC
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = AttnGCN()
+    model = Transformer()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
