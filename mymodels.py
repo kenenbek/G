@@ -361,7 +361,7 @@ class Transformer(torch.nn.Module):
         self.norm3 = BatchNorm1d(5)
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
-        h, t = self.conv1(bf, edge_index, edge_weight, return_attention_weights=True)
+        h, t = self.conv1(x_input, edge_index, edge_weight, return_attention_weights=True)
         a, edge_weight = t
         h = self.norm1(h)
         h = F.leaky_relu(h)
