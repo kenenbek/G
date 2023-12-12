@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
         out = model(x_input, full_data.big_features[train_mask],
                     sub_data_25_filtered, train_edge_index, train_edge_weight)
-        loss = criterion(out, full_data.y[train_mask])
+        loss = criterion(out[node_mask], full_data.y[train_mask][node_mask])
 
         loss.backward()
         optimizer.step()
