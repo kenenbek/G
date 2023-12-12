@@ -321,7 +321,7 @@ class GINNet(torch.nn.Module):
 class Transformer(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        n_features = 512
+        n_features = 256
         n_heads = 1
         self.dp = 0.2
         self.conv1 = TransformerConv(in_channels=6,
