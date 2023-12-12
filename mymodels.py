@@ -324,7 +324,7 @@ class Transformer(torch.nn.Module):
         n_features = 512
         n_heads = 1
         self.dp = 0.2
-        self.conv1 = TransformerConv(in_channels=15,
+        self.conv1 = TransformerConv(in_channels=6,
                                      out_channels=n_features,
                                      heads=n_heads,
                                      concat=True,
