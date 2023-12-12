@@ -329,7 +329,6 @@ class Transformer(torch.nn.Module):
                                      concat=True,
                                      beta=False,
                                      dropout=0.0,
-                                     edge_dim=0,
                                      bias=True,
                                      root_weight=True,
                                      )
