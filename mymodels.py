@@ -362,7 +362,9 @@ class Transformer(torch.nn.Module):
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
         h, t = self.conv1(bf, edge_index, edge_weight, return_attention_weights=True)
-        _, edge_weight = t
+        a, edge_weight = t
+        print(a.shape)
+        print(edge_weight.shape)
         h = self.norm1(h)
         h = F.leaky_relu(h)
 
