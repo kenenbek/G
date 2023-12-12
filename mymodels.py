@@ -333,6 +333,7 @@ class Transformer(torch.nn.Module):
                                      edge_dim=1,
                                      bias=True,
                                      root_weight=True,
+                                     aggr="mean"
                                      )
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
@@ -345,6 +346,7 @@ class Transformer(torch.nn.Module):
                                      edge_dim=1,
                                      bias=True,
                                      root_weight=True,
+                                     aggr="mean"
                                      )
         self.norm2 = BatchNorm1d(n_features*n_heads)
 
@@ -357,6 +359,7 @@ class Transformer(torch.nn.Module):
                                      edge_dim=1,
                                      bias=True,
                                      root_weight=True,
+                                     aggr="mean"
                                      )
         self.norm3 = BatchNorm1d(5)
 
