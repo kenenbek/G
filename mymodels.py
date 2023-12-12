@@ -342,7 +342,7 @@ class Transformer(torch.nn.Module):
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
         res = []
-        h = self.conv1(bf, edge_index)
+        h = self.conv1(bf, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
         res.append(h)
