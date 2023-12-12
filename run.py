@@ -91,7 +91,7 @@ if __name__ == "__main__":
         #                                                  train_edge_weight,
         #                                                  q=0.05)
 
-        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=10)
+        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=100)
 
         out = model(x_input, full_data.big_features[train_mask],
                     sub_data_25_filtered, train_edge_index, train_edge_weight)
