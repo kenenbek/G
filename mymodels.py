@@ -337,6 +337,7 @@ class Transformer(torch.nn.Module):
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
         self.fc1 = Linear(n_features*n_heads, n_features*n_heads)
+        self.fc_norm = BatchNorm1d(n_features*n_heads)
         self.fc2 = Linear(n_features*n_heads, 5)
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
@@ -347,7 +348,7 @@ class Transformer(torch.nn.Module):
         res.append(h)
 
         h = torch.cat(res, dim=-1)
-        h = self.fc1(h).relu()
+        h = self.fc_norm(self.fc1(h)).relu()
         h = F.dropout(h, p=self.dp, training=self.training)
         h = self.fc2(h)
         return h
