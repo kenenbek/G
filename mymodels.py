@@ -332,7 +332,7 @@ class Transformer(torch.nn.Module):
                                      dropout=0.2,
                                      edge_dim=1,
                                      bias=True,
-                                     root_weight=True,
+                                     root_weight=False,
                                      )
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
