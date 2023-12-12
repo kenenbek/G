@@ -322,7 +322,7 @@ class Transformer(torch.nn.Module):
     def __init__(self):
         super().__init__()
         n_features = 64
-        n_heads = 2
+        n_heads = 1
         self.dp = 0.2
         self.conv1 = TransformerConv(in_channels=15,
                                      out_channels=n_features,
@@ -363,8 +363,6 @@ class Transformer(torch.nn.Module):
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
         h, t = self.conv1(bf, edge_index, edge_weight, return_attention_weights=True)
         a, edge_weight = t
-        print(a.shape)
-        print(edge_weight.shape)
         h = self.norm1(h)
         h = F.leaky_relu(h)
 
