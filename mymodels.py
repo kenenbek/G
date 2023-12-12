@@ -336,19 +336,38 @@ class Transformer(torch.nn.Module):
                                      )
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
-        self.fc1 = Linear(n_features*n_heads, n_features*n_heads)
-        self.fc_norm = BatchNorm1d(n_features*n_heads)
-        self.fc2 = Linear(n_features*n_heads, 5)
+        self.conv2 = TransformerConv(in_channels=n_features*n_heads,
+                                     out_channels=n_features,
+                                     heads=n_heads,
+                                     concat=True,
+                                     beta=False,
+                                     dropout=0.2,
+                                     edge_dim=1,
+                                     bias=True,
+                                     root_weight=True,
+                                     )
+        self.norm2 = BatchNorm1d(n_features*n_heads)
+
+        self.conv3 = TransformerConv(in_channels=n_features*n_heads,
+                                     out_channels=5,
+                                     heads=n_heads,
+                                     concat=False,
+                                     beta=False,
+                                     dropout=0.2,
+                                     edge_dim=1,
+                                     bias=True,
+                                     root_weight=True,
+                                     )
+        self.norm3 = BatchNorm1d(5)
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
-        res = []
-        h = self.conv1(bf, edge_index, edge_weight)
+        h, _, edge_weight = self.conv1(bf, edge_index, edge_weight, return_attention_weights=True)
         h = self.norm1(h)
         h = F.leaky_relu(h)
-        res.append(h)
 
-        h = torch.cat(res, dim=-1)
-        h = self.fc_norm(self.fc1(h)).relu()
-        h = F.dropout(h, p=self.dp, training=self.training)
-        h = self.fc2(h)
+        h, _, edge_weight = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
+        h = self.norm2(h)
+        h = F.leaky_relu(h)
+
+        h = self.conv3(h, edge_index, edge_weight)
         return h
