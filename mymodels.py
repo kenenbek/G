@@ -169,7 +169,7 @@ class AttnGCN(torch.nn.Module):
         h = F.leaky_relu(h)
 
         h, t = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
-        _, edge_weight = t
+        edge_index, edge_weight = t
         h = self.norm2(h)
         h = F.leaky_relu(h)
 
