@@ -144,16 +144,6 @@ class AttnGCN(torch.nn.Module):
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
         self.conv2 = GATv2Conv(in_channels=n_features,
-                               out_channels=n_features,
-                               heads=n_heads,
-                               edge_dim=1,
-                               aggr="add",
-                               concat=False,
-                               share_weights=False,
-                               add_self_loops=True)
-        self.norm2 = BatchNorm1d(n_features * n_heads)
-
-        self.conv3 = GATv2Conv(in_channels=n_features,
                                out_channels=5,
                                heads=n_heads,
                                edge_dim=1,
@@ -168,12 +158,7 @@ class AttnGCN(torch.nn.Module):
         h = self.norm1(h)
         h = F.leaky_relu(h)
 
-        h, t = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
-        edge_index, edge_weight = t
-        h = self.norm2(h)
-        h = F.leaky_relu(h)
-
-        h = self.conv3(h, edge_index, edge_weight)
+        h = self.conv2(h, edge_index, edge_weight)
         return h
 
 
