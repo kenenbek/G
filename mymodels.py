@@ -133,7 +133,7 @@ class AttnGCN(torch.nn.Module):
         super().__init__()
         n_features = 128
         n_heads = 1
-        self.conv1 = GATv2Conv(in_channels=15,
+        self.conv1 = GATv2Conv(in_channels=5,
                                out_channels=n_features,
                                heads=n_heads,
                                edge_dim=1,
@@ -143,20 +143,32 @@ class AttnGCN(torch.nn.Module):
                                add_self_loops=False)
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
-        self.fc1 = Linear(n_features*n_heads, n_features*n_heads)
-        self.fc2 = Linear(n_features*n_heads, 5)
-        self.dp = 0.0
+        self.conv2 = GATv2Conv(in_channels=n_features,
+                               out_channels=n_features,
+                               heads=n_heads,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
+        self.norm2 = BatchNorm1d(n_features * n_heads)
+
+        self.conv3 = GATv2Conv(in_channels=n_features,
+                               out_channels=5,
+                               heads=n_heads,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
-        res = []
-        h = self.conv1(bf, edge_index, edge_weight)
+        h, t = self.conv1(x_input, edge_index, edge_weight, return_attention_weights=True)
+        _, edge_weight = t
         h = self.norm1(h)
         h = F.leaky_relu(h)
-        res.append(h)
 
-        h = torch.cat(res, dim=-1)
-        h = self.fc1(h).relu()
-        h = self.fc2(h)
+
         return h
 
 
@@ -337,7 +349,7 @@ class Transformer(torch.nn.Module):
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
         self.conv2 = TransformerConv(in_channels=n_features*n_heads,
-                                     out_channels=n_features,
+                                     out_channels=5,
                                      heads=n_heads,
                                      concat=True,
                                      beta=False,
@@ -366,10 +378,5 @@ class Transformer(torch.nn.Module):
         h = self.norm1(h)
         h = F.leaky_relu(h)
 
-        h, t = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
-        _, edge_weight = t
-        h = self.norm2(h)
-        h = F.leaky_relu(h)
-
-        h = self.conv3(h, edge_index, edge_weight)
+        h = self.conv2(h, edge_index, edge_weight)
         return h
