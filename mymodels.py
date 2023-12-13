@@ -323,10 +323,10 @@ class GINNet(torch.nn.Module):
 class Transformer(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        n_features = 2048
+        n_features = 128
         n_heads = 1
         self.dp = 0.2
-        self.conv1 = TransformerConv(in_channels=5,
+        self.conv1 = TransformerConv(in_channels=15,
                                      out_channels=n_features,
                                      heads=n_heads,
                                      concat=True,
@@ -339,7 +339,7 @@ class Transformer(torch.nn.Module):
         self.norm1 = BatchNorm1d(n_features*n_heads)
 
         self.conv2 = TransformerConv(in_channels=n_features*n_heads,
-                                     out_channels=5,
+                                     out_channels=n_features*n_heads,
                                      heads=n_heads,
                                      concat=True,
                                      beta=False,
@@ -363,10 +363,15 @@ class Transformer(torch.nn.Module):
         self.norm3 = BatchNorm1d(5)
 
     def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
-        h, t = self.conv1(x_input, edge_index, edge_weight, return_attention_weights=True)
+        h, t = self.conv1(bf, edge_index, edge_weight, return_attention_weights=True)
         _, edge_weight = t
         h = self.norm1(h)
         h = F.leaky_relu(h)
 
-        h = self.conv2(h, edge_index, edge_weight)
+        h = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
+        _, edge_weight = t
+        h = self.norm2(h)
+        h = F.leaky_relu(h)
+
+        h = self.conv3(h, edge_index, edge_weight)
         return h
