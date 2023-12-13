@@ -368,7 +368,7 @@ class Transformer(torch.nn.Module):
         h = self.norm1(h)
         h = F.leaky_relu(h)
 
-        h = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
+        h, t = self.conv2(h, edge_index, edge_weight, return_attention_weights=True)
         _, edge_weight = t
         h = self.norm2(h)
         h = F.leaky_relu(h)
