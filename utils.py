@@ -77,7 +77,7 @@ def evaluate_one_by_one(model, full_data, train_data, train_mask, test_mask):
 def my_subgraph(full_data, train_data, test_node_id, node_mapping):
     id_tensor = torch.zeros(1, train_data.num_nodes + 1).to(device)
     id_tensor[0, -1] = 1.
-    new_node_feature = torch.cat([full_data.big_features[test_node_id], id_tensor], dim=1)
+    new_node_feature = torch.cat([full_data.big_features[test_node_id].unsqueeze(0), id_tensor], dim=1)
     node_features_plus = torch.cat([train_data.big_features, new_node_feature.unsqueeze(0)], dim=0)
 
     # Find edges in full_data connected to the new node
