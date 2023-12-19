@@ -38,43 +38,35 @@ def fine_tune(sub_data, input_x, test_node_position, model, steps=50):
     return model
 
 
-def evaluate_one_by_one(model, data, train_mask, test_mask):
+def evaluate_one_by_one(model, full_data, train_data, train_mask, test_mask):
     model.eval()
 
     # Get the indices of test nodes
     test_indices = torch.where(test_mask)[0].tolist()
+    train_indices = train_mask.nonzero(as_tuple=False).squeeze()
 
     y_true_list = []
     pred_list = []
 
     model = model.to(device)
-    data = data.to(device)
+    full_data = full_data.to(device)
+    train_data = train_data.to(device)
     train_mask = train_mask.to(device)
+    train_indices = train_indices.to(device)
+
+    node_mapping = {old_id.item(): new_id for new_id, old_id in enumerate(train_indices)}
 
     with torch.no_grad():
         for test_index in trange(len(test_indices)):
             # Get the actual node index
             idx = test_indices[test_index]
 
-            # Combine training indices with the current test index
-            sub_indices = torch.cat([torch.where(train_mask)[0], torch.tensor([idx]).to(device)])
-            sub_indices, _ = torch.sort(sub_indices)
+            sub_data = my_subgraph(full_data, train_data, idx, node_mapping)
 
-            # Extract sub-graph
-            sub_data = data.subgraph(sub_indices)
+            out = model(sub_data.node_features_plus, sub_data.edge_index, sub_data.edge_attr)  # NB
 
-            # Find the position of the test node in the subgraph
-            test_node_position = torch.where(sub_indices == idx)[0].item()
-
-            # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-            x_input = sub_data.x_one_hot.clone()
-            x_input[test_node_position] = unknown_label
-
-            out = model(x_input, sub_data.big_features, None, sub_data.edge_index, sub_data.edge_attr)  # NB
-
-            pred = out[test_node_position].argmax(dim=0).item()
-            true_label = sub_data.y[test_node_position].item()
+            pred = out[-1].argmax(dim=0).item()
+            true_label = sub_data.y[-1].item()
 
             y_true_list.append(true_label)
             pred_list.append(pred)
@@ -82,7 +74,39 @@ def evaluate_one_by_one(model, data, train_mask, test_mask):
     return y_true_list, pred_list
 
 
-def evaluate_one_by_one_mmm(model, data, train_mask, test_mask):
+def my_subgraph(full_data, train_data, test_node_id, node_mapping):
+    id_tensor = torch.zeros(1, train_data.num_nodes + 1).to(device)
+    id_tensor[0, -1] = 1.
+    new_node_feature = torch.cat([full_data.bf[test_node_id], id_tensor], dim=1)
+    node_features_plus = torch.cat([train_data.bf, new_node_feature.unsqueeze(0)], dim=0)
+
+    # Find edges in full_data connected to the new node
+    test_edges = full_data.edge_index[:, (full_data.edge_index[0] == test_node_id) | (full_data.edge_index[1] == test_node_id)]
+
+    # Remap the edges to align with train_data's node IDs
+    for i in range(test_edges.size(1)):
+        test_edges[0, i] = node_mapping.get(test_edges[0, i].item(), train_data.num_nodes)
+        test_edges[1, i] = node_mapping.get(test_edges[1, i].item(), train_data.num_nodes)
+
+    edge_index_plus = torch.cat([train_data.edge_index, test_edges], dim=1)
+
+    # Assuming full_data.edge_attr exists
+    test_edge_attrs = full_data.edge_attr[
+        (full_data.edge_index[0] == test_node_id) | (full_data.edge_index[1] == test_node_id)]
+
+    # Append new edge attributes to train_data.edge_attr
+    edge_attr_plus = torch.cat([train_data.edge_attr, test_edge_attrs], dim=0)
+    y_plus = torch.cat([train_data.y, full_data.y[test_node_id]], dim=0)
+
+    return Data(
+        bf=node_features_plus,
+        edge_index=edge_index_plus,
+        edge_attr=edge_attr_plus,
+        y=y_plus
+    )
+
+
+def evaluate_one_by_one_mmm(model, data, train_data, train_mask, test_mask):
     model.eval()
 
     # Get the indices of test nodes
@@ -285,12 +309,7 @@ def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1, test=False):
     modified_x_one_hot = F.one_hot(y, num_classes=5).type(torch.float)
     return modified_x_one_hot, sub_data_s
 
-# edge_attr_multi = sub_data.edge_attr_multi.clone()
-# mask = sub_data.edge_index[0] == test_node_position
-# new_edge_attr = torch.zeros_like(edge_attr_multi).to(device)
-# new_edge_attr[mask, -1] = torch.max(edge_attr_multi[mask], dim=1)[0]
-# edge_attr_multi[mask] = new_edge_attr[mask]
 
-# model = fine_tune(sub_data, input_x, test_node_position, model, steps=10)
-# model.eval()
+
+
 

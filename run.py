@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-3
-    wandb.config.epochs = 5000
+    wandb.config.epochs = 10
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = Transformer()
+    model = AttnGCN()
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
     scheduler = StepLR(optimizer, step_size=500,
@@ -61,11 +61,6 @@ if __name__ == "__main__":
     t = trange(wandb.config.epochs, leave=True)
     losses = []
 
-    # Extract the subgraph associated with the training nodes
-    # train_edge_index, train_edge_attr_multi = subgraph(
-    #     train_nodes, full_data.edge_index, edge_attr=full_data.edge_attr_multi, relabel_nodes=True
-    # )
-
     train_edge_index, train_edge_weight = subgraph(
         train_indices, full_data.edge_index, edge_attr=full_data.edge_attr, relabel_nodes=True
     )
@@ -75,27 +70,18 @@ if __name__ == "__main__":
     train_mask = train_mask.to(device)
     train_edge_index = train_edge_index.to(device)
     train_edge_weight = train_edge_weight.to(device)
-    # train_edge_attr_multi = train_edge_attr_multi.to(device)
 
-    sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
-                                            train_edge_index,
-                                            train_edge_weight,
-                                            q=0.1)
+    input_data = torch.eye(len(train_indices)).to(device)
+    zero_column = torch.zeros(len(train_indices), 1).to(device)
+    input_data = torch.cat([full_data.big_features[train_mask], input_data, zero_column], dim=1)
 
     for epoch in t:
         model.train()
         optimizer.zero_grad()
 
-        # x_input, sub_data_25_filtered = create_25_graphs(full_data.y[train_mask],
-        #                                                  train_edge_index,
-        #                                                  train_edge_weight,
-        #                                                  q=0.05)
-
-        x_input, node_mask = change_input(full_data.x_one_hot[train_mask], q=50)
-
-        out = model(x_input, full_data.big_features[train_mask],
-                    sub_data_25_filtered, train_edge_index, train_edge_weight)
-        loss = criterion(out[node_mask], full_data.y[train_mask][node_mask])
+        out = model(input_data,
+                    train_edge_index, train_edge_weight)
+        loss = criterion(out, full_data.y[train_mask])
 
         loss.backward()
         optimizer.step()
@@ -106,7 +92,15 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one
-    y_true, y_pred = evaluate_one_by_one(model, full_data, train_mask, test_mask)
+    train_data = Data(
+        bf=full_data.big_features[train_mask],
+        edge_index=train_edge_index,
+        edge_attr=train_edge_weight,
+        y=full_data.y[train_mask]
+    ).to(device)
+
+    y_true, y_pred = evaluate_one_by_one(model, full_data, train_data,
+                                         train_mask, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))

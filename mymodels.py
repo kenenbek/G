@@ -132,18 +132,29 @@ class AttnGCN(torch.nn.Module):
     def __init__(self):
         super().__init__()
         n_features = 128
-        n_heads = 1
-        self.conv1 = GATv2Conv(in_channels=15,
+        n_heads = 2
+        self.dp = 0.2
+        self.conv1 = GATv2Conv(in_channels=2651,
                                out_channels=n_features,
                                heads=n_heads,
                                edge_dim=1,
                                aggr="add",
                                concat=False,
                                share_weights=False,
-                               add_self_loops=False)
-        self.norm1 = BatchNorm1d(n_features*n_heads)
+                               add_self_loops=True)
+        self.norm1 = BatchNorm1d(n_features)
 
         self.conv2 = GATv2Conv(in_channels=n_features,
+                               out_channels=n_features,
+                               heads=n_heads,
+                               edge_dim=1,
+                               aggr="add",
+                               concat=False,
+                               share_weights=False,
+                               add_self_loops=True)
+        self.norm2 = BatchNorm1d(n_features)
+
+        self.conv3 = GATv2Conv(in_channels=n_features,
                                out_channels=5,
                                heads=n_heads,
                                edge_dim=1,
@@ -151,14 +162,20 @@ class AttnGCN(torch.nn.Module):
                                concat=False,
                                share_weights=False,
                                add_self_loops=True)
+        self.norm3 = BatchNorm1d(n_features)
 
-    def forward(self, x_input, bf, sub_data_25, edge_index, edge_weight):
-        h, t = self.conv1(bf, edge_index, edge_weight, return_attention_weights=True)
-        _, edge_weight = t
+    def forward(self, bf, edge_index, edge_weight):
+        h = self.conv1(bf, edge_index, edge_weight)
         h = self.norm1(h)
         h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=True)
 
         h = self.conv2(h, edge_index, edge_weight)
+        h = self.norm2(h)
+        h = F.leaky_relu(h)
+        h = F.dropout(h, p=self.dp, training=True)
+
+        h = self.conv3(h, edge_index, edge_weight)
         return h
 
 
