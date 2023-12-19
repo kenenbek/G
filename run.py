@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-3
-    wandb.config.epochs = 10
+    wandb.config.epochs = 2
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
     # TEST one by one
     train_data = Data(
-        bf=full_data.big_features[train_mask],
+        big_features=full_data.big_features[train_mask],
         edge_index=train_edge_index,
         edge_attr=train_edge_weight,
         y=full_data.y[train_mask]
