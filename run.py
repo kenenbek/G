@@ -93,7 +93,7 @@ if __name__ == "__main__":
 
     # TEST one by one
     train_data = Data(
-        big_features=full_data.big_features[train_mask],
+        big_features=input_data,
         edge_index=train_edge_index,
         edge_attr=train_edge_weight,
         y=full_data.y[train_mask]
