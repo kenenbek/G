@@ -98,11 +98,9 @@ def my_subgraph(full_data, train_data, train_indices, test_node_id, node_mapping
 
     edge_index_plus = torch.cat([train_data.edge_index, test_edges], dim=1)
 
-    # Assuming full_data.edge_attr exists
     test_edge_attrs = full_data.edge_attr[mask]
-
-    # Append new edge attributes to train_data.edge_attr
     edge_attr_plus = torch.cat([train_data.edge_attr, test_edge_attrs], dim=0)
+
     y_plus = torch.cat([train_data.y, full_data.y[test_node_id].unsqueeze(0)], dim=0)
 
     return Data(
