@@ -96,7 +96,8 @@ if __name__ == "__main__":
         big_features=input_data,
         edge_index=train_edge_index,
         edge_attr=train_edge_weight,
-        y=full_data.y[train_mask]
+        y=full_data.y[train_mask],
+        num_nodes=len(train_indices)
     ).to(device)
 
     y_true, y_pred = evaluate_one_by_one(model, full_data, train_data,

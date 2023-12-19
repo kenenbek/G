@@ -61,7 +61,7 @@ def evaluate_one_by_one(model, full_data, train_data, train_mask, test_mask):
             # Get the actual node index
             idx = test_indices[test_index]
 
-            sub_data = my_subgraph(full_data, train_data, idx, node_mapping)
+            sub_data = my_subgraph(full_data, train_data, train_indices, idx, node_mapping)
 
             out = model(sub_data.node_features_plus, sub_data.edge_index, sub_data.edge_attr)  # NB
 
@@ -74,14 +74,22 @@ def evaluate_one_by_one(model, full_data, train_data, train_mask, test_mask):
     return y_true_list, pred_list
 
 
-def my_subgraph(full_data, train_data, test_node_id, node_mapping):
+def my_subgraph(full_data, train_data, train_indices, test_node_id, node_mapping):
     id_tensor = torch.zeros(1, train_data.num_nodes + 1).to(device)
     id_tensor[0, -1] = 1.
     new_node_feature = torch.cat([full_data.big_features[test_node_id].unsqueeze(0), id_tensor], dim=1)
     node_features_plus = torch.cat([train_data.big_features, new_node_feature], dim=0)
 
     # Find edges in full_data connected to the new node
-    test_edges = full_data.edge_index[:, (full_data.edge_index[0] == test_node_id) | (full_data.edge_index[1] == test_node_id)]
+    # Mask for whether each node in edge_index is in train_indices
+    source_in_train = torch.isin(full_data.edge_index[0], train_indices)
+    target_in_train = torch.isin(full_data.edge_index[1], train_indices)
+
+    # Select edges where one end is test_node_id and the other is in train_indices
+    mask = ((full_data.edge_index[0] == test_node_id) & target_in_train) | \
+           ((full_data.edge_index[1] == test_node_id) & source_in_train)
+
+    test_edges = full_data.edge_index[:, mask]
 
     # Remap the edges to align with train_data's node IDs
     for i in range(test_edges.size(1)):
@@ -91,8 +99,7 @@ def my_subgraph(full_data, train_data, test_node_id, node_mapping):
     edge_index_plus = torch.cat([train_data.edge_index, test_edges], dim=1)
 
     # Assuming full_data.edge_attr exists
-    test_edge_attrs = full_data.edge_attr[
-        (full_data.edge_index[0] == test_node_id) | (full_data.edge_index[1] == test_node_id)]
+    test_edge_attrs = full_data.edge_attr[mask]
 
     # Append new edge attributes to train_data.edge_attr
     edge_attr_plus = torch.cat([train_data.edge_attr, test_edge_attrs], dim=0)
