@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # Store configurations/hyperparameters
     wandb.config.lr = 0.001
     wandb.config.weight_decay = 5e-3
-    wandb.config.epochs = 1000
+    wandb.config.epochs = 3000
 
     full_dataset = MyDataset(root="full_data/")
     full_data = full_dataset[0]
@@ -71,13 +71,11 @@ if __name__ == "__main__":
     train_edge_index = train_edge_index.to(device)
     train_edge_weight = train_edge_weight.to(device)
 
-    input_data = torch.eye(len(train_indices)).to(device)
-    zero_column = torch.zeros(len(train_indices), 1).to(device)
-    input_data = torch.cat([full_data.big_features[train_mask], input_data, zero_column], dim=1)
-
     for epoch in t:
         model.train()
         optimizer.zero_grad()
+
+        input_data, rand_mask = change_input(full_data.x_one_hot[train_mask], q=10)
 
         out = model(input_data,
                     train_edge_index, train_edge_weight)
@@ -92,15 +90,8 @@ if __name__ == "__main__":
         t.set_description(str(round(loss.item(), 6)))
 
     # TEST one by one
-    train_data = Data(
-        big_features=input_data,
-        edge_index=train_edge_index,
-        edge_attr=train_edge_weight,
-        y=full_data.y[train_mask],
-        num_nodes=len(train_indices)
-    ).to(device)
 
-    y_true, y_pred = evaluate_one_by_one(model, full_data, train_data,
+    y_true, y_pred = evaluate_one_by_one(model, full_data,
                                          train_mask, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 

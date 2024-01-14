@@ -90,7 +90,7 @@ class MyDataset(Dataset):
             edge_attr_multi = torch.Tensor(edge_attr_multi).type(torch.float).contiguous()
             edge_index = torch.Tensor(edge_index).type(torch.long).t().contiguous()
 
-            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1).type(torch.float)
+            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1 + 1).type(torch.float)
 
             data = MyData(x=x,
                           edge_num=edge_num,

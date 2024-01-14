@@ -38,7 +38,7 @@ def fine_tune(sub_data, input_x, test_node_position, model, steps=50):
     return model
 
 
-def evaluate_one_by_one(model, full_data, train_data, train_mask, test_mask):
+def ____evaluate_one_by_one(model, full_data, train_data, train_mask, test_mask):
     model.eval()
 
     # Get the indices of test nodes
@@ -111,7 +111,7 @@ def my_subgraph(full_data, train_data, train_indices, test_node_id, node_mapping
     )
 
 
-def evaluate_one_by_one_mmm(model, data, train_data, train_mask, test_mask):
+def evaluate_one_by_one(model, full_data, train_mask, test_mask):
     model.eval()
 
     # Get the indices of test nodes
@@ -121,7 +121,7 @@ def evaluate_one_by_one_mmm(model, data, train_data, train_mask, test_mask):
     pred_list = []
 
     model = model.to(device)
-    data = data.to(device)
+    full_data = full_data.to(device)
     train_mask = train_mask.to(device)
 
     with torch.no_grad():
@@ -134,37 +134,42 @@ def evaluate_one_by_one_mmm(model, data, train_data, train_mask, test_mask):
             sub_indices, _ = torch.sort(sub_indices)
 
             # Extract sub-graph
-            sub_data = data.subgraph(sub_indices)
+            sub_data = full_data.subgraph(sub_indices)
 
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
-            preds = []
-            for i in range(5):
-                # Clean subgraph
-                unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-                unknown_label[i] = 1
-                x_input = sub_data.x_one_hot.clone()
-                x_input[test_node_position] = unknown_label
+            # Clean subgraph
+            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+            x_input = sub_data.x_one_hot.clone()
+            x_input[test_node_position] = unknown_label
 
-                y = sub_data.y.clone()
-                y[test_node_position] = i
+            out = model(x_input, sub_data.edge_index, sub_data.edge_attr)  # NB
+            pred = out[test_node_position].argmax(dim=0).item()
 
-                _, sub_data_25_filtered = create_25_graphs(y, sub_data.edge_index, sub_data.edge_attr, test=True)
-
-                out = model(x_input, sub_data.big_features, sub_data_25_filtered, sub_data.edge_index, sub_data.edge_attr)  # NB
-                #pred = out[test_node_position].argmax(dim=0).item()
-                test_node_probs = F.softmax(out[test_node_position], dim=-1)
-                pred = test_node_probs[i].item()
-                preds.append(pred)
-
-            pred = np.argmax(preds)
             true_label = sub_data.y[test_node_position].item()
 
             y_true_list.append(true_label)
             pred_list.append(pred)
 
     return y_true_list, pred_list
+
+
+def change_input(x_input, q=10):
+    x_input = x_input.clone()
+
+    num_nodes = x_input.size(0)  # Assume data.y contains your node labels
+    unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+
+    # Randomly select 10% of your node indices
+    indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)
+
+    # Update the labels of these selected nodes to the unknown label
+    x_input[indices] = unknown_label
+
+    node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
+    node_mask[indices] = True
+    return x_input, node_mask
 
 
 def get_neighbors(node_id, edge_index):
@@ -268,24 +273,6 @@ def create_5_graphs(y, train_edge_index, train_edge_weight):
         sub_data_s.append((filtered_edge_index, filtered_edge_weights))
 
     return sub_data_s
-
-
-def change_input(x_input, q=10):
-    x_input = x_input.clone()
-    # train_edge_attr_multi = train_edge_attr_multi.clone()
-
-    num_nodes = x_input.size(0)  # Assume data.y contains your node labels
-    unknown_label = torch.tensor([0, 0, 0, 0, 0]).type(torch.float).to(device)
-
-    # Randomly select 10% of your node indices
-    indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)
-
-    # Update the labels of these selected nodes to the unknown label
-    x_input[indices] = unknown_label
-
-    node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
-    node_mask[indices] = True
-    return x_input, node_mask
 
 
 def create_25_graphs(y, train_edge_index, train_edge_weight, q=0.1, test=False):
