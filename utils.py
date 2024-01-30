@@ -224,6 +224,19 @@ def calc_accuracy(y_true, y_pred):
         "x": f1_w,
     }
 
+    stats = {
+        "0": accuracy,
+        "1": precision_micro,
+        "2": recall_micro,
+        "3": f1_micro,
+        "4": precision_macro,
+        "5": recall_macro,
+        "6": f1_macro,
+        "7": precision_w,
+        "8": recall_w,
+        "9": f1_w,
+    }
+
     return stats
 
 
