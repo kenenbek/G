@@ -212,70 +212,30 @@ class SimpleNN(torch.nn.Module):
 
 class GCN(torch.nn.Module):
     def __init__(self):
-        super().__init__()
+        super(GCN, self).__init__()
+        num_features = 5
+        hidden_dim = 128
+        num_classes = 5
+        # First GCN layer with normalization
+        self.conv1 = GCNConv(num_features, hidden_dim, normalize=True)
 
-        self.conv1_sum_ibd = GCNConv(
-            in_channels=20,
-            out_channels=64,
-            add_self_loops=False,
-            normalize=False,
-            aggr="add"
-        )
-        self.conv1_mean_ibd = GCNConv(
-            in_channels=20,
-            out_channels=64,
-            add_self_loops=False,
-            normalize=False,
-            aggr="mean"
-        )
+        # Second GCN layer with normalization
+        self.conv2 = GCNConv(hidden_dim, hidden_dim, normalize=True)
 
-        self.conv1_num_edges = GCNConv(
-            in_channels=20,
-            out_channels=64,
-            add_self_loops=False,
-            normalize=False,
-            aggr="add"
-        )
+        # Output layer
+        self.fc = torch.nn.Linear(hidden_dim, num_classes)
 
-        self.norm1 = LayerNorm(192)
+    def forward(self, x, edge_index, edge_weight):
+        # Apply the first GCN layer
+        x = F.relu(self.conv1(x, edge_index, edge_weight))
 
-        self.attn_conv = GATv2Conv(in_channels=192,
-                                   out_channels=192,
-                                   heads=1,
-                                   edge_dim=1,
-                                   aggr="mean",
-                                   concat=False,
-                                   share_weights=False,
-                                   add_self_loops=True
-                                   )
-        self.attn_norm = LayerNorm(192)
+        # Apply the second GCN layer
+        x = F.relu(self.conv2(x, edge_index, edge_weight))
 
-        self.mean_norm = LayerNorm(5)
-        self.std_norm = LayerNorm(5)
-        self.edge_norm = LayerNorm(5)
-        self.fc1 = Linear(192, 192)
-        self.fc2 = Linear(192, 5)
+        # Fully connected layer for classification
+        x = self.fc(x)
 
-    def forward(self, h, big_features, edge_index, edge_weight):
-        big_features = torch.cat((self.mean_norm(big_features[:, :5]),
-                                  self.std_norm(big_features[:, 5:10]),
-                                  self.edge_norm(big_features[:, 10:15])), dim=-1)
-
-        h = torch.cat((h, big_features), dim=-1)
-
-        h1 = self.conv1_sum_ibd(h, edge_index, edge_weight).relu()
-        h2 = self.conv1_mean_ibd(h, edge_index, edge_weight).relu()
-        h3 = self.conv1_num_edges(h, edge_index).relu()
-
-        h = torch.cat((h1, h2, h3), dim=-1)
-        h = self.norm1(h)
-
-        h = self.attn_conv(h, edge_index, edge_weight).relu()
-        h = self.attn_norm(h)
-
-        h = self.fc1(h).relu()
-        h = self.fc2(h)
-        return h
+        return x
 
 
 class GCN_simple(torch.nn.Module):

@@ -53,7 +53,7 @@ for k in range(10):
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = GINNet() #AttnGCN() #TAGConv_3l_512h_w_k3()
+    model = GCN()  #GINNet() #AttnGCN() #TAGConv_3l_512h_w_k3()
     best_model = None
 
     criterion = torch.nn.CrossEntropyLoss()
@@ -124,13 +124,13 @@ for k in range(10):
                                                          y_pred,
                                                          display_labels=sub_etnos,
                                                          ax=ax)
-    fig.savefig(f"models/gin/confusion_matrix_{k}.png")  # Save the figure to a file
+    fig.savefig(f"models/gcn/confusion_matrix_{k}.png")  # Save the figure to a file
 
-    torch.save(best_model.state_dict(), f"models/gin/model_{k}.pt")
-    torch.save(y_true, f"models/gin/y_true_{k}.pt")
-    torch.save(y_pred, f"models/gin/y_pred_{k}.pt")
+    torch.save(best_model.state_dict(), f"models/gcn/model_{k}.pt")
+    torch.save(y_true, f"models/gcn/y_true_{k}.pt")
+    torch.save(y_pred, f"models/gcn/y_pred_{k}.pt")
 
     results = str(metrics["0"]) + ", " + str(metrics["1"]) + ", " + str(metrics["2"]) + ", " + str(metrics["3"]) + ", " + str(metrics["4"]) + ", " + str(metrics["5"]) + ", " + str(metrics["6"]) + ", " + str(metrics["7"]) + ", " + str(metrics["8"]) + ", " + str(metrics["9"])
 
-    with open(f"models/gin/results.csv", "a") as file:
+    with open(f"models/gcn/results.csv", "a") as file:
         file.write(results + "\n")
