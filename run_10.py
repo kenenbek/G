@@ -16,7 +16,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
 
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
-from mymodels import AttnGCN, GINNet, SimpleNN, GCN, GCN_simple, BigAttn, Transformer
+from mymodels import AttnGCN, GINNet, SimpleNN, GCN, TAGConv_3l_512h_w_k3, GCN_simple, BigAttn, Transformer
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
     set_global_seed, change_input, create_5_graphs, create_25_graphs
 from torch_geometric.transforms import GDC
@@ -53,7 +53,7 @@ for k in range(10):
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = GCN()  #GINNet() #AttnGCN() #TAGConv_3l_512h_w_k3()
+    model = TAGConv_3l_512h_w_k3() #GCN()  #GINNet() #AttnGCN() #
     best_model = None
 
     criterion = torch.nn.CrossEntropyLoss()
@@ -124,13 +124,13 @@ for k in range(10):
                                                          y_pred,
                                                          display_labels=sub_etnos,
                                                          ax=ax)
-    fig.savefig(f"models/gcn/confusion_matrix_{k}.png")  # Save the figure to a file
+    fig.savefig(f"models/tagconv/confusion_matrix_{k}.png")  # Save the figure to a file
 
-    torch.save(best_model.state_dict(), f"models/gcn/model_{k}.pt")
-    torch.save(y_true, f"models/gcn/y_true_{k}.pt")
-    torch.save(y_pred, f"models/gcn/y_pred_{k}.pt")
+    torch.save(best_model.state_dict(), f"models/tagconv/model_{k}.pt")
+    torch.save(y_true, f"models/tagconv/y_true_{k}.pt")
+    torch.save(y_pred, f"models/tagconv/y_pred_{k}.pt")
 
     results = str(metrics["0"]) + ", " + str(metrics["1"]) + ", " + str(metrics["2"]) + ", " + str(metrics["3"]) + ", " + str(metrics["4"]) + ", " + str(metrics["5"]) + ", " + str(metrics["6"]) + ", " + str(metrics["7"]) + ", " + str(metrics["8"]) + ", " + str(metrics["9"])
 
-    with open(f"models/gcn/results.csv", "a") as file:
+    with open(f"models/tagconv/results.csv", "a") as file:
         file.write(results + "\n")
