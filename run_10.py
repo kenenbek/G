@@ -105,8 +105,8 @@ for k in range(10):
                                                  train_mask, val_mask, disable=True)
             metrics = calc_accuracy(y_true, y_pred)
 
-            if metrics["Macro-Averaged F1 Score"] > best_metric:
-                best_metric = metrics["Macro-Averaged F1 Score"]
+            if metrics["6"] > best_metric:
+                best_metric = metrics["6"]
                 best_model = model
                 print("Epoch: ", epoch)
                 print(metrics)
