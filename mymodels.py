@@ -134,27 +134,17 @@ class AttnGCN(torch.nn.Module):
         n_features = 128
         n_heads = 2
         self.dp = 0.2
-        self.conv1 = GATv2Conv(in_channels=6,
+        self.conv1 = GATv2Conv(in_channels=5,
                                out_channels=n_features,
                                heads=n_heads,
                                edge_dim=1,
                                aggr="add",
-                               concat=False,
+                               concat=True,
                                share_weights=False,
                                add_self_loops=True)
-        self.norm1 = BatchNorm1d(n_features)
+        self.norm1 = BatchNorm1d(n_features*n_heads)
 
-        self.conv2 = GATv2Conv(in_channels=n_features,
-                               out_channels=n_features,
-                               heads=n_heads,
-                               edge_dim=1,
-                               aggr="add",
-                               concat=False,
-                               share_weights=False,
-                               add_self_loops=True)
-        self.norm2 = BatchNorm1d(n_features)
-
-        self.conv3 = GATv2Conv(in_channels=n_features,
+        self.conv2 = GATv2Conv(in_channels=n_features*n_heads,
                                out_channels=5,
                                heads=1,
                                edge_dim=1,
@@ -162,7 +152,17 @@ class AttnGCN(torch.nn.Module):
                                concat=False,
                                share_weights=False,
                                add_self_loops=True)
-        self.norm3 = BatchNorm1d(n_features)
+#         self.norm2 = BatchNorm1d(n_features)
+
+#         self.conv3 = GATv2Conv(in_channels=n_features,
+#                                out_channels=5,
+#                                heads=1,
+#                                edge_dim=1,
+#                                aggr="add",
+#                                concat=False,
+#                                share_weights=False,
+#                                add_self_loops=True)
+#         self.norm3 = BatchNorm1d(n_features)
 
     def forward(self, x_input, edge_index, edge_weight):
         h = self.conv1(x_input, edge_index, edge_weight)
@@ -170,12 +170,12 @@ class AttnGCN(torch.nn.Module):
         h = F.leaky_relu(h)
         h = F.dropout(h, p=self.dp, training=True)
 
-        h = self.conv2(h, edge_index)
-        h = self.norm2(h)
-        h = F.leaky_relu(h)
-        h = F.dropout(h, p=self.dp, training=True)
+        h = self.conv2(h, edge_index, edge_weight)
+#         h = self.norm2(h)
+#         h = F.leaky_relu(h)
+#         h = F.dropout(h, p=self.dp, training=True)
 
-        h = self.conv3(h, edge_index)
+#         h = self.conv3(h, edge_index)
         return h
 
 
@@ -392,3 +392,17 @@ class Transformer(torch.nn.Module):
 
         h = self.conv3(h, edge_index, edge_weight)
         return h
+
+
+class TAGConv_3l_512h_w_k3(torch.nn.Module):
+    def __init__(self):
+        super(TAGConv_3l_512h_w_k3, self).__init__()
+        self.conv1 = TAGConv(5, 128)
+        self.conv2 = TAGConv(128, 128)
+        self.conv3 = TAGConv(128, 5)
+
+    def forward(self, x, edge_index, edge_weight):
+        x = F.elu(self.conv1(x, edge_index, edge_weight))
+        x = F.elu(self.conv2(x, edge_index, edge_weight))
+        x = self.conv3(x, edge_index, edge_weight)
+        return x

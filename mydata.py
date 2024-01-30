@@ -90,7 +90,7 @@ class MyDataset(Dataset):
             edge_attr_multi = torch.Tensor(edge_attr_multi).type(torch.float).contiguous()
             edge_index = torch.Tensor(edge_index).type(torch.long).t().contiguous()
 
-            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1 + 1).type(torch.float)
+            x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1).type(torch.float)
 
             data = MyData(x=x,
                           edge_num=edge_num,
@@ -277,7 +277,7 @@ class MyData(Data):
         self.x_one_hot_hidden = hidden_x_data
 
 
-def generate_train_test_indices(y, run=10, train=.7, val=.0, test=.3):
+def generate_train_test_indices(y, run=10, train=.6, val=.2, test=.2):
     num_nodes = y.size(0)
     num_classes = int(y.max()) + 1
 
