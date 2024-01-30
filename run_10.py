@@ -130,7 +130,7 @@ for k in range(10):
     torch.save(y_true, f"models/attn/y_true_{k}.pt")
     torch.save(y_pred, f"models/attn/y_pred_{k}.pt")
 
-    results = str(metrics[0]) + ", " + str(metrics[1]) + ", " + str(metrics[2]) + ", " + str(metrics[3]) + ", " + str(metrics[4]) + ", " + str(metrics[5]) + ", " + str(metrics[6]) + ", " + str(metrics[7]) + ", " + str(metrics[8]) + ", " + str(metrics[9])
+    results = str(metrics["0"]) + ", " + str(metrics["1"]) + ", " + str(metrics["2"]) + ", " + str(metrics["3"]) + ", " + str(metrics["4"]) + ", " + str(metrics["5"]) + ", " + str(metrics["6"]) + ", " + str(metrics["7"]) + ", " + str(metrics["8"]) + ", " + str(metrics["9"])
 
     with open(f"models/attn/results.csv", "a") as file:
         file.write(results + "\n")
