@@ -111,7 +111,7 @@ def my_subgraph(full_data, train_data, train_indices, test_node_id, node_mapping
     )
 
 
-def evaluate_one_by_one(model, full_data, train_mask, test_mask):
+def evaluate_one_by_one(model, full_data, train_mask, test_mask, disable=False):
     model.eval()
 
     # Get the indices of test nodes
@@ -125,7 +125,7 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask):
     train_mask = train_mask.to(device)
 
     with torch.no_grad():
-        for test_index in trange(len(test_indices)):
+        for test_index in trange(len(test_indices), disable=disable):
             # Get the actual node index
             idx = test_indices[test_index]
 
@@ -140,7 +140,7 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask):
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
             # Clean subgraph
-            unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+            unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
             x_input = sub_data.x_one_hot.clone()
             x_input[test_node_position] = unknown_label
 
@@ -159,7 +159,7 @@ def change_input(x_input, q=10):
     x_input = x_input.clone()
 
     num_nodes = x_input.size(0)  # Assume data.y contains your node labels
-    unknown_label = torch.tensor([0, 0, 0, 0, 0, 1]).type(torch.float).to(device)
+    unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
     indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)
