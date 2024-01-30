@@ -126,7 +126,7 @@ for k in range(10):
                                                          ax=ax)
     fig.savefig(f"models/attn/confusion_matrix_{k}.png")  # Save the figure to a file
 
-    torch.save(best_model.state_dict(), f"models/attn/_{k}.pt")
+    torch.save(best_model.state_dict(), f"models/attn/model_{k}.pt")
     torch.save(y_true, f"models/attn/y_true_{k}.pt")
     torch.save(y_pred, f"models/attn/y_pred_{k}.pt")
 
