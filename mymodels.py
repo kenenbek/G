@@ -142,9 +142,9 @@ class AttnGCN(torch.nn.Module):
                                concat=True,
                                share_weights=False,
                                add_self_loops=True)
-        self.norm1 = BatchNorm1d(n_features*n_heads)
+        self.norm1 = BatchNorm1d(n_features * n_heads)
 
-        self.conv2 = GATv2Conv(in_channels=n_features*n_heads,
+        self.conv2 = GATv2Conv(in_channels=n_features * n_heads,
                                out_channels=5,
                                heads=1,
                                edge_dim=1,
@@ -152,17 +152,18 @@ class AttnGCN(torch.nn.Module):
                                concat=False,
                                share_weights=False,
                                add_self_loops=True)
-#         self.norm2 = BatchNorm1d(n_features)
 
-#         self.conv3 = GATv2Conv(in_channels=n_features,
-#                                out_channels=5,
-#                                heads=1,
-#                                edge_dim=1,
-#                                aggr="add",
-#                                concat=False,
-#                                share_weights=False,
-#                                add_self_loops=True)
-#         self.norm3 = BatchNorm1d(n_features)
+    #         self.norm2 = BatchNorm1d(n_features)
+
+    #         self.conv3 = GATv2Conv(in_channels=n_features,
+    #                                out_channels=5,
+    #                                heads=1,
+    #                                edge_dim=1,
+    #                                aggr="add",
+    #                                concat=False,
+    #                                share_weights=False,
+    #                                add_self_loops=True)
+    #         self.norm3 = BatchNorm1d(n_features)
 
     def forward(self, x_input, edge_index, edge_weight):
         h = self.conv1(x_input, edge_index, edge_weight)
@@ -171,11 +172,11 @@ class AttnGCN(torch.nn.Module):
         h = F.dropout(h, p=self.dp, training=True)
 
         h = self.conv2(h, edge_index, edge_weight)
-#         h = self.norm2(h)
-#         h = F.leaky_relu(h)
-#         h = F.dropout(h, p=self.dp, training=True)
+        #         h = self.norm2(h)
+        #         h = F.leaky_relu(h)
+        #         h = F.dropout(h, p=self.dp, training=True)
 
-#         h = self.conv3(h, edge_index)
+        #         h = self.conv3(h, edge_index)
         return h
 
 
@@ -314,29 +315,6 @@ class GCN_simple(torch.nn.Module):
         return h
 
 
-class GINNet(torch.nn.Module):
-    def __init__(self, num_features, dim):
-        super(GINNet, self).__init__()
-
-        nn1 = torch.nn.Sequential(torch.nn.Linear(num_features, dim), torch.nn.ReLU(), torch.nn.Linear(dim, dim))
-        self.conv1 = GINConv(nn1)
-
-        nn2 = torch.nn.Sequential(torch.nn.Linear(dim, dim), torch.nn.ReLU(), torch.nn.Linear(dim, dim))
-        self.conv2 = GINConv(nn2)
-
-        self.fc1 = torch.nn.Linear(dim, dim)
-        self.fc2 = torch.nn.Linear(dim, 2)  # Assuming binary classification for simplicity
-
-    def forward(self, h, bf, edge_index, edge_weight):
-        h = F.relu(self.conv1(h, edge_index))
-        h = F.relu(self.conv2(h, edge_index))
-
-        h = F.relu(self.fc1(h))
-        h = self.fc2(h)
-
-        return h
-
-
 class Transformer(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -353,10 +331,10 @@ class Transformer(torch.nn.Module):
                                      bias=True,
                                      root_weight=False,
                                      )
-        self.norm1 = BatchNorm1d(n_features*n_heads)
+        self.norm1 = BatchNorm1d(n_features * n_heads)
 
-        self.conv2 = TransformerConv(in_channels=n_features*n_heads,
-                                     out_channels=n_features*n_heads,
+        self.conv2 = TransformerConv(in_channels=n_features * n_heads,
+                                     out_channels=n_features * n_heads,
                                      heads=n_heads,
                                      concat=True,
                                      beta=False,
@@ -365,9 +343,9 @@ class Transformer(torch.nn.Module):
                                      bias=True,
                                      root_weight=True,
                                      )
-        self.norm2 = BatchNorm1d(n_features*n_heads)
+        self.norm2 = BatchNorm1d(n_features * n_heads)
 
-        self.conv3 = TransformerConv(in_channels=n_features*n_heads,
+        self.conv3 = TransformerConv(in_channels=n_features * n_heads,
                                      out_channels=5,
                                      heads=n_heads,
                                      concat=False,
@@ -406,3 +384,51 @@ class TAGConv_3l_512h_w_k3(torch.nn.Module):
         x = F.elu(self.conv2(x, edge_index, edge_weight))
         x = self.conv3(x, edge_index, edge_weight)
         return x
+
+
+from torch_geometric.nn import GINConv, global_add_pool
+
+
+class GINNet(torch.nn.Module):
+    def __init__(self):
+        super(GINNet, self).__init__()
+        num_features = 5
+        hidden_dim = 128
+        num_classes = 5
+        # GIN Convolution Layer
+        self.conv1 = GINConv(
+            nn=torch.nn.Sequential(
+                torch.nn.Linear(num_features, hidden_dim),
+                torch.nn.BatchNorm1d(hidden_dim),
+                torch.nn.ReLU(),
+                torch.nn.Linear(hidden_dim, hidden_dim),
+                torch.nn.BatchNorm1d(hidden_dim),
+                torch.nn.ReLU()
+            ),
+            eps=0.0  # Add a small value to the denominator for numerical stability
+        )
+
+        self.conv2 = GINConv(
+            nn=torch.nn.Sequential(
+                torch.nn.Linear(hidden_dim, hidden_dim),
+                torch.nn.BatchNorm1d(hidden_dim),
+                torch.nn.ReLU(),
+                torch.nn.Linear(hidden_dim, hidden_dim),
+                torch.nn.BatchNorm1d(hidden_dim),
+                torch.nn.ReLU()
+            ),
+            eps=0.0
+        )
+
+        # Output layer
+        self.fc = torch.nn.Linear(hidden_dim, num_classes)
+
+    def forward(self, x, edge_index, edge_weight):
+        # Apply GIN Convolution layers
+        x = F.relu(self.conv1(x, edge_index))
+        x = F.relu(self.conv2(x, edge_index))
+
+        # Fully connected layer for classification
+        x = self.fc(x)
+
+        return F.log_softmax(x, dim=1)
