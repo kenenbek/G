@@ -9,15 +9,21 @@ import torch.nn.functional as F
 import networkx as nx
 import numpy as np
 import random
+from builtins import NotImplementedError
 
 
 class MyDataset(Dataset):
-    def __init__(self, root, transform=None, pre_transform=None, pre_filter=None):
+    def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):
+        assert dataset == "cr" or dataset == "nc", "Incorrect name for dataset"
+        self.dataset = dataset
         super().__init__(root, transform, pre_transform, pre_filter)
 
     @property
     def raw_file_names(self):
-        return ["CR_graph_rel.csv"]
+        if self.dataset == "cr":
+            return ["CR_graph_rel.csv"]
+        elif self.dataset == "nc":
+            return ["NC_graph_rel.csv"]
 
     @property
     def processed_file_names(self):
@@ -28,14 +34,24 @@ class MyDataset(Dataset):
         pass
 
     def process(self):
-
-        ind = {
-            'мордвины': 0,
-            'белорусы': 1,
-            'украинцы': 2,
-            'южные-русские': 3,
-            'северные-русские': 4
-        }
+        if self.dataset == "cr":
+            ind = {
+                'мордвины': 0,
+                'белорусы': 1,
+                'украинцы': 2,
+                'южные-русские': 3,
+                'северные-русские': 4
+            }
+        elif self.dataset == "nc":
+            ind = {'карачаевцы,балкарцы': 0,
+                 'осетины': 1,
+                 'кабардинцы,черкесы,адыгейцы': 2,
+                 'ингуши': 3,
+                 'кумыки': 4,
+                 'ногайцы': 5,
+                 'чеченцы': 6,
+                 'дагестанские народы': 7,
+            }
 
         idx = 0
         for raw_path in self.raw_paths:
@@ -44,8 +60,14 @@ class MyDataset(Dataset):
             edge_attr_multi = []
 
             y_labels = {}
-            x_data = defaultdict(lambda: (5 * [0]))
-            edge_num = defaultdict(lambda: (5 * [0]))
+            if self.dataset == "cr":
+                x_data = defaultdict(lambda: (5 * [0]))
+                edge_num = defaultdict(lambda: (5 * [0]))
+            elif self.dataset == "nc":
+                x_data = defaultdict(lambda: (8 * [0]))
+                edge_num = defaultdict(lambda: (8 * [0]))
+            else:
+                raise NotImplementedError()
 
             dataset_csv = pd.read_csv(raw_path)
             for index, row in tqdm(dataset_csv.iterrows()):
@@ -71,12 +93,12 @@ class MyDataset(Dataset):
                 y_labels[id1] = ind[label1]
                 y_labels[id2] = ind[label2]
 
-                eam1 = [0, 0, 0, 0, 0, 0]
-                eam2 = [0, 0, 0, 0, 0, 0]
-                eam1[ind[label1]] = ibd_sum
-                eam2[ind[label2]] = ibd_sum
-                edge_attr_multi.append(eam1)
-                edge_attr_multi.append(eam2)
+                # eam1 = [0, 0, 0, 0, 0, 0]
+                # eam2 = [0, 0, 0, 0, 0, 0]
+                # eam1[ind[label1]] = ibd_sum
+                # eam2[ind[label2]] = ibd_sum
+                # edge_attr_multi.append(eam1)
+                # edge_attr_multi.append(eam2)
 
             y_labels = dict(sorted(y_labels.items()))
             y = torch.Tensor(list(y_labels.values())).type(torch.long)
@@ -87,7 +109,7 @@ class MyDataset(Dataset):
             edge_num = torch.Tensor(list(edge_num.values())).type(torch.float)
 
             edge_attr = torch.Tensor(edge_attr).type(torch.float).contiguous()
-            edge_attr_multi = torch.Tensor(edge_attr_multi).type(torch.float).contiguous()
+            #edge_attr_multi = torch.Tensor(edge_attr_multi).type(torch.float).contiguous()
             edge_index = torch.Tensor(edge_index).type(torch.long).t().contiguous()
 
             x_one_hot = F.one_hot(y, num_classes=int(y.max()) + 1).type(torch.float)
@@ -96,7 +118,7 @@ class MyDataset(Dataset):
                           edge_num=edge_num,
                           edge_index=edge_index,
                           edge_attr=edge_attr,
-                          edge_attr_multi=edge_attr_multi,
+                          #edge_attr_multi=edge_attr_multi,
                           x_one_hot=x_one_hot,
                           y=y)
             torch.save(data, osp.join(self.processed_dir, f'data_{idx}.pt'))
@@ -123,9 +145,16 @@ def recalculate_input_features(full_data, train_mask):
     edges = {}
 
     for i in range(full_data.x.shape[0]):
-        hidden_x_data[i] = [0, 0, 0, 0, 0]
-        edge_num[i] = [0, 0, 0, 0, 0]
-        neighbors[i] = [[], [], [], [], []]
+        if full_data.dataset == "cr":
+            hidden_x_data[i] = [0, 0, 0, 0, 0]
+            edge_num[i] = [0, 0, 0, 0, 0]
+            neighbors[i] = [[], [], [], [], []]
+        elif full_data.dataset == "nc":
+            hidden_x_data[i] = [0, 0, 0, 0, 0, 0, 0, 0]
+            edge_num[i] = [0, 0, 0, 0, 0, 0, 0, 0]
+            neighbors[i] = [[], [], [], [], [], [], [], []]
+        else:
+            raise NotImplementedError()
         means[i] = []
         stds[i] = []
         edges[i] = []
@@ -310,9 +339,9 @@ def generate_train_test_indices(y, run=10, train=.6, val=.2, test=.2):
         val_indices = torch.nonzero(val_mask).squeeze()
         test_indices = torch.nonzero(test_mask).squeeze()
 
-        torch.save(train_indices, f"full_data/{i}/train_indices.pt")
-        torch.save(val_indices, f"full_data/{i}/val_indices.pt")
-        torch.save(test_indices, f"full_data/{i}/test_indices.pt")
+        torch.save(train_indices, f"full_data/nc/{i}/train_indices.pt")
+        torch.save(val_indices, f"full_data/nc/{i}/val_indices.pt")
+        torch.save(test_indices, f"full_data/nc/{i}/test_indices.pt")
 
     return
 
