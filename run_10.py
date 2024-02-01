@@ -33,12 +33,12 @@ wandb.config.weight_decay = 5e-3
 wandb.config.epochs = 3000
 
 for k in range(10):
-    full_dataset = MyDataset(root="full_data/")
+    full_dataset = MyDataset(root="full_data/nc/")
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
-    train_indices = torch.load(f"full_data/{k}/train_indices.pt")
-    val_indices = torch.load(f"full_data/{k}/val_indices.pt")
-    test_indices = torch.load(f"full_data/{k}/test_indices.pt")
+    train_indices = torch.load(f"full_data/nc/{k}/train_indices.pt")
+    val_indices = torch.load(f"full_data/nc/{k}/val_indices.pt")
+    test_indices = torch.load(f"full_data/nc/{k}/test_indices.pt")
 
     train_mask = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask[train_indices] = True
@@ -63,7 +63,7 @@ for k in range(10):
 
     # wandb.watch(model, log="all", log_freq=10)
 
-    t = trange(10000, leave=True)
+    t = trange(5000, leave=True)
     losses = []
 
     train_indices = train_indices.to(device)
@@ -100,7 +100,7 @@ for k in range(10):
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
 
-        if epoch % 500 == 0:
+        if epoch % 200 == 0:
             y_true, y_pred = evaluate_one_by_one(model, full_data,
                                                  train_mask, val_mask, disable=True)
             metrics = calc_accuracy(y_true, y_pred)
@@ -118,19 +118,19 @@ for k in range(10):
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    sub_etnos = ["1", "2", "3", "4", "5"]
+    sub_etnos = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
     cm_display = ConfusionMatrixDisplay.from_predictions(y_true,
                                                          y_pred,
                                                          display_labels=sub_etnos,
                                                          ax=ax)
-    fig.savefig(f"models/tagconv/confusion_matrix_{k}.png")  # Save the figure to a file
+    fig.savefig(f"models/nc/tagconv/confusion_matrix_{k}.png")  # Save the figure to a file
 
-    torch.save(best_model.state_dict(), f"models/tagconv/model_{k}.pt")
-    torch.save(y_true, f"models/tagconv/y_true_{k}.pt")
-    torch.save(y_pred, f"models/tagconv/y_pred_{k}.pt")
+    torch.save(best_model.state_dict(), f"models/nc/tagconv/model_{k}.pt")
+    torch.save(y_true, f"models/nc/tagconv/y_true_{k}.pt")
+    torch.save(y_pred, f"models/nc/tagconv/y_pred_{k}.pt")
 
     results = str(metrics["0"]) + ", " + str(metrics["1"]) + ", " + str(metrics["2"]) + ", " + str(metrics["3"]) + ", " + str(metrics["4"]) + ", " + str(metrics["5"]) + ", " + str(metrics["6"]) + ", " + str(metrics["7"]) + ", " + str(metrics["8"]) + ", " + str(metrics["9"])
 
-    with open(f"models/tagconv/results.csv", "a") as file:
+    with open(f"models/nc/tagconv/results.csv", "a") as file:
         file.write(results + "\n")
