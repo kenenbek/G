@@ -14,13 +14,19 @@ import random
 from collections import defaultdict
 from sklearn.metrics import ConfusionMatrixDisplay
 from torch.optim.lr_scheduler import StepLR
-
+import argparse
 from mydata import ClassBalancedNodeSplit, MyDataset, create_hidden_train_mask, recalculate_input_features
 from mymodels import AttnGCN, GINNet, SimpleNN, GCN, TAGConv_3l_512h_w_k3, GCN_simple, BigAttn, Transformer
 from utils import evaluate_one_by_one, evaluate_batch, calc_accuracy, \
     set_global_seed, change_input, create_5_graphs, create_25_graphs
 from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
+from builtins import NotImplementedError
+
+parser = argparse.ArgumentParser(description='Your script description here.')
+parser.add_argument('--model', type=str, help='Specify the model (e.g., attention)')
+
+args = parser.parse_args()
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -33,7 +39,7 @@ wandb.config.weight_decay = 5e-3
 wandb.config.epochs = 3000
 
 for k in range(10):
-    full_dataset = MyDataset(root="full_data/nc/")
+    full_dataset = MyDataset(root="full_data/nc/", dataset="nc")
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
     train_indices = torch.load(f"full_data/nc/{k}/train_indices.pt")
@@ -53,7 +59,20 @@ for k in range(10):
     full_data.edge_num = edge_num
     full_data.big_features = big_features
 
-    model = TAGConv_3l_512h_w_k3() #GCN()  #GINNet() #AttnGCN() #
+    if args.model == "attn":
+        model = AttnGCN()
+        output = "attn"
+    elif args.model == "tagconv":
+        model = TAGConv_3l_512h_w_k3()
+        output = "tagconv"
+    elif args.model == "gcn":
+        model = GCN()
+        output = "gcn"
+    elif args.model == "gin":
+        model = GINNet()
+        output = "gin"
+    else:
+        raise NotImplementedError
     best_model = None
 
     criterion = torch.nn.CrossEntropyLoss()
