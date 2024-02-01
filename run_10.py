@@ -1,5 +1,3 @@
-import wandb
-
 import torch
 import torch.nn.functional as F
 from torch_geometric.data import Data
@@ -31,12 +29,6 @@ args = parser.parse_args()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 set_global_seed(42)
-wandb.init(project="Genomics", entity="kenenbek")
-
-# Store configurations/hyperparameters
-wandb.config.lr = 0.001
-wandb.config.weight_decay = 5e-3
-wandb.config.epochs = 3000
 
 for k in range(10):
     full_dataset = MyDataset(root="full_data/nc/", dataset="nc")
@@ -80,7 +72,6 @@ for k in range(10):
     scheduler = StepLR(optimizer, step_size=500,
                        gamma=0.1)  # Decay the learning rate by a factor of 0.1 every 10 epochs
 
-    # wandb.watch(model, log="all", log_freq=10)
 
     t = trange(5000, leave=True)
     losses = []
@@ -115,7 +106,6 @@ for k in range(10):
         optimizer.step()
         scheduler.step()
 
-        wandb.log({"loss": loss.item()})
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
 
