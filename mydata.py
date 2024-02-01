@@ -120,7 +120,8 @@ class MyDataset(Dataset):
                           edge_attr=edge_attr,
                           #edge_attr_multi=edge_attr_multi,
                           x_one_hot=x_one_hot,
-                          y=y)
+                          y=y,
+                          dataset=self.dataset)
             torch.save(data, osp.join(self.processed_dir, f'data_{idx}.pt'))
             idx += 1
 
