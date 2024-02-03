@@ -213,9 +213,9 @@ class SimpleNN(torch.nn.Module):
 class GCN(torch.nn.Module):
     def __init__(self):
         super(GCN, self).__init__()
-        num_features = 5
+        num_features = 8
         hidden_dim = 128
-        num_classes = 5
+        num_classes = 8
         # First GCN layer with normalization
         self.conv1 = GCNConv(num_features, hidden_dim, normalize=True)
 
@@ -335,9 +335,9 @@ class Transformer(torch.nn.Module):
 class TAGConv_3l_512h_w_k3(torch.nn.Module):
     def __init__(self):
         super(TAGConv_3l_512h_w_k3, self).__init__()
-        self.conv1 = TAGConv(5, 128)
+        self.conv1 = TAGConv(8, 128)
         self.conv2 = TAGConv(128, 128)
-        self.conv3 = TAGConv(128, 5)
+        self.conv3 = TAGConv(128, 8)
 
     def forward(self, x, edge_index, edge_weight):
         x = F.elu(self.conv1(x, edge_index, edge_weight))
@@ -352,9 +352,9 @@ from torch_geometric.nn import GINConv, global_add_pool
 class GINNet(torch.nn.Module):
     def __init__(self):
         super(GINNet, self).__init__()
-        num_features = 5
+        num_features = 8
         hidden_dim = 128
-        num_classes = 5
+        num_classes = 8
         # GIN Convolution Layer
         self.conv1 = GINConv(
             nn=torch.nn.Sequential(
