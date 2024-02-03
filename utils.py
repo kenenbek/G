@@ -140,6 +140,8 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask, disable=False):
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
+            x_input = sub_data.x_one_hot.clone()
+
             # Clean subgraph
             if x_input.shape[1] == 5:
                 unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
@@ -147,7 +149,7 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask, disable=False):
                 unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
             else:
                 raise NotImplementedError()
-            x_input = sub_data.x_one_hot.clone()
+
             x_input[test_node_position] = unknown_label
 
             out = model(x_input, sub_data.edge_index, sub_data.edge_attr)  # NB

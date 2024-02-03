@@ -31,12 +31,20 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 set_global_seed(42)
 
 for k in range(10):
-    full_dataset = MyDataset(root="full_data/nc/", dataset="nc")
+
+    if args.data == "nc":
+        path = "nc"
+    elif args.data == "cr":
+        path = "cr"
+    else:
+        raise NotImplementedError()
+
+    full_dataset = MyDataset(root=f"full_data/{path}/", dataset="nc")
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
-    train_indices = torch.load(f"full_data/nc/{k}/train_indices.pt")
-    val_indices = torch.load(f"full_data/nc/{k}/val_indices.pt")
-    test_indices = torch.load(f"full_data/nc/{k}/test_indices.pt")
+    train_indices = torch.load(f"full_data/{path}/{k}/train_indices.pt")
+    val_indices = torch.load(f"full_data/{path}/{k}/val_indices.pt")
+    test_indices = torch.load(f"full_data/{path}/{k}/test_indices.pt")
 
     train_mask = torch.zeros(num_nodes, dtype=torch.bool)
     train_mask[train_indices] = True
@@ -65,6 +73,7 @@ for k in range(10):
         output = "gin"
     else:
         raise NotImplementedError
+
     best_model = None
 
     criterion = torch.nn.CrossEntropyLoss()
@@ -133,13 +142,13 @@ for k in range(10):
                                                          y_pred,
                                                          display_labels=sub_etnos,
                                                          ax=ax)
-    fig.savefig(f"models/nc/tagconv/confusion_matrix_{k}.png")  # Save the figure to a file
+    fig.savefig(f"models/{path}/{args.model}/confusion_matrix_{k}.png")  # Save the figure to a file
 
-    torch.save(best_model.state_dict(), f"models/nc/tagconv/model_{k}.pt")
-    torch.save(y_true, f"models/nc/tagconv/y_true_{k}.pt")
-    torch.save(y_pred, f"models/nc/tagconv/y_pred_{k}.pt")
+    torch.save(best_model.state_dict(), f"models/{path}/{args.model}/model_{k}.pt")
+    torch.save(y_true, f"models/{path}/{args.model}/y_true_{k}.pt")
+    torch.save(y_pred, f"models/{path}/{args.model}/y_pred_{k}.pt")
 
     results = str(metrics["0"]) + ", " + str(metrics["1"]) + ", " + str(metrics["2"]) + ", " + str(metrics["3"]) + ", " + str(metrics["4"]) + ", " + str(metrics["5"]) + ", " + str(metrics["6"]) + ", " + str(metrics["7"]) + ", " + str(metrics["8"]) + ", " + str(metrics["9"])
 
-    with open(f"models/nc/tagconv/results.csv", "a") as file:
+    with open(f"models/{path}/{args.model}/results.csv", "a") as file:
         file.write(results + "\n")
