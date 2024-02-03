@@ -23,6 +23,7 @@ from builtins import NotImplementedError
 
 parser = argparse.ArgumentParser(description='Your script description here.')
 parser.add_argument('--model', type=str, help='Specify the model (e.g., attention)')
+parser.add_argument('--data', type=str, help='Specify the model (e.g., attention)')
 
 args = parser.parse_args()
 
@@ -39,7 +40,7 @@ for k in range(10):
     else:
         raise NotImplementedError()
 
-    full_dataset = MyDataset(root=f"full_data/{path}/", dataset="nc")
+    full_dataset = MyDataset(root=f"full_data/{path}/", dataset=path)
     full_data = full_dataset[0]
     num_nodes = full_data.y.shape[0]
     train_indices = torch.load(f"full_data/{path}/{k}/train_indices.pt")
