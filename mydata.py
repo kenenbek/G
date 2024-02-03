@@ -122,6 +122,13 @@ class MyDataset(Dataset):
                           x_one_hot=x_one_hot,
                           y=y,
                           dataset=self.dataset)
+
+            if not data.validate(raise_on_error=False):
+                _, edge_index = fix_edge_index(edge_index)
+                data.edge_index = edge_index
+
+                assert data.validate()
+
             torch.save(data, osp.join(self.processed_dir, f'data_{idx}.pt'))
             idx += 1
 
@@ -132,6 +139,15 @@ class MyDataset(Dataset):
         data = torch.load(osp.join(self.processed_dir, f'data_{idx}.pt'))
         return data
 
+
+def fix_edge_index(edge_index):
+    unique_nodes = torch.unique(edge_index)
+    mapping = {old_node.item(): new_node for new_node, old_node in enumerate(unique_nodes)}
+
+    # Apply the mapping to the edge_index
+    edge_index_fixed = torch.tensor([[mapping[edge.item()] for edge in row] for row in edge_index])
+
+    return mapping, edge_index_fixed
 
 def recalculate_input_features(full_data, train_mask):
     available_node_indices = torch.nonzero(train_mask).squeeze()
