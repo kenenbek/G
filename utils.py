@@ -146,7 +146,7 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask, disable=False):
             if x_input.shape[1] == 5:
                 unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
             elif x_input.shape[1] == 8:
-                unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
+                unknown_label = torch.tensor([0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]).type(torch.float).to(device)
             else:
                 raise NotImplementedError()
 
@@ -170,7 +170,7 @@ def change_input(x_input, q=10):
     if x_input.shape[1] == 5:
         unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
     elif x_input.shape[1] == 8:
-        unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
+        unknown_label = torch.tensor([0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
     indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)
