@@ -14,7 +14,8 @@ from builtins import NotImplementedError
 
 class MyDataset(Dataset):
     def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):
-        assert dataset == "cr" or dataset == "nc", "Incorrect name for dataset"
+        datasets = {"cr", "nc", "westeurope", "scand", "volga"}
+        assert dataset in datasets, "Incorrect name for dataset"
         self.dataset = dataset
         super().__init__(root, transform, pre_transform, pre_filter)
 
@@ -24,6 +25,12 @@ class MyDataset(Dataset):
             return ["CR_graph_rel.csv"]
         elif self.dataset == "nc":
             return ["NC_graph_rel.csv"]
+        elif self.dataset == "westeurope":
+            return ["Western-Europe_weights_partial_labels.csv"]
+        elif self.dataset == "scand":
+            return ["Scandinavia_weights_partial_labels.csv"]
+        elif self.dataset == "volga":
+            return ["Volga_weights_partial_labels.csv"]
 
     @property
     def processed_file_names(self):
@@ -124,9 +131,10 @@ class MyDataset(Dataset):
                           dataset=self.dataset)
 
             if not data.validate(raise_on_error=False):
-                _, edge_index = fix_edge_index(edge_index)
+                mapping, edge_index = fix_edge_index(edge_index)
                 data.edge_index = edge_index
 
+                torch.save(mapping, osp.join(self.processed_dir, f'mapping_indices.pt'))
                 assert data.validate()
 
             torch.save(data, osp.join(self.processed_dir, f'data_{idx}.pt'))
