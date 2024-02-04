@@ -59,6 +59,31 @@ class MyDataset(Dataset):
                  'чеченцы': 6,
                  'дагестанские народы': 7,
             }
+        elif self.dataset == "westeurope":
+            ind = {
+                "English": 2306,
+                "Germans": 845,
+                "French": 490,
+                "Russians": 438,
+                "Ashkenazim": 380,
+                "Belgium": 348,
+                "Finns": 334,
+                "Norwegians": 328,
+                "Tatars, Volga - Tatars, Mishar - Tatars, Kryashens": 243,
+            "Swedes": 184,
+            "Lithuanians": 148,
+            "Danes": 132,
+            "Ukrainians": 111,
+            "Belarusians": 107,
+            "Puerto - Ricans": 67,
+            "Chuvash": 63,
+            "Bashkirs": 63,
+            "Poles": 60,
+            "Irish": 48,
+            "Tuscans": 47,
+            "Balkan": 39,
+            "Spaniards": 34,
+            }
 
         idx = 0
         for raw_path in self.raw_paths:
