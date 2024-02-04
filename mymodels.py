@@ -134,7 +134,7 @@ class AttnGCN(torch.nn.Module):
         n_features = 128
         n_heads = 2
         self.dp = 0.2
-        self.conv1 = GATv2Conv(in_channels=5,
+        self.conv1 = GATv2Conv(in_channels=8,
                                out_channels=n_features,
                                heads=n_heads,
                                edge_dim=1,
