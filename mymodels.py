@@ -4,7 +4,6 @@ from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMM
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
 
-from my_gatconv import MyGATv2Conv
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
