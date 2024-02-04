@@ -140,6 +140,9 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask, disable=False):
             # Find the position of the test node in the subgraph
             test_node_position = torch.where(sub_indices == idx)[0].item()
 
+            if is_isolated(sub_data, test_node_position):
+                continue
+
             x_input = sub_data.x_one_hot.clone()
 
             # Clean subgraph
@@ -181,6 +184,13 @@ def change_input(x_input, q=10):
     node_mask = torch.zeros(num_nodes, dtype=torch.bool).to(device)
     node_mask[indices] = True
     return x_input, node_mask
+
+
+def is_isolated(data, node_id):
+    edge_index = data.edge_index
+    neighbors = edge_index[:, edge_index[0] == node_id]  # Get neighbors of the node
+
+    return neighbors.size(1) == 0  # Check if the node has no neighbors
 
 
 def get_neighbors(node_id, edge_index):
