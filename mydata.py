@@ -11,6 +11,11 @@ import numpy as np
 import random
 from builtins import NotImplementedError
 
+num_classes = {
+    "westeurope": 22,
+    "scand": 17,
+    "volga": 27,
+}
 
 class MyDataset(Dataset):
     def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):

@@ -21,6 +21,8 @@ from torch_geometric.transforms import GDC
 from torch_geometric.utils import to_undirected
 from builtins import NotImplementedError
 
+from mydata import num_classes
+
 parser = argparse.ArgumentParser(description='Your script description here.')
 parser.add_argument('--model', type=str, help='Specify the model (e.g., attention)')
 parser.add_argument('--data', type=str, help='Specify the model (e.g., attention)')
@@ -30,12 +32,6 @@ args = parser.parse_args()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 set_global_seed(42)
-
-num_classes = {
-    "westeurope": 22,
-    "scand": 17,
-    "volga": 27,
-}
 
 for k in range(10):
 

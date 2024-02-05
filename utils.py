@@ -10,6 +10,7 @@ from torch_geometric.data import Data
 from torch_geometric.utils import subgraph
 import torch.nn.functional as F
 from builtins import NotImplementedError
+from mydata import num_classes
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -144,15 +145,8 @@ def evaluate_one_by_one(model, full_data, train_mask, test_mask, disable=False):
                 continue
 
             x_input = sub_data.x_one_hot.clone()
-
-            # Clean subgraph
-            if x_input.shape[1] == 5:
-                unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
-            elif x_input.shape[1] == 8:
-                unknown_label = torch.tensor([0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]).type(torch.float).to(device)
-            else:
-                raise NotImplementedError()
-
+            unknown_label = torch.tensor([1. / x_input.shape[1] for _ in range(x_input.shape[1])]).type(torch.float).to(
+                device)
             x_input[test_node_position] = unknown_label
 
             out = model(x_input, sub_data.edge_index, sub_data.edge_attr)  # NB
@@ -170,10 +164,7 @@ def change_input(x_input, q=10):
     x_input = x_input.clone()
 
     num_nodes = x_input.size(0)  # Assume data.y contains your node labels
-    if x_input.shape[1] == 5:
-        unknown_label = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]).type(torch.float).to(device)
-    elif x_input.shape[1] == 8:
-        unknown_label = torch.tensor([0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]).type(torch.float).to(device)
+    unknown_label = torch.tensor([1./x_input.shape[1] for _ in range(x_input.shape[1])]).type(torch.float).to(device)
 
     # Randomly select 10% of your node indices
     indices = torch.randperm(num_nodes)[: int(num_nodes) // q].to(device)

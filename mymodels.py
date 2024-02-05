@@ -3,15 +3,10 @@ from torch.nn import Linear, BatchNorm1d, LayerNorm, Sequential, LeakyReLU, Drop
 from torch_geometric.nn import GCNConv, TAGConv, GATv2Conv, TransformerConv, GMMConv, GINConv
 from torch_geometric.nn.conv import SAGEConv
 import torch.nn.functional as F
+from mydata import num_classes
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-num_classes = {
-    "westeurope": 22,
-    "scand": 17,
-    "volga": 27,
-}
 
 class BigAttn(torch.nn.Module):
     def __init__(self):
