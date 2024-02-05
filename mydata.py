@@ -139,8 +139,6 @@ class MyDataset(Dataset):
         else:
             NotImplementedError()
 
-        self.class_num = len(ind)
-
         idx = 0
         for raw_path in self.raw_paths:
             edge_index = []
@@ -207,7 +205,8 @@ class MyDataset(Dataset):
                           #edge_attr_multi=edge_attr_multi,
                           x_one_hot=x_one_hot,
                           y=y,
-                          dataset=self.dataset)
+                          dataset=self.dataset,
+                          class_num=len(ind))
 
             if not data.validate(raise_on_error=False):
                 mapping, edge_index = fix_edge_index(edge_index)
