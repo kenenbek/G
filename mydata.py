@@ -404,7 +404,7 @@ class MyData(Data):
         self.x_one_hot_hidden = hidden_x_data
 
 
-def generate_train_test_indices(y, run=10, train=.6, val=.2, test=.2):
+def generate_train_test_indices(y, run=10, train=.6, val=.2, test=.2, path=None):
     num_nodes = y.size(0)
     num_classes = int(y.max()) + 1
 
@@ -437,9 +437,9 @@ def generate_train_test_indices(y, run=10, train=.6, val=.2, test=.2):
         val_indices = torch.nonzero(val_mask).squeeze()
         test_indices = torch.nonzero(test_mask).squeeze()
 
-        torch.save(train_indices, f"full_data/nc/{i}/train_indices.pt")
-        torch.save(val_indices, f"full_data/nc/{i}/val_indices.pt")
-        torch.save(test_indices, f"full_data/nc/{i}/test_indices.pt")
+        torch.save(train_indices, f"full_data/{path}/{i}/train_indices.pt")
+        torch.save(val_indices, f"full_data/{path}/{i}/val_indices.pt")
+        torch.save(test_indices, f"full_data/{path}/{i}/test_indices.pt")
 
     return
 
