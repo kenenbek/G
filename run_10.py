@@ -145,7 +145,7 @@ for k in range(10):
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    sub_etnos = [str(i+1) for i in num_classes[path]]
+    sub_etnos = [str(i+1) for i in range(num_classes[path])]
 
     cm_display = ConfusionMatrixDisplay.from_predictions(y_true,
                                                          y_pred,
