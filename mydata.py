@@ -138,7 +138,7 @@ class MyDataset(Dataset):
             }
         else:
             NotImplementedError()
-
+        self.class_num = len(ind)
         idx = 0
         for raw_path in self.raw_paths:
             edge_index = []
