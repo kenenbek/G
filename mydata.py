@@ -17,6 +17,7 @@ class MyDataset(Dataset):
         datasets = {"cr", "nc", "westeurope", "scand", "volga"}
         assert dataset in datasets, "Incorrect name for dataset"
         self.dataset = dataset
+        self.class_num = None
         super().__init__(root, transform, pre_transform, pre_filter)
 
     @property
@@ -41,6 +42,7 @@ class MyDataset(Dataset):
         pass
 
     def process(self):
+        ind = {}
         if self.dataset == "cr":
             ind = {
                 'мордвины': 0,
@@ -61,29 +63,83 @@ class MyDataset(Dataset):
             }
         elif self.dataset == "westeurope":
             ind = {
-                "English": 2306,
-                "Germans": 845,
-                "French": 490,
-                "Russians": 438,
-                "Ashkenazim": 380,
-                "Belgium": 348,
-                "Finns": 334,
-                "Norwegians": 328,
-                "Tatars, Volga - Tatars, Mishar - Tatars, Kryashens": 243,
-            "Swedes": 184,
-            "Lithuanians": 148,
-            "Danes": 132,
-            "Ukrainians": 111,
-            "Belarusians": 107,
-            "Puerto - Ricans": 67,
-            "Chuvash": 63,
-            "Bashkirs": 63,
-            "Poles": 60,
-            "Irish": 48,
-            "Tuscans": 47,
-            "Balkan": 39,
-            "Spaniards": 34,
+                "English": 0,
+                "Germans": 1,
+                "French": 2,
+                "Russians": 3,
+                "Ashkenazim": 4,
+                "Belgium": 5,
+                "Finns": 6,
+                "Norwegians": 7,
+                "Tatars, Volga - Tatars, Mishar - Tatars, Kryashens": 8,
+                "Swedes": 9,
+                "Lithuanians": 10,
+                "Danes": 11,
+                "Ukrainians": 12,
+                "Belarusians": 13,
+                "Puerto - Ricans": 14,
+                "Chuvash": 15,
+                "Bashkirs": 16,
+                "Poles": 17,
+                "Irish": 18,
+                "Tuscans": 19,
+                "Balkan": 20,
+                "Spaniards": 21,
             }
+        elif self.dataset == "scand":
+            ind = {
+                "Finns": 0,
+                "English": 1,
+                "Norwegians": 2,
+                "Swedes": 3,
+                "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 4,
+                "Russians": 5,
+                "Danes": 6,
+                "Ashkenazim": 7,
+                "Germans": 8,
+                "Chuvash": 9,
+                "Karelians,Veps": 10,
+                "Belgium": 11,
+                "Bashkirs": 12,
+                "Lithuanians": 13,
+                "Ukrainians": 14,
+                "Belarusians": 15,
+                "Estonians": 16,
+            }
+        elif self.dataset == "volga":
+            ind = {
+                "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 0,
+                "Russians": 1,
+                "Finns": 2,
+                "Bashkirs": 3,
+                "Chuvash": 4,
+                "Lithuanians": 5,
+                "Germans": 6,
+                "Ukrainians": 7,
+                "Belarusians": 8,
+                "Swedes": 9,
+                "Ashkenazim": 10,
+                "Kazakhs": 11,
+                "Dolgans,Yakuts": 12,
+                "Udmurts,Besermyan": 13,
+                "Mordvins": 14,
+                "Norwegians": 15,
+                "Karelians,Veps": 16,
+                "English": 17,
+                "Poles": 18,
+                "Mari": 19,
+                "Buryats,Hamnigan,Mongols": 20,
+                "Khanty,Mansi": 21,
+                "Komi": 22,
+                "Estonians": 23,
+                "Kyrgyz": 24,
+                "Kabardians,Cherkess,Adygeans": 25,
+                "Balkan": 26,
+            }
+        else:
+            NotImplementedError()
+
+        self.class_num = len(ind)
 
         idx = 0
         for raw_path in self.raw_paths:
@@ -92,14 +148,9 @@ class MyDataset(Dataset):
             edge_attr_multi = []
 
             y_labels = {}
-            if self.dataset == "cr":
-                x_data = defaultdict(lambda: (5 * [0]))
-                edge_num = defaultdict(lambda: (5 * [0]))
-            elif self.dataset == "nc":
-                x_data = defaultdict(lambda: (8 * [0]))
-                edge_num = defaultdict(lambda: (8 * [0]))
-            else:
-                raise NotImplementedError()
+
+            x_data = defaultdict(lambda: (self.class_num * [0]))
+            edge_num = defaultdict(lambda: (self.class_num * [0]))
 
             dataset_csv = pd.read_csv(raw_path)
             for index, row in tqdm(dataset_csv.iterrows()):
@@ -108,6 +159,9 @@ class MyDataset(Dataset):
                 label1 = row["label_id1"]
                 label2 = row["label_id2"]
                 ibd_sum = row["ibd_sum"]
+
+                if not (label1 in ind and label2 in ind):
+                    continue
 
                 id1 = int(node1[5:])
                 id2 = int(node2[5:])
@@ -195,16 +249,10 @@ def recalculate_input_features(full_data, train_mask):
     edges = {}
 
     for i in range(full_data.x.shape[0]):
-        if full_data.dataset == "cr":
-            hidden_x_data[i] = [0, 0, 0, 0, 0]
-            edge_num[i] = [0, 0, 0, 0, 0]
-            neighbors[i] = [[], [], [], [], []]
-        elif full_data.dataset == "nc":
-            hidden_x_data[i] = [0, 0, 0, 0, 0, 0, 0, 0]
-            edge_num[i] = [0, 0, 0, 0, 0, 0, 0, 0]
-            neighbors[i] = [[], [], [], [], [], [], [], []]
-        else:
-            raise NotImplementedError()
+        hidden_x_data[i] = [0 for _ in range(full_data.class_num)]
+        edge_num[i] = [0 for _ in range(full_data.class_num)]
+        neighbors[i] = [[] for _ in range(full_data.class_num)]
+
         means[i] = []
         stds[i] = []
         edges[i] = []

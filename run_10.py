@@ -31,12 +31,24 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 set_global_seed(42)
 
+num_classes = {
+    "westeurope": 22,
+    "scand": 17,
+    "volga": 27,
+}
+
 for k in range(10):
 
     if args.data == "nc":
         path = "nc"
     elif args.data == "cr":
         path = "cr"
+    elif args.data == "westeurope":
+        path = "westeurope"
+    elif args.data == "scand":
+        path = "scand"
+    elif args.data == "volga":
+        path = "volga"
     else:
         raise NotImplementedError()
 
@@ -61,19 +73,19 @@ for k in range(10):
     full_data.big_features = big_features
 
     if args.model == "attn":
-        model = AttnGCN()
+        model = AttnGCN(path)
         output = "attn"
     elif args.model == "tagconv":
-        model = TAGConv_3l_512h_w_k3()
+        model = TAGConv_3l_512h_w_k3(path)
         output = "tagconv"
     elif args.model == "gcn":
-        model = GCN()
+        model = GCN(path)
         output = "gcn"
     elif args.model == "gin":
-        model = GINNet()
+        model = GINNet(path)
         output = "gin"
     else:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     best_model = None
 
@@ -83,7 +95,7 @@ for k in range(10):
                        gamma=0.1)  # Decay the learning rate by a factor of 0.1 every 10 epochs
 
 
-    t = trange(5000, leave=True)
+    t = trange(8000, leave=True)
     losses = []
 
     train_indices = train_indices.to(device)
@@ -119,7 +131,7 @@ for k in range(10):
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
 
-        if epoch % 200 == 0:
+        if epoch % 300 == 0:
             y_true, y_pred = evaluate_one_by_one(model, full_data,
                                                  train_mask, val_mask, disable=True)
             metrics = calc_accuracy(y_true, y_pred)
@@ -137,7 +149,7 @@ for k in range(10):
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    sub_etnos = ["1", "2", "3", "4", "5", "6", "7", "8"]
+    sub_etnos = [str(i+1) for i in num_classes[path]]
 
     cm_display = ConfusionMatrixDisplay.from_predictions(y_true,
                                                          y_pred,

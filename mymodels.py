@@ -7,6 +7,11 @@ import torch.nn.functional as F
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+num_classes = {
+    "westeurope": 22,
+    "scand": 17,
+    "volga": 27,
+}
 
 class BigAttn(torch.nn.Module):
     def __init__(self):
@@ -128,12 +133,15 @@ class BigAttn(torch.nn.Module):
 
 
 class AttnGCN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, dataset):
         super().__init__()
         n_features = 128
         n_heads = 2
         self.dp = 0.2
-        self.conv1 = GATv2Conv(in_channels=8,
+
+        n_class = num_classes[dataset]
+
+        self.conv1 = GATv2Conv(in_channels=n_class,
                                out_channels=n_features,
                                heads=n_heads,
                                edge_dim=1,
@@ -144,7 +152,7 @@ class AttnGCN(torch.nn.Module):
         self.norm1 = BatchNorm1d(n_features * n_heads)
 
         self.conv2 = GATv2Conv(in_channels=n_features * n_heads,
-                               out_channels=8,
+                               out_channels=n_class,
                                heads=1,
                                edge_dim=1,
                                aggr="add",
@@ -210,19 +218,18 @@ class SimpleNN(torch.nn.Module):
 
 
 class GCN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, dataset):
         super(GCN, self).__init__()
-        num_features = 8
         hidden_dim = 128
-        num_classes = 8
+        n_class = num_classes[dataset]
         # First GCN layer with normalization
-        self.conv1 = GCNConv(num_features, hidden_dim, normalize=True)
+        self.conv1 = GCNConv(n_class, hidden_dim, normalize=True)
 
         # Second GCN layer with normalization
         self.conv2 = GCNConv(hidden_dim, hidden_dim, normalize=True)
 
         # Output layer
-        self.fc = torch.nn.Linear(hidden_dim, num_classes)
+        self.fc = torch.nn.Linear(hidden_dim, n_class)
 
     def forward(self, x, edge_index, edge_weight):
         # Apply the first GCN layer
@@ -332,11 +339,12 @@ class Transformer(torch.nn.Module):
 
 
 class TAGConv_3l_512h_w_k3(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, dataset):
         super(TAGConv_3l_512h_w_k3, self).__init__()
-        self.conv1 = TAGConv(8, 128)
+        n_class = num_classes[dataset]
+        self.conv1 = TAGConv(n_class, 128)
         self.conv2 = TAGConv(128, 128)
-        self.conv3 = TAGConv(128, 8)
+        self.conv3 = TAGConv(128, n_class)
 
     def forward(self, x, edge_index, edge_weight):
         x = F.elu(self.conv1(x, edge_index, edge_weight))
@@ -349,15 +357,14 @@ from torch_geometric.nn import GINConv, global_add_pool
 
 
 class GINNet(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, dataset):
         super(GINNet, self).__init__()
-        num_features = 8
+        n_class = num_classes[dataset]
         hidden_dim = 128
-        num_classes = 8
         # GIN Convolution Layer
         self.conv1 = GINConv(
             nn=torch.nn.Sequential(
-                torch.nn.Linear(num_features, hidden_dim),
+                torch.nn.Linear(n_class, hidden_dim),
                 torch.nn.BatchNorm1d(hidden_dim),
                 torch.nn.ReLU(),
                 torch.nn.Linear(hidden_dim, hidden_dim),
@@ -380,7 +387,7 @@ class GINNet(torch.nn.Module):
         )
 
         # Output layer
-        self.fc = torch.nn.Linear(hidden_dim, num_classes)
+        self.fc = torch.nn.Linear(hidden_dim, n_class)
 
     def forward(self, x, edge_index, edge_weight):
         # Apply GIN Convolution layers
