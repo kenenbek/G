@@ -76,7 +76,7 @@ class MyDataset(Dataset):
                 "Belgium": 5,
                 "Finns": 6,
                 "Norwegians": 7,
-                "Tatars, Volga - Tatars, Mishar - Tatars, Kryashens": 8,
+                "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 8,
                 "Swedes": 9,
                 "Lithuanians": 10,
                 "Danes": 11,
