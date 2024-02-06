@@ -82,7 +82,7 @@ class MyDataset(Dataset):
                 "Danes": 11,
                 "Ukrainians": 12,
                 "Belarusians": 13,
-                "Puerto - Ricans": 14,
+                "Puerto-Ricans": 14,
                 "Chuvash": 15,
                 "Bashkirs": 16,
                 "Poles": 17,
