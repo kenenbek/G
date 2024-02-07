@@ -14,7 +14,7 @@ from builtins import NotImplementedError
 num_classes = {
     "westeurope": 22,
     "scand": 17,
-    "volga": 7,
+    "volga": 6,
 }
 
 class MyDataset(Dataset):
@@ -127,12 +127,12 @@ class MyDataset(Dataset):
                 # "Kazakhs": 5,
                 # "Dolgans,Yakuts": 12,
                 "Udmurts,Besermyan": 4,
-                "Mordvins": 5,
+                # "Mordvins": 5,
                 # "Norwegians": 15,
                 # "Karelians,Veps": 16,
                 # "English": 17,
                 # "Poles": 18,
-                "Mari": 6,
+                "Mari": 5,
                 # "Buryats,Hamnigan,Mongols": 20,
                 # "Khanty,Mansi": 21,
                 # "Komi": 22,
