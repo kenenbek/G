@@ -13,7 +13,7 @@ from builtins import NotImplementedError
 
 num_classes = {
     "westeurope": 22,
-    "scand": 17,
+    "scand": 6,
     "volga": 6,
 }
 
@@ -94,22 +94,22 @@ class MyDataset(Dataset):
         elif self.dataset == "scand":
             ind = {
                 "Finns": 0,
-                "English": 1,
-                "Norwegians": 2,
-                "Swedes": 3,
-                "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 4,
-                "Russians": 5,
-                "Danes": 6,
-                "Ashkenazim": 7,
-                "Germans": 8,
-                "Chuvash": 9,
-                "Karelians,Veps": 10,
-                "Belgium": 11,
-                "Bashkirs": 12,
-                "Lithuanians": 13,
-                "Ukrainians": 14,
-                "Belarusians": 15,
-                "Estonians": 16,
+                # "English": 1,
+                "Norwegians": 1,
+                "Swedes": 2,
+                # "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 4,
+                # "Russians": 5,
+                "Danes": 3,
+                # "Ashkenazim": 7,
+                # "Germans": 8,
+                # "Chuvash": 9,
+                "Karelians,Veps": 4,
+                # "Belgium": 11,
+                # "Bashkirs": 12,
+                # "Lithuanians": 13,
+                # "Ukrainians": 14,
+                # "Belarusians": 15,
+                "Estonians": 5,
             }
         elif self.dataset == "volga":
             ind = {

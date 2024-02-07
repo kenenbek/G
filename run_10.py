@@ -90,7 +90,7 @@ for k in range(10):
                        gamma=0.1)  # Decay the learning rate by a factor of 0.1 every 10 epochs
 
 
-    t = trange(2500, leave=True)
+    t = trange(1500, leave=True)
     losses = []
 
     train_indices = train_indices.to(device)
