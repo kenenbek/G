@@ -83,7 +83,6 @@ for k in range(10):
     else:
         raise NotImplementedError()
 
-    best_model = None
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-3)
@@ -91,7 +90,7 @@ for k in range(10):
                        gamma=0.1)  # Decay the learning rate by a factor of 0.1 every 10 epochs
 
 
-    t = trange(10000, leave=True)
+    t = trange(5000, leave=True)
     losses = []
 
     train_indices = train_indices.to(device)
@@ -102,6 +101,7 @@ for k in range(10):
     )
 
     model = model.to(device)
+    best_model = model
     train_mask = train_mask.to(device)
     val_mask = val_mask.to(device)
     test_mask = test_mask.to(device)
@@ -140,7 +140,7 @@ for k in range(10):
 
     # TEST one by one
 
-    y_true, y_pred = evaluate_one_by_one(best_model, full_data,
+    y_true, y_pred = evaluate_one_by_one(model, full_data,
                                          train_mask, test_mask)
     metrics = calc_accuracy(y_true, y_pred)
 
