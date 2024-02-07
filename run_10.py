@@ -91,7 +91,7 @@ for k in range(10):
                        gamma=0.1)  # Decay the learning rate by a factor of 0.1 every 10 epochs
 
 
-    t = trange(8000, leave=True)
+    t = trange(10000, leave=True)
     losses = []
 
     train_indices = train_indices.to(device)
@@ -127,7 +127,7 @@ for k in range(10):
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
 
-        if epoch % 300 == 0:
+        if epoch % 1000 == 0:
             y_true, y_pred = evaluate_one_by_one(model, full_data,
                                                  train_mask, val_mask, disable=True)
             metrics = calc_accuracy(y_true, y_pred)
