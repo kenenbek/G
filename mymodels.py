@@ -130,9 +130,9 @@ class BigAttn(torch.nn.Module):
 class AttnGCN(torch.nn.Module):
     def __init__(self, dataset):
         super().__init__()
-        n_features = 128
+        n_features = 64
         n_heads = 2
-        self.dp = 0.2
+        self.dp = 0.1
 
         n_class = num_classes[dataset]
 
