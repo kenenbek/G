@@ -127,16 +127,16 @@ for k in range(10):
         losses.append(loss)
         t.set_description(str(round(loss.item(), 6)))
 
-        if epoch % 1000 == 0:
-            y_true, y_pred = evaluate_one_by_one(model, full_data,
-                                                 train_mask, val_mask, disable=True)
-            metrics = calc_accuracy(y_true, y_pred)
-
-            if metrics["6"] > best_metric:
-                best_metric = metrics["6"]
-                best_model = model
-                print("Epoch: ", epoch)
-                print(metrics)
+        # if epoch % 1000 == 0:
+        #     y_true, y_pred = evaluate_one_by_one(model, full_data,
+        #                                          train_mask, val_mask, disable=True)
+        #     metrics = calc_accuracy(y_true, y_pred)
+        #
+        #     if metrics["6"] > best_metric:
+        #         best_metric = metrics["6"]
+        #         best_model = model
+        #         print("Epoch: ", epoch)
+        #         print(metrics)
 
     # TEST one by one
 

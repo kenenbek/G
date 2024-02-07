@@ -337,9 +337,9 @@ class TAGConv_3l_512h_w_k3(torch.nn.Module):
     def __init__(self, dataset):
         super(TAGConv_3l_512h_w_k3, self).__init__()
         n_class = num_classes[dataset]
-        self.conv1 = TAGConv(n_class, 256)
-        self.conv2 = TAGConv(256, 256)
-        self.conv3 = TAGConv(256, n_class)
+        self.conv1 = TAGConv(n_class, 128)
+        self.conv2 = TAGConv(128, 128)
+        self.conv3 = TAGConv(128, n_class)
 
     def forward(self, x, edge_index, edge_weight):
         x = F.elu(self.conv1(x, edge_index, edge_weight))
