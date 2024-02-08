@@ -15,6 +15,7 @@ num_classes = {
     "westeurope": 22,
     "scand": 4,
     "volga": 6,
+    "nc": 8,
 }
 
 class MyDataset(Dataset):
