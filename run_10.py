@@ -80,6 +80,9 @@ for k in range(10):
     elif args.model == "gin":
         model = GINNet(path)
         output = "gin"
+    elif args.model == "mlp":
+        model = SimpleNN(path)
+        output = "mlp"
     else:
         raise NotImplementedError()
 
@@ -140,8 +143,15 @@ for k in range(10):
 
     # TEST one by one
 
-    y_true, y_pred = evaluate_one_by_one(model, full_data,
-                                         train_mask, test_mask)
+    # y_true, y_pred = evaluate_one_by_one(model, full_data,
+    #                                      train_mask, test_mask)
+
+    model.eval()
+    out = model(big_features, None, None)
+    pred = out.argmax(dim=1)
+    y_true = full_data.y[test_mask].cpu().numpy()
+    y_pred = pred[test_mask].cpu().numpy()
+
     metrics = calc_accuracy(y_true, y_pred)
 
     fig, ax = plt.subplots(figsize=(10, 10))
