@@ -122,7 +122,7 @@ for k in range(10):
 
         out = model(big_features,
                     train_edge_index, train_edge_weight)
-        loss = criterion(out, full_data.y[train_mask])
+        loss = criterion(out[train_mask], full_data.y[train_mask])
 
         loss.backward()
         optimizer.step()
