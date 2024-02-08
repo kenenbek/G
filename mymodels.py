@@ -184,7 +184,7 @@ class AttnGCN(torch.nn.Module):
 
 
 class SimpleNN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, dataset):
         super().__init__()
         dp = 0.2
         hidden_dim = 128
@@ -209,7 +209,7 @@ class SimpleNN(torch.nn.Module):
             Linear(hidden_dim, n_class),
         )
 
-    def forward(self, h):
+    def forward(self, h, a, b):
         h = self.model(h)
         return h
 
