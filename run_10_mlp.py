@@ -120,9 +120,9 @@ for k in range(10):
 
         input_data, rand_mask = change_input(full_data.x_one_hot[train_mask], q=20)
 
-        out = model(input_data,
+        out = model(big_features,
                     train_edge_index, train_edge_weight)
-        loss = criterion(out[rand_mask], full_data.y[train_mask][rand_mask])
+        loss = criterion(out[train_mask], full_data.y[train_mask])
 
         loss.backward()
         optimizer.step()
@@ -144,8 +144,14 @@ for k in range(10):
 
     # TEST one by one
 
-    y_true, y_pred = evaluate_one_by_one(model, full_data,
-                                         train_mask, test_mask)
+    # y_true, y_pred = evaluate_one_by_one(model, full_data,
+    #                                      train_mask, test_mask)
+
+    model.eval()
+    out = model(big_features, None, None)
+    pred = out.argmax(dim=1)
+    y_true = full_data.y[test_mask].cpu().numpy()
+    y_pred = pred[test_mask].cpu().numpy()
 
     metrics = calc_accuracy(y_true, y_pred)
 
