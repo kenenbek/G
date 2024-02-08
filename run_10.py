@@ -104,6 +104,7 @@ for k in range(10):
     )
 
     model = model.to(device)
+    big_features = big_features.to(device)
     best_model = model
     train_mask = train_mask.to(device)
     val_mask = val_mask.to(device)
