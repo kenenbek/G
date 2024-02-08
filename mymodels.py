@@ -190,7 +190,7 @@ class SimpleNN(torch.nn.Module):
         hidden_dim = 128
         n_class = num_classes[dataset]
         self.model = Sequential(
-            Linear(n_class, hidden_dim),
+            Linear(3 * n_class, hidden_dim),
             BatchNorm1d(hidden_dim),
             LeakyReLU(),
             Dropout(p=dp),
