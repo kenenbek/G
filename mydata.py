@@ -39,7 +39,7 @@ class MyDataset(Dataset):
         elif self.dataset == "we":
             return ["Western-Europe_weights_partial_labels.csv"]
         elif self.dataset == "sim_we":
-            return ["simulated_nc.csv"]
+            return ["simulated_we.csv"]
         elif self.dataset == "scand":
             return ["Scandinavia_weights_partial_labels.csv"]
         elif self.dataset == "volga":
