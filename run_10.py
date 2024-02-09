@@ -122,7 +122,7 @@ for k in range(10):
         model.train()
         optimizer.zero_grad()
 
-        input_data, rand_mask = change_input(full_data.x_one_hot[train_mask], q=20)
+        input_data, rand_mask = change_input(full_data.x_one_hot[train_mask], q=100)
 
         out = model(input_data,
                     train_edge_index, train_edge_weight)
