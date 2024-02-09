@@ -16,11 +16,12 @@ num_classes = {
     "scand": 4,
     "volga": 6,
     "nc": 8,
+    "sim_nc": 8,
 }
 
 class MyDataset(Dataset):
     def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):
-        datasets = {"cr", "nc", "westeurope", "scand", "volga"}
+        datasets = {"cr", "nc", "westeurope", "scand", "volga", "sim_nc"}
         assert dataset in datasets, "Incorrect name for dataset"
         self.dataset = dataset
         self.class_num = None
@@ -32,6 +33,8 @@ class MyDataset(Dataset):
             return ["CR_graph_rel.csv"]
         elif self.dataset == "nc":
             return ["NC_graph_rel.csv"]
+        elif self.dataset == "sim_nc":
+            return ["simulated_nc.csv"]
         elif self.dataset == "westeurope":
             return ["Western-Europe_weights_partial_labels.csv"]
         elif self.dataset == "scand":
@@ -57,7 +60,7 @@ class MyDataset(Dataset):
                 'южные-русские': 3,
                 'северные-русские': 4
             }
-        elif self.dataset == "nc":
+        elif self.dataset == "nc" or self.dataset == "sim_nc":
             ind = {'карачаевцы,балкарцы': 0,
                  'осетины': 1,
                  'кабардинцы,черкесы,адыгейцы': 2,
