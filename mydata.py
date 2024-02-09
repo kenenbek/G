@@ -15,14 +15,16 @@ num_classes = {
     "we": 4,
     "sim_we": 4,
     "scand": 3,
+    "sim_scand": 3,
     "volga": 4,
+    "sim_volga": 4,
     "nc": 8,
     "sim_nc": 8,
 }
 
 class MyDataset(Dataset):
     def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):
-        datasets = {"cr", "nc", "we", "scand", "volga", "sim_nc", "sim_we"}
+        datasets = {"cr", "nc", "we", "scand", "volga", "sim_nc", "sim_volga", "sim_we"}
         assert dataset in datasets, "Incorrect name for dataset"
         self.dataset = dataset
         self.class_num = None
@@ -42,8 +44,14 @@ class MyDataset(Dataset):
             return ["simulated_we.csv"]
         elif self.dataset == "scand":
             return ["Scandinavia_weights_partial_labels.csv"]
+        elif self.dataset == "sim_scand":
+            return [""]
         elif self.dataset == "volga":
             return ["Volga_weights_partial_labels.csv"]
+        elif self.dataset == "sim_volga":
+            return ["simulated_vo_500.csv"]
+        else:
+            raise NotImplementedError()
 
     @property
     def processed_file_names(self):
@@ -98,7 +106,7 @@ class MyDataset(Dataset):
                 # "Balkan": 20,
                 # "Spaniards": 21,
             }
-        elif self.dataset == "scand":
+        elif self.dataset == "scand" or self.dataset == "sim_scand":
             ind = {
                 # "Finns": 0,
                 # "English": 1,
@@ -118,7 +126,7 @@ class MyDataset(Dataset):
                 # "Belarusians": 15,
                 # "Estonians": 5,
             }
-        elif self.dataset == "volga":
+        elif self.dataset == "volga" or self.dataset == "sim_volga":
             ind = {
                 "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 0,
                 # "Russians": 1,

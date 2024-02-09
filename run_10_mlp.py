@@ -47,8 +47,12 @@ for k in range(10):
         path = "sim_we"
     elif args.data == "scand":
         path = "scand"
+    elif args.data == "sim_scand":
+        path = "sim_scand"
     elif args.data == "volga":
         path = "volga"
+    elif args.data == "sim_volga":
+        path = "sim_volga"
     else:
         raise NotImplementedError()
 
