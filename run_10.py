@@ -37,6 +37,8 @@ for k in range(10):
 
     if args.data == "nc":
         path = "nc"
+    elif args.data == "sim_nc":
+        path = "sim_nc"
     elif args.data == "cr":
         path = "cr"
     elif args.data == "westeurope":
