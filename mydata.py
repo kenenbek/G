@@ -12,16 +12,17 @@ import random
 from builtins import NotImplementedError
 
 num_classes = {
-    "westeurope": 4,
-    "scand": 4,
-    "volga": 6,
+    "we": 4,
+    "sim_we": 4,
+    "scand": 3,
+    "volga": 4,
     "nc": 8,
     "sim_nc": 8,
 }
 
 class MyDataset(Dataset):
     def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):
-        datasets = {"cr", "nc", "westeurope", "scand", "volga", "sim_nc"}
+        datasets = {"cr", "nc", "we", "scand", "volga", "sim_nc", "sim_we"}
         assert dataset in datasets, "Incorrect name for dataset"
         self.dataset = dataset
         self.class_num = None
@@ -35,8 +36,10 @@ class MyDataset(Dataset):
             return ["NC_graph_rel.csv"]
         elif self.dataset == "sim_nc":
             return ["simulated_nc.csv"]
-        elif self.dataset == "westeurope":
+        elif self.dataset == "we":
             return ["Western-Europe_weights_partial_labels.csv"]
+        elif self.dataset == "sim_we":
+            return ["simulated_nc.csv"]
         elif self.dataset == "scand":
             return ["Scandinavia_weights_partial_labels.csv"]
         elif self.dataset == "volga":
@@ -70,7 +73,7 @@ class MyDataset(Dataset):
                  'чеченцы': 6,
                  'дагестанские народы': 7,
             }
-        elif self.dataset == "westeurope":
+        elif self.dataset == "we" or self.dataset == "sim_we":
             ind = {
                 "English": 0,
                 "Germans": 1,
@@ -97,13 +100,13 @@ class MyDataset(Dataset):
             }
         elif self.dataset == "scand":
             ind = {
-                "Finns": 0,
+                # "Finns": 0,
                 # "English": 1,
-                "Norwegians": 1,
-                "Swedes": 2,
+                "Norwegians": 0,
+                "Swedes": 1,
                 # "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 4,
                 # "Russians": 5,
-                "Danes": 3,
+                "Danes": 2,
                 # "Ashkenazim": 7,
                 # "Germans": 8,
                 # "Chuvash": 9,
@@ -118,10 +121,10 @@ class MyDataset(Dataset):
         elif self.dataset == "volga":
             ind = {
                 "Tatars,Volga-Tatars,Mishar-Tatars,Kryashens": 0,
-                "Russians": 1,
+                # "Russians": 1,
                 # "Finns": 2,
-                "Bashkirs": 2,
-                "Chuvash": 3,
+                # "Bashkirs": 2,
+                "Chuvash": 1,
                 # "Lithuanians": 5,
                 # "Germans": 6,
                 # "Ukrainians": 7,
@@ -130,13 +133,13 @@ class MyDataset(Dataset):
                 # "Ashkenazim": 4,
                 # "Kazakhs": 5,
                 # "Dolgans,Yakuts": 12,
-                "Udmurts,Besermyan": 4,
+                "Udmurts,Besermyan": 2,
                 # "Mordvins": 5,
                 # "Norwegians": 15,
                 # "Karelians,Veps": 16,
                 # "English": 17,
                 # "Poles": 18,
-                "Mari": 5,
+                "Mari": 3,
                 # "Buryats,Hamnigan,Mongols": 20,
                 # "Khanty,Mansi": 21,
                 # "Komi": 22,

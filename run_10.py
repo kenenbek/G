@@ -41,8 +41,10 @@ for k in range(10):
         path = "sim_nc"
     elif args.data == "cr":
         path = "cr"
-    elif args.data == "westeurope":
-        path = "westeurope"
+    elif args.data == "we":
+        path = "we"
+    elif args.data == "sim_we":
+        path = "sim_we"
     elif args.data == "scand":
         path = "scand"
     elif args.data == "volga":
