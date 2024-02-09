@@ -24,7 +24,7 @@ num_classes = {
 
 class MyDataset(Dataset):
     def __init__(self, root, dataset, transform=None, pre_transform=None, pre_filter=None):
-        datasets = {"cr", "nc", "we", "scand", "volga", "sim_nc", "sim_volga", "sim_we"}
+        datasets = {"cr", "nc", "we", "scand", "volga", "sim_nc", "sim_scand", "sim_volga", "sim_we"}
         assert dataset in datasets, "Incorrect name for dataset"
         self.dataset = dataset
         self.class_num = None
@@ -45,7 +45,7 @@ class MyDataset(Dataset):
         elif self.dataset == "scand":
             return ["Scandinavia_weights_partial_labels.csv"]
         elif self.dataset == "sim_scand":
-            return [""]
+            return ["simulated_sc_500.csv"]
         elif self.dataset == "volga":
             return ["Volga_weights_partial_labels.csv"]
         elif self.dataset == "sim_volga":
